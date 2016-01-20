@@ -25,10 +25,19 @@
 
     <ImageView
         android:id="@+id/imageView1"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
-        android:layout_alignParentRight="true"
-        android:layout_alignTop="@+id/usb_conn_logo"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_above="@+id/seekBar1"
+        android:layout_alignRight="@+id/seekBar1"
+        android:layout_marginRight="60dp"
         android:src="@drawable/usb_disconnection" />
+
+    <Button
+        android:id="@+id/button1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@+id/textView1"
+        android:layout_toRightOf="@+id/textView1"
+        android:text="Setting" />
 
 </RelativeLayout>

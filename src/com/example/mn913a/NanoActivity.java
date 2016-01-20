@@ -1,5 +1,6 @@
 package com.example.mn913a;
 
+import com.example.mn913a.MN_913A_Device.CMD_T;
 
 import android.app.Activity;
 import android.app.PendingIntent;
@@ -13,6 +14,9 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
@@ -21,13 +25,14 @@ import android.widget.TextView;
 public class NanoActivity extends Activity {
 	PendingIntent mPermissionIntent;
 	UsbManager mUsbManager;
-	boolean mRequest_USB_permission;
+	boolean mRequest_USB_permission, Is_MN913A_Online = false;
 	public final String Tag = "MN913_Activity";
 	private static final String ACTION_USB_PERMISSION = "com.example.mn913a.USB_PERMISSION";
 	MN_913A_Device mNano_dev;
 	public static boolean mDebug_Nano = false;
 	RelativeLayout mMain_Layout;
 	ImageView connection_status_v;
+	Button Setting_Btn;
 	int Cur_Voltage_Level = -1;
 	
 	@Override
@@ -44,12 +49,12 @@ public class NanoActivity extends Activity {
 		mIntentFilter.addAction(ACTION_USB_PERMISSION);
 		registerReceiver(mReceiver, mIntentFilter);
 		
+		mMain_Layout = ( RelativeLayout ) this.findViewById( R.id.ID_Main_Layout );
+		connection_status_v = ( ImageView ) this.findViewById( R.id.imageView1 );
+		
 		mNano_dev = new MN_913A_Device ( this );
 		mRequest_USB_permission = false;
 		EnumerationDevice(getIntent());
-		
-		mMain_Layout = ( RelativeLayout ) this.findViewById( R.id.ID_Main_Layout );
-		connection_status_v = ( ImageView ) this.findViewById( R.id.usb_conn_logo );
 		
 		SeekBar seekbar1;
 		seekbar1 = (SeekBar) findViewById(R.id.seekBar1);
@@ -81,12 +86,24 @@ public class NanoActivity extends Activity {
 		TextView seekbar_value;
 		seekbar_value = (TextView) findViewById(R.id.textView1);
 		seekbar_value.setText(Integer.toString(seekbar1.getProgress()) + "%");
+		
+		Setting_Btn = ( Button ) findViewById(R.id.button1);
+		Setting_Btn.setOnClickListener( new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_SETTING, 0, 0, null, 1);
+			}
+			
+		});
 	}
 
 	public void EnumerationDevice(Intent intent) {
 		if (intent.getAction().equals(Intent.ACTION_MAIN)) {
 			if (mNano_dev.Enumeration()) {
-				connection_status_v.setImageResource ( R.drawable.usb_connection ); 
+				//connection_status_v.setImageResource ( R.drawable.usb_connection );
+				Is_MN913A_Online = true;
 			}
 			else {
 				if (mNano_dev.isDeviceOnline()) {
@@ -94,6 +111,7 @@ public class NanoActivity extends Activity {
 					mUsbManager.requestPermission(mNano_dev.getDevice(), mPermissionIntent);
 				}
 				else {
+					Is_MN913A_Online = false;
 				}
 			}
 		}
@@ -101,10 +119,10 @@ public class NanoActivity extends Activity {
     		if (intent.getAction().equals(UsbManager.ACTION_USB_DEVICE_ATTACHED)) {
     			UsbDevice device = (UsbDevice) intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
     			if (mNano_dev.Enumeration(device)) {
-    				
+    				Is_MN913A_Online = true;
     			}
     			else {
-    				
+    				Is_MN913A_Online = false;
     			}
     		}
 		update_ui_state ( );
@@ -117,6 +135,17 @@ public class NanoActivity extends Activity {
 		SeekBar seekbar1;
 		seekbar1 = (SeekBar) findViewById(R.id.seekBar1);
 		//connection_status_v.setImageResource(drawable)
+		if ( Is_MN913A_Online == true ) {
+			connection_status_v.setImageResource ( R.drawable.usb_connection );
+			seekbar_value.setEnabled( true );
+			seekbar1.setEnabled( true );
+			//mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_SETTING, 0, 0, null, 1);
+		}
+		else {
+			connection_status_v.setImageResource ( R.drawable.usb_disconnection );
+			seekbar_value.setEnabled( false );
+			seekbar1.setEnabled( false );
+		}
 	}
 	
 	@Override
@@ -153,6 +182,7 @@ public class NanoActivity extends Activity {
 						mNano_dev.DeviceOffline();
 						Log.d( Tag, "MN913A DETACHED" );
 						mNano_dev.Reset_Device_Info();
+						Is_MN913A_Online = false;
 						update_ui_state ( );
 					}
 				}
@@ -161,10 +191,12 @@ public class NanoActivity extends Activity {
 				if (action.equals(ACTION_USB_PERMISSION)) {
 					if (intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
 						if (device != null) {
+							Is_MN913A_Online = true;
 							Log.d(Tag, "permission allowed for device "+device);
 						}
 					}
 					else {
+						Is_MN913A_Online = false;
 						Log.d(Tag, "permission denied for device " + device);
 					}
 					
@@ -182,5 +214,11 @@ public class NanoActivity extends Activity {
     protected void onDestroy() {
 		super.onDestroy();
 		unregisterReceiver(mReceiver);
-	}    
+	}
+	
+    protected void onNewIntent(Intent intent) {
+    	mNano_dev.show_debug("New intent: "+intent.getAction()+"\n");
+    	if (intent.getAction().equals(UsbManager.ACTION_USB_DEVICE_ATTACHED))
+    		EnumerationDevice(intent);
+    }
 }
