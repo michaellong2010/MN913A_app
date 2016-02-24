@@ -296,6 +296,11 @@ public class MN_913A_Device {
     	}
 	}
 	
+	public void Set_Xenon_Voltage_Level ( int level )
+	{
+		Xenon_Voltage_Level = level;
+	}
+	
 	public static final int SZ_MN913A_setting_type = Integer.SIZE / Byte.SIZE;
 	/* #define PAGE_SIZE 256 */
 	public static final int PAGE_SIZE = 256;
@@ -326,6 +331,7 @@ public class MN_913A_Device {
 	    private final ByteBuffer mDataBuffer;
 	    
 	    public static final int HID_CMD_MN913A_SETTING = 0x86;
+	    public static final int HID_CMD_MN913A_MEASURE = 0x87;
 	    
 	    public CMD_T() {
 	        mMessageBuffer = ByteBuffer.allocate(SZ_CMD_T);
@@ -416,7 +422,13 @@ public class MN_913A_Device {
 					arg2 = (SZ_MN913A_setting_type / PAGE_SIZE) + 1;
 				else
 					arg2 = (SZ_MN913A_setting_type / PAGE_SIZE);
-				break;			
+				break;
+			case HID_CMD_MN913A_MEASURE:
+				if (debug != 0)
+					Log.d(Tag, ">>> Starting MN913A measurement\n");
+				arg1 = 0;
+				arg2 = 0;
+				break;
 			}
 			len = CMD_T.SZ_CMD_T - 4; /* Not include checksum */
 			Signature = HID_CMD_SIGNATURE;

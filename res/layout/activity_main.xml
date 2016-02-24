@@ -21,7 +21,8 @@
         android:layout_height="wrap_content"
         android:layout_alignLeft="@+id/textView1"
         android:layout_below="@+id/textView1"
-        android:layout_marginTop="34dp" />
+        android:layout_marginTop="34dp"
+        android:max="242" />
 
     <ImageView
         android:id="@+id/imageView1"
@@ -39,5 +40,13 @@
         android:layout_alignTop="@+id/textView1"
         android:layout_toRightOf="@+id/textView1"
         android:text="Setting" />
+
+    <Button
+        android:id="@+id/button2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@+id/imageView1"
+        android:layout_toRightOf="@+id/button1"
+        android:text="Measure" />
 
 </RelativeLayout>

@@ -1,5 +1,6 @@
 package com.example.mn913a;
 
+
 import com.example.mn913a.MN_913A_Device.CMD_T;
 
 import android.app.Activity;
@@ -32,8 +33,9 @@ public class NanoActivity extends Activity {
 	public static boolean mDebug_Nano = false;
 	RelativeLayout mMain_Layout;
 	ImageView connection_status_v;
-	Button Setting_Btn;
+	Button Setting_Btn, Measure_Btn;
 	int Cur_Voltage_Level = -1;
+	double xenon_voltage;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -54,17 +56,20 @@ public class NanoActivity extends Activity {
 		
 		mNano_dev = new MN_913A_Device ( this );
 		mRequest_USB_permission = false;
-		EnumerationDevice(getIntent());
+		//EnumerationDevice(getIntent());
 		
 		SeekBar seekbar1;
 		seekbar1 = (SeekBar) findViewById(R.id.seekBar1);
 		//seekbar1.setEnabled(Adjust_Detection_Sensitivity);
+		seekbar1.setProgress ( 162 );
+		Cur_Voltage_Level = 162;
 		seekbar1.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
 			
 			@Override
 			public void onStopTrackingTouch(SeekBar seekBar) {
 				// TODO Auto-generated method stub
-				
+				if ( seekBar.getProgress() < 162 )
+					seekBar.setProgress ( 162 );
 			}
 			
 			@Override
@@ -80,12 +85,14 @@ public class NanoActivity extends Activity {
 				Cur_Voltage_Level = progress;
 				TextView seekbar_value;
 				seekbar_value = (TextView) findViewById(R.id.textView1);
-				seekbar_value.setText(Integer.toString(Cur_Voltage_Level) + "%");
+				xenon_voltage = 3.17 + ( 4.7 - 3.17 ) * ( Cur_Voltage_Level - 162 ) / ( 242 - 162 );
+				seekbar_value.setText( String.format( "%.3f", xenon_voltage ) + "V");
 			}
 		});
 		TextView seekbar_value;
 		seekbar_value = (TextView) findViewById(R.id.textView1);
-		seekbar_value.setText(Integer.toString(seekbar1.getProgress()) + "%");
+		xenon_voltage = 3.17 + ( 4.7 - 3.17 ) * ( seekbar1.getProgress() - 162 ) / ( 242 - 162 );
+		seekbar_value.setText( String.format( "%.3f", xenon_voltage ) + "V");
 		
 		Setting_Btn = ( Button ) findViewById(R.id.button1);
 		Setting_Btn.setOnClickListener( new OnClickListener() {
@@ -93,10 +100,23 @@ public class NanoActivity extends Activity {
 			@Override
 			public void onClick(View v) {
 				// TODO Auto-generated method stub
+				mNano_dev.Set_Xenon_Voltage_Level ( Cur_Voltage_Level );
 				mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_SETTING, 0, 0, null, 1);
 			}
 			
 		});
+		Measure_Btn = ( Button ) findViewById(R.id.button2);
+		Measure_Btn.setOnClickListener( new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_MEASURE, 0, 0, null, 1);
+			}
+			
+		});
+		
+		EnumerationDevice(getIntent());
 	}
 
 	public void EnumerationDevice(Intent intent) {
@@ -140,11 +160,16 @@ public class NanoActivity extends Activity {
 			seekbar_value.setEnabled( true );
 			seekbar1.setEnabled( true );
 			//mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_SETTING, 0, 0, null, 1);
+			Setting_Btn.setEnabled( true );
+			Measure_Btn.setEnabled( true );
+			mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_SETTING, 0, 0, null, 1);
 		}
 		else {
 			connection_status_v.setImageResource ( R.drawable.usb_disconnection );
 			seekbar_value.setEnabled( false );
 			seekbar1.setEnabled( false );
+			Setting_Btn.setEnabled( false );
+			Measure_Btn.setEnabled( false );
 		}
 	}
 	
