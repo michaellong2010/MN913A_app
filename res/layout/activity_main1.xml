@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/mn_913a_ui_bg"
+    android:weightSum="1" >
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight=".09" >
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight=".82" >
+
+        <ImageButton
+            android:id="@+id/imageButton1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_marginLeft="128dp"
+            android:layout_marginTop="128dp"
+            android:src="@drawable/dsdna" />
+
+         <ImageButton
+             android:id="@+id/imageButton2"
+             android:layout_width="wrap_content"
+             android:layout_height="wrap_content"
+             android:layout_alignLeft="@id/imageButton1"
+             android:layout_below="@+id/imageButton1"
+             android:layout_marginTop="96dp"
+             android:src="@drawable/ssdna" />
+
+         <ImageButton
+             android:id="@+id/imageButton3"
+             android:layout_width="wrap_content"
+             android:layout_height="wrap_content"
+             android:layout_alignLeft="@id/imageButton2"
+             android:layout_below="@+id/imageButton2"
+             android:layout_marginTop="96dp"
+             android:src="@drawable/management" />
+
+         <ImageButton
+             android:id="@+id/imageButton4"
+             android:layout_width="wrap_content"
+             android:layout_height="wrap_content"
+             android:layout_alignTop="@+id/imageButton1"
+             android:layout_marginLeft="200dp"
+             android:layout_toRightOf="@+id/imageButton1"
+             android:src="@drawable/rna" />
+
+         <ImageButton
+             android:id="@+id/imageButton5"
+             android:layout_width="wrap_content"
+             android:layout_height="wrap_content"
+             android:layout_alignLeft="@+id/imageButton4"
+             android:layout_alignTop="@+id/imageButton2"
+             android:src="@drawable/protein" />
+
+         <ImageButton
+             android:id="@+id/imageButton6"
+             android:layout_width="wrap_content"
+             android:layout_height="wrap_content"
+             android:layout_alignLeft="@+id/imageButton5"
+             android:layout_alignTop="@+id/imageButton3"
+             android:src="@drawable/analysis" />
+
+         <ImageButton
+             android:id="@+id/imageButton7"
+             android:layout_width="wrap_content"
+             android:layout_height="wrap_content"
+             android:layout_alignTop="@+id/imageButton4"
+             android:layout_marginLeft="145dp"
+             android:layout_toRightOf="@+id/imageButton4"
+             android:src="@drawable/about" />
+
+         <ImageButton
+             android:id="@+id/imageButton8"
+             android:layout_width="wrap_content"
+             android:layout_height="wrap_content"
+             android:layout_alignLeft="@+id/imageButton7"
+             android:layout_alignTop="@+id/imageButton5"
+             android:src="@drawable/setting" />
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight=".09" >
+
+    </RelativeLayout>
+</LinearLayout>

@@ -16,6 +16,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -40,7 +41,9 @@ public class NanoActivity extends Activity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_main);
+		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+		getWindow().addFlags(WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD);
+		setContentView(R.layout.activity_main1);
 
 		mUsbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
 		mPermissionIntent = PendingIntent.getBroadcast(this, 0, new Intent(ACTION_USB_PERMISSION), 0);
@@ -58,7 +61,7 @@ public class NanoActivity extends Activity {
 		mRequest_USB_permission = false;
 		//EnumerationDevice(getIntent());
 		
-		SeekBar seekbar1;
+/*		SeekBar seekbar1;
 		seekbar1 = (SeekBar) findViewById(R.id.seekBar1);
 		//seekbar1.setEnabled(Adjust_Detection_Sensitivity);
 		seekbar1.setProgress ( 162 );
@@ -116,7 +119,7 @@ public class NanoActivity extends Activity {
 			
 		});
 		
-		EnumerationDevice(getIntent());
+		EnumerationDevice(getIntent());*/
 	}
 
 	public void EnumerationDevice(Intent intent) {
