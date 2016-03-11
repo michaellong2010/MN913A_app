@@ -1,8 +1,14 @@
 package com.example.mn913a;
 
 
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
 import com.example.mn913a.MN_913A_Device.CMD_T;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
@@ -12,6 +18,7 @@ import android.content.IntentFilter;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -19,12 +26,13 @@ import android.view.View;
 import android.view.WindowManager;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
-public class NanoActivity extends Activity {
+@SuppressLint("NewApi") public class NanoActivity extends Activity {
 	PendingIntent mPermissionIntent;
 	UsbManager mUsbManager;
 	boolean mRequest_USB_permission, Is_MN913A_Online = false;
@@ -37,6 +45,7 @@ public class NanoActivity extends Activity {
 	Button Setting_Btn, Measure_Btn;
 	int Cur_Voltage_Level = -1;
 	double xenon_voltage;
+	DisplayMetrics metrics;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -61,7 +70,7 @@ public class NanoActivity extends Activity {
 		mRequest_USB_permission = false;
 		//EnumerationDevice(getIntent());
 		
-/*		SeekBar seekbar1;
+		/*SeekBar seekbar1;
 		seekbar1 = (SeekBar) findViewById(R.id.seekBar1);
 		//seekbar1.setEnabled(Adjust_Detection_Sensitivity);
 		seekbar1.setProgress ( 162 );
@@ -120,6 +129,34 @@ public class NanoActivity extends Activity {
 		});
 		
 		EnumerationDevice(getIntent());*/
+		ImageButton imageButton1;
+		imageButton1 = ( ImageButton ) findViewById(R.id.imageButton1);
+		imageButton1.setOnClickListener( new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				metrics = new DisplayMetrics();
+				(( WindowManager )getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getRealMetrics(metrics);
+				//finish();
+				hide_system_bar();
+				
+				/*String result;
+		    	result = exec_shell_command ( "am startservice -n com.android.systemui/.SystemUIService\n" );
+		    	if ( result.equals( Msg_Shell_Command_Error) == false )
+		    		Log.d ( Tag, "show system bar successfully!" );
+		    	else
+		    		Log.d ( Tag, "show system bar fail!" );*/
+				try {
+					Runtime.getRuntime().exec(new String[] { "su -c pm disable com.android.systemui" });
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+			
+			
+		});
 	}
 
 	public void EnumerationDevice(Intent intent) {
@@ -233,10 +270,23 @@ public class NanoActivity extends Activity {
 						//hide_system_bar();
 						mRequest_USB_permission = false;
 					}
+					
+					if (mRequest_USB_permission==true) {
+						hide_system_bar();
+						mRequest_USB_permission = false;
+					}
 				}
 		}
     	
     };
+    
+    @Override
+    protected void onStart() {
+    	super.onStart();
+
+    	if (mRequest_USB_permission==false)
+    		hide_system_bar();    	
+    }
     
 	@Override
     protected void onDestroy() {
@@ -248,5 +298,71 @@ public class NanoActivity extends Activity {
     	mNano_dev.show_debug("New intent: "+intent.getAction()+"\n");
     	if (intent.getAction().equals(UsbManager.ACTION_USB_DEVICE_ATTACHED))
     		EnumerationDevice(intent);
+    }
+    
+	/*20141105 added by michael
+	 * execute shell command in superuser privilege */
+	private final String Msg_Shell_Command_Error = "shell command error";
+	public String exec_shell_command( String shell_cmd ) {
+		// TODO Auto-generated method stub
+		String result, line;
+		java.lang.Process p;
+		java.lang.Runtime rt;
+		byte[] buff;
+		int readed;
+
+		result = Msg_Shell_Command_Error;
+		buff = new byte[100];
+
+		try {
+			rt = Runtime.getRuntime();
+			p = rt.exec(new String[] { "/system/xbin/su" });
+			// p = Runtime.getRuntime().exec( "/system/bin/ls" );
+			DataOutputStream os = new DataOutputStream(p.getOutputStream());
+			//DataInputStream is = new DataInputStream(p.getInputStream());
+			InputStreamReader is_reader = new InputStreamReader ( p.getInputStream() );
+			BufferedReader buf_is_reader = new BufferedReader ( is_reader );
+			os.writeBytes( shell_cmd );
+			os.writeBytes( "exit\n" );
+			os.flush();
+			p.waitFor();
+			if ( p.exitValue() == 0 ) {
+			/*while (is.available() > 0) {
+				readed = is.read(buff);
+				if (readed <= 0)
+					break;
+				String seg = new String(buff, 0, readed);
+				result = result + seg; // result is a string to show in textview
+			}*/
+				result = "";
+				while ( ( line = buf_is_reader.readLine() ) != null ) {
+					result += line;
+				}
+			}
+			else
+				result = Msg_Shell_Command_Error;
+			os.flush();
+			os.close();
+			is_reader.close();
+			buf_is_reader.close();
+			p.waitFor();
+			p.destroy();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (Exception ex) {
+		}
+		
+		return result;
+	}
+	
+    public void hide_system_bar() {    	
+    	String result;
+    	result = exec_shell_command ( "service call activity 42 s16 com.android.systemui\n" );
+    	if ( result.equals( Msg_Shell_Command_Error) == false )
+    		Log.d ( Tag, "hide system bar successfully!" );
+    	else
+    		Log.d ( Tag, "hide system bar fail!" );
+    	
     }
 }

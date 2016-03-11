@@ -9,90 +9,82 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight=".09" >
-
+        android:layout_weight="0.12" >
     </RelativeLayout>
-
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight=".82" >
+        android:layout_weight="0.76" >
 
         <ImageButton
             android:id="@+id/imageButton1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentLeft="true"
-            android:layout_marginLeft="128dp"
-            android:layout_marginTop="128dp"
+            android:layout_width="365dp"
+            android:layout_height="150dp"
+            android:layout_marginLeft="93dp"
+            android:layout_marginTop="91dp"
             android:src="@drawable/dsdna" />
 
          <ImageButton
              android:id="@+id/imageButton2"
-             android:layout_width="wrap_content"
-             android:layout_height="wrap_content"
-             android:layout_alignLeft="@id/imageButton1"
-             android:layout_below="@+id/imageButton1"
-             android:layout_marginTop="96dp"
+             android:layout_width="365dp"
+             android:layout_height="150dp"
+             android:layout_marginLeft="93dp"
+             android:layout_marginTop="269dp"
              android:src="@drawable/ssdna" />
 
          <ImageButton
              android:id="@+id/imageButton3"
-             android:layout_width="wrap_content"
-             android:layout_height="wrap_content"
-             android:layout_alignLeft="@id/imageButton2"
-             android:layout_below="@+id/imageButton2"
-             android:layout_marginTop="96dp"
+             android:layout_width="365dp"
+             android:layout_height="150dp"
+             android:layout_marginLeft="93dp"
+             android:layout_marginTop="447dp"
              android:src="@drawable/management" />
 
          <ImageButton
              android:id="@+id/imageButton4"
-             android:layout_width="wrap_content"
-             android:layout_height="wrap_content"
-             android:layout_alignTop="@+id/imageButton1"
-             android:layout_marginLeft="200dp"
-             android:layout_toRightOf="@+id/imageButton1"
+             android:layout_width="365dp"
+             android:layout_height="150dp"
+             android:layout_marginLeft="588dp"
+             android:layout_marginTop="91dp"
              android:src="@drawable/rna" />
 
          <ImageButton
              android:id="@+id/imageButton5"
-             android:layout_width="wrap_content"
-             android:layout_height="wrap_content"
-             android:layout_alignLeft="@+id/imageButton4"
-             android:layout_alignTop="@+id/imageButton2"
+             android:layout_width="365dp"
+             android:layout_height="150dp"
+             android:layout_marginLeft="588dp"
+             android:layout_marginTop="269dp"
              android:src="@drawable/protein" />
 
          <ImageButton
              android:id="@+id/imageButton6"
-             android:layout_width="wrap_content"
-             android:layout_height="wrap_content"
-             android:layout_alignLeft="@+id/imageButton5"
-             android:layout_alignTop="@+id/imageButton3"
+             android:layout_width="365dp"
+             android:layout_height="150dp"
+             android:layout_marginLeft="588dp"
+             android:layout_marginTop="447dp"
              android:src="@drawable/analysis" />
 
          <ImageButton
              android:id="@+id/imageButton7"
-             android:layout_width="wrap_content"
-             android:layout_height="wrap_content"
-             android:layout_alignTop="@+id/imageButton4"
-             android:layout_marginLeft="145dp"
-             android:layout_toRightOf="@+id/imageButton4"
+             android:layout_width="110dp"
+             android:layout_height="110dp"
+             android:layout_marginLeft="1113dp"
+             android:layout_marginTop="91dp"
              android:src="@drawable/about" />
 
          <ImageButton
              android:id="@+id/imageButton8"
-             android:layout_width="wrap_content"
-             android:layout_height="wrap_content"
-             android:layout_alignLeft="@+id/imageButton7"
-             android:layout_alignTop="@+id/imageButton5"
+             android:layout_width="110dp"
+             android:layout_height="110dp"
+             android:layout_marginLeft="1104dp"
+             android:layout_marginTop="447dp"
              android:src="@drawable/setting" />
 
     </RelativeLayout>
-
+    
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight=".09" >
-
+        android:layout_weight="0.12" >
     </RelativeLayout>
 </LinearLayout>
