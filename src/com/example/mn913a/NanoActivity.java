@@ -5,6 +5,8 @@ import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import com.example.mn913a.MN_913A_Device.CMD_T;
 
@@ -17,17 +19,22 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -46,10 +53,15 @@ import android.widget.TextView;
 	int Cur_Voltage_Level = -1;
 	double xenon_voltage;
 	DisplayMetrics metrics;
+	FrameLayout mLayout_Content;
+	LinearLayout mLayout_MeasurePage, mLayout_MainPage;
+	Thread timerThread = null;
+	SimpleDateFormat df = new SimpleDateFormat("yyyy.MM.dd a HH:mm");
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		mLayout_Content = (FrameLayout) this.findViewById(android.R.id.content);
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD);
 		setContentView(R.layout.activity_main1);
@@ -129,36 +141,100 @@ import android.widget.TextView;
 		});
 		
 		EnumerationDevice(getIntent());*/
-		ImageButton imageButton1;
-		imageButton1 = ( ImageButton ) findViewById(R.id.imageButton1);
-		imageButton1.setOnClickListener( new OnClickListener() {
+		ImageButton imageButton1, imageButton2, imageButton3, imageButton4;
+		View.OnClickListener click_listener;
+		click_listener = new OnClickListener() {
 
 			@Override
 			public void onClick(View v) {
 				// TODO Auto-generated method stub
-				metrics = new DisplayMetrics();
+/*				metrics = new DisplayMetrics();
 				(( WindowManager )getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getRealMetrics(metrics);
 				//finish();
 				hide_system_bar();
 				
-				/*String result;
+				String result;
 		    	result = exec_shell_command ( "am startservice -n com.android.systemui/.SystemUIService\n" );
 		    	if ( result.equals( Msg_Shell_Command_Error) == false )
 		    		Log.d ( Tag, "show system bar successfully!" );
 		    	else
-		    		Log.d ( Tag, "show system bar fail!" );*/
+		    		Log.d ( Tag, "show system bar fail!" );
 				try {
 					Runtime.getRuntime().exec(new String[] { "su -c pm disable com.android.systemui" });
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
+				}*/
+				mLayout_Content.removeAllViews ( );
+				if ( mLayout_MeasurePage == null) {
+					LayoutInflater inflater = (LayoutInflater) getSystemService ( Context.LAYOUT_INFLATER_SERVICE );
+					mLayout_MeasurePage = ( LinearLayout ) inflater.inflate( R.layout.measure_main, null );
 				}
+				mLayout_Content.addView( mLayout_MeasurePage );
 			}
-			
-			
-		});
+		};
+		imageButton1 = ( ImageButton ) findViewById( R.id.imageButton1 );
+		imageButton1.setOnClickListener( click_listener );
+		imageButton2 = ( ImageButton ) findViewById( R.id.imageButton2 );
+		imageButton2.setOnClickListener( click_listener );
+		imageButton3 = ( ImageButton ) findViewById( R.id.imageButton3 );
+		imageButton3.setOnClickListener( click_listener );
+		imageButton4 = ( ImageButton ) findViewById( R.id.imageButton4 );
+		imageButton4.setOnClickListener( click_listener );
+		metrics = new DisplayMetrics();
+    	if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+    		((WindowManager) getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getRealMetrics(metrics);
+    	}
+    	else {
+    		((WindowManager) getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getMetrics((metrics));
+    	}
+		
+		//adjust_ui_dimension ( ( ViewGroup ) this.findViewById( R.id.top_ui ) );
+    	//mLayout_MainPage = (LinearLayout) findViewById(R.id.top_ui);
+    	Runnable runnable = new CountDownRunner();
+    	timerThread= new Thread(runnable);   
+    	timerThread.start();
+	}
+	
+	class CountDownRunner implements Runnable{
+	    // @Override
+	    public void run() {
+	            while(!Thread.currentThread().isInterrupted()){
+	                try {
+	                	runOnUiThread(new Runnable() {
+	                		public void run() {
+	                			try {
+	                				TextView txtCurrentTime = (TextView) findViewById( R.id.lbltime );
+	                				String curTime = df.format(new Date());
+	                				
+	                				if ( txtCurrentTime != null )
+	                					txtCurrentTime.setText(curTime);
+	                			} catch (Exception e) {
+	                				
+	                			}
+	                		}
+	                	});
+					Thread.sleep(1000);
+	                } catch (InterruptedException e) {
+	                        Thread.currentThread().interrupt();
+	                } catch(Exception e){
+	                }
+	            }
+	    }
 	}
 
+	public void adjust_ui_dimension ( ViewGroup vg ) {
+		int i;
+
+		Log.d ( Tag, "child count: " + vg.getChildCount() + "width: " + vg.getMeasuredWidth() + "height: " + vg.getMeasuredHeight() );
+		for (i = 0; i < vg.getChildCount ( ); i++ ) {
+			if ( vg.getChildAt( i ) instanceof ViewGroup )
+				adjust_ui_dimension ( ( ViewGroup ) vg.getChildAt( i ) );
+			else
+				Log.d ( Tag, "child: " + vg.getChildAt( i ) );
+		} 
+	}
+	
 	public void EnumerationDevice(Intent intent) {
 		if (intent.getAction().equals(Intent.ACTION_MAIN)) {
 			if (mNano_dev.Enumeration()) {
@@ -285,7 +361,9 @@ import android.widget.TextView;
     	super.onStart();
 
     	if (mRequest_USB_permission==false)
-    		hide_system_bar();    	
+    		hide_system_bar();
+    	
+    	//adjust_ui_dimension ( ( ViewGroup ) this.findViewById( R.id.top_ui ) );
     }
     
 	@Override

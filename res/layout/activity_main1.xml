@@ -3,17 +3,31 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@drawable/mn_913a_ui_bg"
-    android:weightSum="1" >
+    android:weightSum="1"
+    android:id="@+id/top_ui" >
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="0.12" >
+        android:layout_weight="0.12"
+        android:background="@drawable/top_border" >
+
+        <TextView
+            android:id="@+id/textView1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:text="@string/main_title"
+            android:textColor="@android:color/white"
+            android:fontFamily="Calibri"
+            android:textSize="12pt" />
+
     </RelativeLayout>
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@drawable/mn_913a_ui_bg"
         android:layout_weight="0.76" >
 
         <ImageButton
@@ -22,7 +36,7 @@
             android:layout_height="150dp"
             android:layout_marginLeft="93dp"
             android:layout_marginTop="91dp"
-            android:src="@drawable/dsdna" />
+            android:background="@drawable/btn_dsdna" />
 
          <ImageButton
              android:id="@+id/imageButton2"
@@ -30,7 +44,7 @@
              android:layout_height="150dp"
              android:layout_marginLeft="93dp"
              android:layout_marginTop="269dp"
-             android:src="@drawable/ssdna" />
+             android:background="@drawable/btn_ssdna" />
 
          <ImageButton
              android:id="@+id/imageButton3"
@@ -38,7 +52,7 @@
              android:layout_height="150dp"
              android:layout_marginLeft="93dp"
              android:layout_marginTop="447dp"
-             android:src="@drawable/management" />
+             android:background="@drawable/btn_management" />
 
          <ImageButton
              android:id="@+id/imageButton4"
@@ -46,7 +60,7 @@
              android:layout_height="150dp"
              android:layout_marginLeft="588dp"
              android:layout_marginTop="91dp"
-             android:src="@drawable/rna" />
+             android:background="@drawable/btn_rna" />
 
          <ImageButton
              android:id="@+id/imageButton5"
@@ -54,7 +68,7 @@
              android:layout_height="150dp"
              android:layout_marginLeft="588dp"
              android:layout_marginTop="269dp"
-             android:src="@drawable/protein" />
+             android:background="@drawable/btn_protein" />
 
          <ImageButton
              android:id="@+id/imageButton6"
@@ -62,7 +76,7 @@
              android:layout_height="150dp"
              android:layout_marginLeft="588dp"
              android:layout_marginTop="447dp"
-             android:src="@drawable/analysis" />
+             android:background="@drawable/btn_analysis" />
 
          <ImageButton
              android:id="@+id/imageButton7"
@@ -70,7 +84,7 @@
              android:layout_height="110dp"
              android:layout_marginLeft="1113dp"
              android:layout_marginTop="91dp"
-             android:src="@drawable/about" />
+             android:background="@drawable/btn_about" />
 
          <ImageButton
              android:id="@+id/imageButton8"
@@ -78,13 +92,26 @@
              android:layout_height="110dp"
              android:layout_marginLeft="1104dp"
              android:layout_marginTop="447dp"
-             android:src="@drawable/setting" />
+             android:background="@drawable/btn_setting" />
 
     </RelativeLayout>
     
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="0.12" >
+        android:layout_weight="0.12"
+        android:background="@drawable/bottom_border" >
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:text="TextView"
+            android:id="@+id/lbltime"
+            android:textColor="@android:color/white"
+            android:fontFamily="Calibri"
+            android:textSize="12pt" />
+
     </RelativeLayout>
 </LinearLayout>
