@@ -13,7 +13,7 @@
         android:background="@drawable/top_border" >
 
         <TextView
-            android:id="@+id/textView1"
+            android:id="@+id/main_title_id"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentLeft="true"
@@ -92,7 +92,8 @@
              android:layout_height="110dp"
              android:layout_marginLeft="1104dp"
              android:layout_marginTop="447dp"
-             android:background="@drawable/btn_setting" />
+             android:background="@drawable/btn_setting"
+             android:onClick="switch_to_setting_page" />
 
     </RelativeLayout>
     

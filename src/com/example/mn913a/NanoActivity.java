@@ -31,6 +31,8 @@ import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.CompoundButton;
+import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -38,6 +40,7 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Switch;
 
 @SuppressLint("NewApi") public class NanoActivity extends Activity {
 	PendingIntent mPermissionIntent;
@@ -54,9 +57,10 @@ import android.widget.TextView;
 	double xenon_voltage;
 	DisplayMetrics metrics;
 	FrameLayout mLayout_Content;
-	LinearLayout mLayout_MeasurePage, mLayout_MainPage;
+	LinearLayout mLayout_MeasurePage, mLayout_MainPage, mLayout_SettingPage;
 	Thread timerThread = null;
 	SimpleDateFormat df = new SimpleDateFormat("yyyy.MM.dd a HH:mm");
+	LayoutInflater inflater;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -80,6 +84,7 @@ import android.widget.TextView;
 		
 		mNano_dev = new MN_913A_Device ( this );
 		mRequest_USB_permission = false;
+		inflater = (LayoutInflater) getSystemService ( Context.LAYOUT_INFLATER_SERVICE );
 		//EnumerationDevice(getIntent());
 		
 		/*SeekBar seekbar1;
@@ -148,7 +153,7 @@ import android.widget.TextView;
 			@Override
 			public void onClick(View v) {
 				// TODO Auto-generated method stub
-/*				metrics = new DisplayMetrics();
+				metrics = new DisplayMetrics();
 				(( WindowManager )getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getRealMetrics(metrics);
 				//finish();
 				hide_system_bar();
@@ -164,23 +169,58 @@ import android.widget.TextView;
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
-				}*/
+				}
 				mLayout_Content.removeAllViews ( );
 				if ( mLayout_MeasurePage == null) {
-					LayoutInflater inflater = (LayoutInflater) getSystemService ( Context.LAYOUT_INFLATER_SERVICE );
 					mLayout_MeasurePage = ( LinearLayout ) inflater.inflate( R.layout.measure_main, null );
 				}
 				mLayout_Content.addView( mLayout_MeasurePage );
 			}
 		};
 		imageButton1 = ( ImageButton ) findViewById( R.id.imageButton1 );
-		imageButton1.setOnClickListener( click_listener );
+		imageButton1.setOnClickListener( new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				//getResources().getText(R.string.main_title)
+				switch_to_measure_page ( );
+				TextView tv;
+				tv = (TextView) NanoActivity.this.findViewById( R.id.main_title_id );
+				tv.setText( R.string.main_title_dsdna );
+			}
+			
+		});
 		imageButton2 = ( ImageButton ) findViewById( R.id.imageButton2 );
-		imageButton2.setOnClickListener( click_listener );
+		imageButton2.setOnClickListener( new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				//getResources().getText(R.string.main_title)
+				switch_to_measure_page ( );
+				TextView tv;
+				tv = (TextView) NanoActivity.this.findViewById( R.id.main_title_id );
+				tv.setText( R.string.main_title_ssdna );
+			}
+			
+		});
 		imageButton3 = ( ImageButton ) findViewById( R.id.imageButton3 );
 		imageButton3.setOnClickListener( click_listener );
 		imageButton4 = ( ImageButton ) findViewById( R.id.imageButton4 );
-		imageButton4.setOnClickListener( click_listener );
+		imageButton4.setOnClickListener( new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				//getResources().getText(R.string.main_title)
+				switch_to_measure_page ( );
+				TextView tv;
+				tv = (TextView) NanoActivity.this.findViewById( R.id.main_title_id );
+				tv.setText( R.string.main_title_rna );
+			}
+			
+		});
 		metrics = new DisplayMetrics();
     	if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
     		((WindowManager) getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getRealMetrics(metrics);
@@ -190,12 +230,47 @@ import android.widget.TextView;
     	}
 		
 		//adjust_ui_dimension ( ( ViewGroup ) this.findViewById( R.id.top_ui ) );
-    	//mLayout_MainPage = (LinearLayout) findViewById(R.id.top_ui);
+    	mLayout_MainPage = (LinearLayout) findViewById(R.id.top_ui);
     	Runnable runnable = new CountDownRunner();
     	timerThread= new Thread(runnable);   
     	timerThread.start();
 	}
 	
+	public void switch_to_main_page ( View v ) {
+		mLayout_Content.removeAllViews ( );
+		if ( mLayout_MainPage == null )
+			mLayout_MainPage = ( LinearLayout ) inflater.inflate( R.layout.activity_main1, null );
+		mLayout_Content.addView( mLayout_MainPage );
+	}
+	
+	public void switch_to_measure_page ( ) {
+		mLayout_Content.removeAllViews ( );
+		if ( mLayout_MeasurePage == null) {
+			mLayout_MeasurePage = ( LinearLayout ) inflater.inflate( R.layout.measure_main, null );
+		}
+		mLayout_Content.addView( mLayout_MeasurePage );
+		
+		Switch sw= ( Switch ) NanoActivity.this.findViewById( R.id.mySwitch );
+		sw.setOnCheckedChangeListener ( new OnCheckedChangeListener () {
+
+			@Override
+			public void onCheckedChanged(CompoundButton buttonView,
+					boolean isChecked) {
+				// TODO Auto-generated method stub
+				Log.d ( Tag, Boolean.toString( isChecked ) );
+			}
+			
+		});
+		sw.setChecked( true );
+	}
+	
+	public void switch_to_setting_page ( View v) {
+		mLayout_Content.removeAllViews ( );
+		if ( mLayout_SettingPage == null )
+			mLayout_SettingPage = ( LinearLayout ) inflater.inflate( R.layout.setting, null );
+		mLayout_Content.addView( mLayout_SettingPage );
+	}
+
 	class CountDownRunner implements Runnable{
 	    // @Override
 	    public void run() {

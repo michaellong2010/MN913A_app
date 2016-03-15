@@ -5,5 +5,10 @@
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
     <string name="main_title">MN-913A</string>
+    <string name="main_title_dsdna">dsDNA</string>
+    <string name="main_title_ssdna">ssDNA</string>
+    <string name="main_title_rna">RNA</string>
+    <string name="main_title_protein">Protein</string>
+    <string name="main_title_setting">Setting</string>
 
 </resources>
