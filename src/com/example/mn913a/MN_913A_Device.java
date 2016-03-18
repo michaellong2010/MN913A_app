@@ -5,6 +5,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.IntBuffer;
 import java.util.LinkedList;
 
 
@@ -39,6 +40,8 @@ public class MN_913A_Device {
     private final LinkedList<UsbRequest> mOutRequestPool = new LinkedList<UsbRequest>();
     private final LinkedList<UsbRequest> mInRequestPool = new LinkedList<UsbRequest>();
 	
+    IntBuffer MN913A_dev_data;
+    public int is_dev_busy = 0;
     Object lock1, lock2;
     
     private final CMD_T message;
@@ -284,8 +287,15 @@ public class MN_913A_Device {
     		if (isDeviceOnline()) {
     			message.set(itracker_cmd, arg0, arg1, dataBytes, debug);
     			result = message.process_command(0);
-    			if (itracker_cmd==CMD_T.HID_CMD_MN913A_SETTING && result) {
+    			if (itracker_cmd==CMD_T.HID_CMD_MN913A_RAW_DATA && result) {
+    				MN913A_dev_data = message.mDataBuffer.asIntBuffer();
     			}
+    			else
+    				if (itracker_cmd==CMD_T.HID_CMD_MN913A_STATUS && result) {
+    					MN913A_dev_data = message.mDataBuffer.asIntBuffer();
+    					//Log.d ( Tag, "int buffer limit: " + Integer.toString( this.MN913A_dev_data.limit ( ) ));
+    					is_dev_busy = MN913A_dev_data.get ( 0 );
+    				}
     			if (result)
     				return true;
     			else
@@ -302,6 +312,8 @@ public class MN_913A_Device {
 	}
 	
 	public static final int SZ_MN913A_setting_type = Integer.SIZE / Byte.SIZE;
+	public static final int SZ_MN913A_status_type = Integer.SIZE / Byte.SIZE;
+	public static final int SZ_MN913A_raw_data_type = 2 * 8 * 256;
 	/* #define PAGE_SIZE 256 */
 	public static final int PAGE_SIZE = 256;
 	// #define HID_CMD_SIGNATURE 0x43444948
@@ -332,6 +344,8 @@ public class MN_913A_Device {
 	    
 	    public static final int HID_CMD_MN913A_SETTING = 0x86;
 	    public static final int HID_CMD_MN913A_MEASURE = 0x87;
+	    public static final int HID_CMD_MN913A_RAW_DATA = 0x88;
+	    public static final int HID_CMD_MN913A_STATUS = 0x89;
 	    
 	    public CMD_T() {
 	        mMessageBuffer = ByteBuffer.allocate(SZ_CMD_T);
@@ -384,6 +398,23 @@ public class MN_913A_Device {
 			return false;*/
 	    }
 
+	    private boolean read_in(ByteBuffer byte_buf, int length) {
+	    	boolean result = false;
+	    	byte[] read_buf;
+	    	int byte_count = 0;
+	    	show_debug(Tag+"The line number is " + new Exception().getStackTrace()[0].getLineNumber()+"\n");
+	    	read_buf = byte_buf.array();
+	    	//Log.d("knight", "buffer length: " + Integer.toString(read_buf.length));
+	    	byte_count = mDeviceConnection.bulkTransfer(mEndpointIn, read_buf, length, 0);
+	    	//Log.d("knight", "receive bytes " + Integer.toString(byte_count));
+	    	if (byte_count != length || length==0) {
+	    		Log.d("knight", "receive bytes " + Integer.toString(byte_count));
+	    	    return false;
+	    	}
+	    	else
+	    		return true;
+	    }
+
 	    public boolean process_command(int debug) {
 	    	boolean result;
 	    	byte [] byte_buf;
@@ -405,6 +436,18 @@ public class MN_913A_Device {
 					Log.d(Tag, "write data complete");
 				break;
 			}
+			
+			switch(command) {
+			case HID_CMD_MN913A_STATUS:
+				if (result)
+					result = read_in(mDataBuffer, mDataBuffer.limit());
+				break;
+			case HID_CMD_MN913A_RAW_DATA:
+				if (result)
+					result = read_in(mDataBuffer, mDataBuffer.limit());
+				show_debug(Tag+"The line number is " + new Exception().getStackTrace()[0].getLineNumber()+"\n");
+				break;
+			}
 			return result;
 	    }
 	    
@@ -415,7 +458,7 @@ public class MN_913A_Device {
 			switch (command) {
 			case HID_CMD_MN913A_SETTING:
 				if (debug != 0)
-					Log.d(Tag, ">>> Setting up I-tracker preference\n");
+					Log.d(Tag, ">>> Setting up MN913A preference\n");
 				arg1 = 0;
 				remainder = SZ_MN913A_setting_type % PAGE_SIZE;
 				if (remainder != 0)
@@ -428,6 +471,26 @@ public class MN_913A_Device {
 					Log.d(Tag, ">>> Starting MN913A measurement\n");
 				arg1 = 0;
 				arg2 = 0;
+				break;
+			case HID_CMD_MN913A_STATUS:
+				if (debug != 0)
+					Log.d(Tag, ">>> Getting MN913A status\n");
+				arg1 = 0;
+				remainder = SZ_MN913A_status_type % PAGE_SIZE;
+				if (remainder != 0)
+					arg2 = (SZ_MN913A_status_type / PAGE_SIZE) + 1;
+				else
+					arg2 = (SZ_MN913A_status_type / PAGE_SIZE);
+				break;				
+			case HID_CMD_MN913A_RAW_DATA:
+				if (debug != 0)
+					Log.d(Tag, ">>> Retrieve MN913A raw data\n");
+				arg1 = 0;
+				remainder = SZ_MN913A_raw_data_type % PAGE_SIZE;
+				if (remainder != 0)
+					arg2 = (SZ_MN913A_raw_data_type / PAGE_SIZE) + 1;
+				else
+					arg2 = (SZ_MN913A_raw_data_type / PAGE_SIZE);
 				break;
 			}
 			len = CMD_T.SZ_CMD_T - 4; /* Not include checksum */

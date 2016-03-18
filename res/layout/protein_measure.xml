@@ -43,8 +43,8 @@
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/measure_pattern"
-            android:layout_weight="1" >
+            android:layout_weight="1"
+            android:background="@drawable/measure_protein_pattern" >
 
             <ImageButton
                 android:id="@+id/imageButton1"
@@ -63,18 +63,6 @@
                 android:background="@drawable/btn_sample" />
 
             <TextView
-                android:id="@+id/textView2"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_below="@+id/textView1"
-                android:layout_marginLeft="23dp"
-                android:layout_toRightOf="@+id/textView1"
-                android:fontFamily="Calibri"
-                android:text="ng/ul"
-                android:textColor="@color/result_textcolor"
-                android:textSize="10pt" />
-
-            <TextView
                 android:id="@+id/textView1"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -86,51 +74,6 @@
                 android:text="TextView"
                 android:textColor="@color/result_textcolor"
                 android:textSize="20pt" />
-
-            <TextView
-                android:id="@+id/textView3"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="730dp"
-                android:layout_marginTop="70dp"
-                android:text="TextView"
-                android:fontFamily="Calibri"
-                android:textColor="@color/result_textcolor"
-                android:textSize="10pt" />
-
-            <TextView
-                android:id="@+id/textView4"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="730dp"
-                android:layout_marginTop="120dp"
-                android:text="TextView"
-                android:fontFamily="Calibri"
-                android:textColor="@color/result_textcolor"
-                android:textSize="10pt" />
-
-            <TextView
-                android:id="@+id/textView5"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="730dp"
-                android:layout_marginTop="185dp"
-                android:text="TextView"
-                android:fontFamily="Calibri"
-                android:textColor="@color/result_textcolor"
-                android:textSize="10pt" />
-            
-            <Switch
-                android:id="@+id/mySwitch"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="550dp"
-                android:layout_marginTop="230dp"
-                android:switchMinWidth="80dp"
-                android:text=""
-                android:textOff=""
-                android:textOn=""
-                android:thumb="@drawable/my_switch_inner" />
 
 <!--             <GridView
                 android:id="@+id/gridView1"

@@ -6,7 +6,9 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 
 import com.example.mn913a.MN_913A_Device.CMD_T;
 
@@ -21,6 +23,9 @@ import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -34,13 +39,17 @@ import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.FrameLayout;
+import android.widget.GridView;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ListAdapter;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
+import android.widget.SimpleAdapter;
 import android.widget.TextView;
 import android.widget.Switch;
+import android.database.Cursor;
 
 @SuppressLint("NewApi") public class NanoActivity extends Activity {
 	PendingIntent mPermissionIntent;
@@ -57,10 +66,22 @@ import android.widget.Switch;
 	double xenon_voltage;
 	DisplayMetrics metrics;
 	FrameLayout mLayout_Content;
-	LinearLayout mLayout_MeasurePage, mLayout_MainPage, mLayout_SettingPage;
+	LinearLayout mLayout_DNA_MeasurePage, mLayout_MainPage, mLayout_SettingPage, gridlayout, mLayout_Protein_MeasurePage;
 	Thread timerThread = null;
 	SimpleDateFormat df = new SimpleDateFormat("yyyy.MM.dd a HH:mm");
 	LayoutInflater inflater;
+	
+	GVTable table;
+	NanoSqlDatabase nano_database;
+	
+	public Handler mWorker_thread_handler;
+	public Message msg;
+	
+	public int measure_mode;
+	public static int MEASURE_MODE_dsDNA = 0x01;
+	public static int MEASURE_MODE_ssDNA = 0x02;
+	public static int MEASURE_MODE_RNA = 0x03;
+	public static int MEASURE_MODE_PROTEIN = 0x05;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -86,7 +107,7 @@ import android.widget.Switch;
 		mRequest_USB_permission = false;
 		inflater = (LayoutInflater) getSystemService ( Context.LAYOUT_INFLATER_SERVICE );
 		//EnumerationDevice(getIntent());
-		
+	
 		/*SeekBar seekbar1;
 		seekbar1 = (SeekBar) findViewById(R.id.seekBar1);
 		//seekbar1.setEnabled(Adjust_Detection_Sensitivity);
@@ -143,10 +164,11 @@ import android.widget.Switch;
 				mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_MEASURE, 0, 0, null, 1);
 			}
 			
-		});
+		});*/
 		
-		EnumerationDevice(getIntent());*/
-		ImageButton imageButton1, imageButton2, imageButton3, imageButton4;
+		EnumerationDevice(getIntent());
+
+		ImageButton imageButton1, imageButton2, imageButton3, imageButton4, btn_protein;
 		View.OnClickListener click_listener;
 		click_listener = new OnClickListener() {
 
@@ -171,23 +193,80 @@ import android.widget.Switch;
 					e.printStackTrace();
 				}
 				mLayout_Content.removeAllViews ( );
-				if ( mLayout_MeasurePage == null) {
-					mLayout_MeasurePage = ( LinearLayout ) inflater.inflate( R.layout.measure_main, null );
+				if ( mLayout_DNA_MeasurePage == null) {
+					mLayout_DNA_MeasurePage = ( LinearLayout ) inflater.inflate( R.layout.measure_main, null );
 				}
-				mLayout_Content.addView( mLayout_MeasurePage );
+				mLayout_Content.addView( mLayout_DNA_MeasurePage );
 			}
 		};
 		imageButton1 = ( ImageButton ) findViewById( R.id.imageButton1 );
 		imageButton1.setOnClickListener( new OnClickListener() {
+			ImageButton btn_blank, btn_sample;
+			GridView gridview;
+			ArrayList<HashMap<String, String>> srcTable;
+		    SimpleAdapter saTable;
+		    ListAdapter lt;
 
 			@Override
 			public void onClick(View v) {
 				// TODO Auto-generated method stub
 				//getResources().getText(R.string.main_title)
-				switch_to_measure_page ( );
+				switch_to_dna_measure_page ( );
 				TextView tv;
 				tv = (TextView) NanoActivity.this.findViewById( R.id.main_title_id );
 				tv.setText( R.string.main_title_dsdna );
+				measure_mode = NanoActivity.this.MEASURE_MODE_dsDNA;
+				
+				btn_blank = ( ImageButton ) NanoActivity.this.findViewById ( R.id.imageButton1 );
+				btn_sample = ( ImageButton ) NanoActivity.this.findViewById ( R.id.imageButton2 );
+				srcTable = new ArrayList<HashMap<String, String>>();
+				saTable = new SimpleAdapter ( NanoActivity.this , srcTable, R.layout.griditem, new String[] { "ItemText1", "ItemText2", "ItemText3" }, new int[] { R.id.ItemText1, R.id.ItemText2, R.id.ItemText3 } );
+				table.gvUpdatePageBar("select count(*) from " + NanoSqlDatabase.DNA_VALUE_TABLE_NAME, nano_database.get_database());
+			    table.gvReadyTable("select * from " + NanoSqlDatabase.DNA_VALUE_TABLE_NAME, nano_database.get_database());
+				table.refresh_last_table();
+				
+				btn_blank.setOnClickListener( new OnClickListener() {
+
+					@Override
+					public void onClick(View v) {
+						// TODO Auto-generated method stub
+						/*gridview = (GridView) NanoActivity.this.findViewById ( R.id.gridView1 );
+						lt = gridview.getAdapter();
+						if ( lt == null ) {
+							Log.d ( Tag, "slclls" + Integer.toString( gridview.getHeight() ) );
+							gridview.setAdapter( saTable );
+							
+				            //gridview.getItemAtPosition( 0 );
+						}
+						HashMap<String, String> map = new HashMap<String, String>();
+			            map.put( "ItemText1", "A260" );
+			            map.put( "ItemText2", "A230" );
+			            map.put( "ItemText3", "A280" );
+			            srcTable.add(map);
+			            saTable.notifyDataSetChanged();*/
+						nano_database.InsertDNADataToDB();
+						table.gvUpdatePageBar("select count(*) from " + NanoSqlDatabase.DNA_VALUE_TABLE_NAME, nano_database.get_database());
+					    table.gvReadyTable("select * from " + NanoSqlDatabase.DNA_VALUE_TABLE_NAME, nano_database.get_database());
+					    table.refresh_last_table();
+					    
+					    msg = mWorker_thread_handler.obtainMessage( EXPERIMENT_MEASURE_BLANK );
+					    msg.sendToTarget ( );
+					    btn_blank.setEnabled( false );
+					}
+					
+				});
+				
+				btn_sample.setOnClickListener (new OnClickListener() {
+
+					@Override
+					public void onClick(View v) {
+						// TODO Auto-generated method stub
+					    msg = mWorker_thread_handler.obtainMessage( EXPERIMENT_MEASURE_SAMPLE );
+					    msg.sendToTarget ( );						
+					}
+					
+				});
+				
 			}
 			
 		});
@@ -198,10 +277,14 @@ import android.widget.Switch;
 			public void onClick(View v) {
 				// TODO Auto-generated method stub
 				//getResources().getText(R.string.main_title)
-				switch_to_measure_page ( );
+				switch_to_dna_measure_page ( );
 				TextView tv;
 				tv = (TextView) NanoActivity.this.findViewById( R.id.main_title_id );
 				tv.setText( R.string.main_title_ssdna );
+				measure_mode = NanoActivity.this.MEASURE_MODE_ssDNA;
+				table.gvUpdatePageBar("select count(*) from " + NanoSqlDatabase.DNA_VALUE_TABLE_NAME, nano_database.get_database());
+			    table.gvReadyTable("select * from " + NanoSqlDatabase.DNA_VALUE_TABLE_NAME, nano_database.get_database());
+				table.refresh_last_table();
 			}
 			
 		});
@@ -214,10 +297,31 @@ import android.widget.Switch;
 			public void onClick(View v) {
 				// TODO Auto-generated method stub
 				//getResources().getText(R.string.main_title)
-				switch_to_measure_page ( );
+				switch_to_dna_measure_page ( );
 				TextView tv;
 				tv = (TextView) NanoActivity.this.findViewById( R.id.main_title_id );
 				tv.setText( R.string.main_title_rna );
+				measure_mode = NanoActivity.this.MEASURE_MODE_RNA;
+				table.gvUpdatePageBar("select count(*) from " + NanoSqlDatabase.DNA_VALUE_TABLE_NAME, nano_database.get_database());
+			    table.gvReadyTable("select * from " + NanoSqlDatabase.DNA_VALUE_TABLE_NAME, nano_database.get_database());
+				table.refresh_last_table();
+			}
+			
+		});
+		btn_protein = ( ImageButton ) findViewById( R.id.imageButton5 );
+		btn_protein.setOnClickListener( new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				switch_to_protein_measure_page ( );
+				TextView tv;
+				tv = (TextView) NanoActivity.this.findViewById( R.id.main_title_id );
+				tv.setText( R.string.main_title_protein );
+				measure_mode = NanoActivity.this.MEASURE_MODE_PROTEIN;
+				table.gvUpdatePageBar("select count(*) from " + NanoSqlDatabase.DNA_VALUE_TABLE_NAME, nano_database.get_database());
+			    table.gvReadyTable("select * from " + NanoSqlDatabase.DNA_VALUE_TABLE_NAME, nano_database.get_database());
+				table.refresh_last_table();
 			}
 			
 		});
@@ -234,6 +338,27 @@ import android.widget.Switch;
     	Runnable runnable = new CountDownRunner();
     	timerThread= new Thread(runnable);   
     	timerThread.start();
+    	
+    	table = new GVTable(this);
+    	table.gvSetTableRowCount ( 200 );
+		table.setTableOnClickListener(new GVTable.OnTableClickListener() {
+			public void onTableClickListener(int x, int y, Cursor c) {
+				c.moveToPosition(y);
+				String str = c.getString(x);
+			}
+		});
+		
+		table.setOnPageSwitchListener(new GVTable.OnPageSwitchListener() {
+			public void onPageSwitchListener(int pageID,int pageCount) {
+				String str = "Page:"+String.valueOf(pageID);
+			}
+		});
+		
+		nano_database = new NanoSqlDatabase ( this );
+		nano_database.CreateDataDB( 4 );
+
+		new LooperThread ( ).start();
+		measure_mode = 0;
 	}
 	
 	public void switch_to_main_page ( View v ) {
@@ -241,14 +366,16 @@ import android.widget.Switch;
 		if ( mLayout_MainPage == null )
 			mLayout_MainPage = ( LinearLayout ) inflater.inflate( R.layout.activity_main1, null );
 		mLayout_Content.addView( mLayout_MainPage );
+		
+		measure_mode = 0;
 	}
 	
-	public void switch_to_measure_page ( ) {
+	public void switch_to_dna_measure_page ( ) {
 		mLayout_Content.removeAllViews ( );
-		if ( mLayout_MeasurePage == null) {
-			mLayout_MeasurePage = ( LinearLayout ) inflater.inflate( R.layout.measure_main, null );
+		if ( mLayout_DNA_MeasurePage == null) {
+			mLayout_DNA_MeasurePage = ( LinearLayout ) inflater.inflate( R.layout.measure_main, null );
 		}
-		mLayout_Content.addView( mLayout_MeasurePage );
+		mLayout_Content.addView( mLayout_DNA_MeasurePage );
 		
 		Switch sw= ( Switch ) NanoActivity.this.findViewById( R.id.mySwitch );
 		sw.setOnCheckedChangeListener ( new OnCheckedChangeListener () {
@@ -258,10 +385,35 @@ import android.widget.Switch;
 					boolean isChecked) {
 				// TODO Auto-generated method stub
 				Log.d ( Tag, Boolean.toString( isChecked ) );
+				buttonView.setText( "" );
 			}
 			
 		});
 		sw.setChecked( true );
+		
+    	gridlayout = (LinearLayout) findViewById(R.id.GridLayout);
+    	if ( gridlayout != null ) {
+    		if ( gridlayout.findViewById( GVTable.ID ) == null )
+    			gridlayout.addView( table );
+    		else
+    			this.table.gvRemoveAll ( );
+    	}
+	}
+	
+	public void switch_to_protein_measure_page ( ) {
+		mLayout_Content.removeAllViews ( );
+		if ( mLayout_Protein_MeasurePage == null) {
+			mLayout_Protein_MeasurePage = ( LinearLayout ) inflater.inflate( R.layout.protein_measure, null );
+		}
+		mLayout_Content.addView( mLayout_Protein_MeasurePage );
+		
+    	gridlayout = (LinearLayout) findViewById(R.id.GridLayout);
+    	if ( gridlayout != null ) {
+    		if ( gridlayout.findViewById( GVTable.ID ) == null )
+    			gridlayout.addView( table );
+    		else
+    			this.table.gvRemoveAll ( );
+    	}
 	}
 	
 	public void switch_to_setting_page ( View v) {
@@ -347,20 +499,22 @@ import android.widget.Switch;
 		seekbar1 = (SeekBar) findViewById(R.id.seekBar1);
 		//connection_status_v.setImageResource(drawable)
 		if ( Is_MN913A_Online == true ) {
-			connection_status_v.setImageResource ( R.drawable.usb_connection );
-			seekbar_value.setEnabled( true );
-			seekbar1.setEnabled( true );
+			//connection_status_v.setImageResource ( R.drawable.usb_connection );
+			//seekbar_value.setEnabled( true );
+			//seekbar1.setEnabled( true );
 			//mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_SETTING, 0, 0, null, 1);
-			Setting_Btn.setEnabled( true );
-			Measure_Btn.setEnabled( true );
+			//Setting_Btn.setEnabled( true );
+			//Measure_Btn.setEnabled( true );
+			Cur_Voltage_Level = 162;
+			mNano_dev.Set_Xenon_Voltage_Level ( Cur_Voltage_Level );
 			mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_SETTING, 0, 0, null, 1);
 		}
 		else {
-			connection_status_v.setImageResource ( R.drawable.usb_disconnection );
+			/*connection_status_v.setImageResource ( R.drawable.usb_disconnection );
 			seekbar_value.setEnabled( false );
 			seekbar1.setEnabled( false );
 			Setting_Btn.setEnabled( false );
-			Measure_Btn.setEnabled( false );
+			Measure_Btn.setEnabled( false );*/
 		}
 	}
 	
@@ -517,5 +671,50 @@ import android.widget.Switch;
     	else
     		Log.d ( Tag, "hide system bar fail!" );
     	
+    }
+    
+    /*20160318 added by michael*/
+    public static final int EXPERIMENT_MEASURE_BLANK = 0;
+    public static final int EXPERIMENT_MEASURE_SAMPLE = 1;
+    class LooperThread extends Thread {
+
+        public void run() {
+            Looper.prepare();
+
+            mWorker_thread_handler = new Handler() {
+                public void handleMessage ( Message msg ) {
+                    // process incoming messages here
+                	switch ( msg.what ) {
+                	  case EXPERIMENT_MEASURE_BLANK:
+                		  if ( Is_MN913A_Online == true ) {
+                			mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_MEASURE, 0, 0, null, 1);
+                			try {
+								sleep ( 1 );
+								while ( mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_STATUS, 0, 0, null, 1) ) {
+									if ( mNano_dev.is_dev_busy == 1 )
+										Log.d ( Tag, "MN913A device busy");
+									else {
+										Log.d ( Tag, "MN913A device not busy");
+										break;
+									}
+								}
+								Log.d ( Tag, "Getting MN913A status finish");
+							} catch (InterruptedException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+                		  }
+                		  break;
+                	  case EXPERIMENT_MEASURE_SAMPLE:
+                		  if ( Is_MN913A_Online == true ) {
+                			  mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_MEASURE, 0, 0, null, 1);
+                		  }
+                		  break;
+                	}
+                }
+            };
+
+            Looper.loop();
+        }
     }
 }
