@@ -90,6 +90,7 @@ import android.database.Cursor;
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD);
 		setContentView(R.layout.activity_main1);
+		Thread.currentThread().setName( "Thread_NanoActivity" );
 
 		mUsbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
 		mPermissionIntent = PendingIntent.getBroadcast(this, 0, new Intent(ACTION_USB_PERMISSION), 0);
@@ -251,7 +252,7 @@ import android.database.Cursor;
 					    
 					    msg = mWorker_thread_handler.obtainMessage( EXPERIMENT_MEASURE_BLANK );
 					    msg.sendToTarget ( );
-					    btn_blank.setEnabled( false );
+					    //btn_blank.setEnabled( false );
 					}
 					
 				});
@@ -359,6 +360,9 @@ import android.database.Cursor;
 
 		new LooperThread ( ).start();
 		measure_mode = 0;
+		
+		NanoApplication app_data = ( ( NanoApplication ) this.getApplication() );
+		app_data.addActivity(this);
 	}
 	
 	public void switch_to_main_page ( View v ) {
@@ -398,6 +402,11 @@ import android.database.Cursor;
     		else
     			this.table.gvRemoveAll ( );
     	}
+    	
+    	/*20160322 added by michael*/
+    	if ( nano_database.get_database() != null )
+    		if ( nano_database.get_database().isOpen() == true )
+    			nano_database.get_database().close();
 	}
 	
 	public void switch_to_protein_measure_page ( ) {
@@ -689,11 +698,9 @@ import android.database.Cursor;
                 		  if ( Is_MN913A_Online == true ) {
                 			mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_MEASURE, 0, 0, null, 1);
                 			try {
-								sleep ( 1 );
 								while ( mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_STATUS, 0, 0, null, 1) ) {
-									if ( mNano_dev.is_dev_busy == 1 )
-										Log.d ( Tag, "MN913A device busy");
-									else {
+									sleep ( 3500 );
+									if ( mNano_dev.is_dev_busy == 0 ) {
 										Log.d ( Tag, "MN913A device not busy");
 										break;
 									}

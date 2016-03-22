@@ -402,7 +402,7 @@ public class MN_913A_Device {
 	    	boolean result = false;
 	    	byte[] read_buf;
 	    	int byte_count = 0;
-	    	show_debug(Tag+"The line number is " + new Exception().getStackTrace()[0].getLineNumber()+"\n");
+	    	/*show_debug(Tag+"The line number is " + new Exception().getStackTrace()[0].getLineNumber()+"\n");
 	    	read_buf = byte_buf.array();
 	    	//Log.d("knight", "buffer length: " + Integer.toString(read_buf.length));
 	    	byte_count = mDeviceConnection.bulkTransfer(mEndpointIn, read_buf, length, 0);
@@ -411,8 +411,18 @@ public class MN_913A_Device {
 	    		Log.d("knight", "receive bytes " + Integer.toString(byte_count));
 	    	    return false;
 	    	}
-	    	else
+	    	else {
 	    		return true;
+	    	}*/
+	    	UsbRequest request = getInRequest();
+	    	if (request != null) {
+	    		result = send_request(request, byte_buf);
+	    		mInRequestPool.add(request);
+	    		byte_buf.position( 0 );
+	    	}
+	    	else
+	    		result = false;
+	    	return result;
 	    }
 
 	    public boolean process_command(int debug) {
