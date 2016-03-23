@@ -5,10 +5,15 @@ import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.IntBuffer;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 
 import com.example.mn913a.MN_913A_Device.CMD_T;
 
@@ -78,10 +83,10 @@ import android.database.Cursor;
 	public Message msg;
 	
 	public int measure_mode;
-	public static int MEASURE_MODE_dsDNA = 0x01;
-	public static int MEASURE_MODE_ssDNA = 0x02;
-	public static int MEASURE_MODE_RNA = 0x03;
-	public static int MEASURE_MODE_PROTEIN = 0x05;
+	public static final int MEASURE_MODE_dsDNA = 0x01;
+	public static final int MEASURE_MODE_ssDNA = 0x02;
+	public static final int MEASURE_MODE_RNA = 0x03;
+	public static final int MEASURE_MODE_PROTEIN = 0x05;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -217,6 +222,8 @@ import android.database.Cursor;
 				tv = (TextView) NanoActivity.this.findViewById( R.id.main_title_id );
 				tv.setText( R.string.main_title_dsdna );
 				measure_mode = NanoActivity.this.MEASURE_MODE_dsDNA;
+				nano_database.CreateDataDB( NanoSqlDatabase.MEASURE_MODE_DNA );
+				blank_valid = false;
 				
 				btn_blank = ( ImageButton ) NanoActivity.this.findViewById ( R.id.imageButton1 );
 				btn_sample = ( ImageButton ) NanoActivity.this.findViewById ( R.id.imageButton2 );
@@ -245,10 +252,10 @@ import android.database.Cursor;
 			            map.put( "ItemText3", "A280" );
 			            srcTable.add(map);
 			            saTable.notifyDataSetChanged();*/
-						nano_database.InsertDNADataToDB();
+						/*nano_database.InsertDNADataToDB();
 						table.gvUpdatePageBar("select count(*) from " + NanoSqlDatabase.DNA_VALUE_TABLE_NAME, nano_database.get_database());
 					    table.gvReadyTable("select * from " + NanoSqlDatabase.DNA_VALUE_TABLE_NAME, nano_database.get_database());
-					    table.refresh_last_table();
+					    table.refresh_last_table();*/
 					    
 					    msg = mWorker_thread_handler.obtainMessage( EXPERIMENT_MEASURE_BLANK );
 					    msg.sendToTarget ( );
@@ -273,6 +280,7 @@ import android.database.Cursor;
 		});
 		imageButton2 = ( ImageButton ) findViewById( R.id.imageButton2 );
 		imageButton2.setOnClickListener( new OnClickListener() {
+			ImageButton btn_blank, btn_sample;
 
 			@Override
 			public void onClick(View v) {
@@ -283,9 +291,36 @@ import android.database.Cursor;
 				tv = (TextView) NanoActivity.this.findViewById( R.id.main_title_id );
 				tv.setText( R.string.main_title_ssdna );
 				measure_mode = NanoActivity.this.MEASURE_MODE_ssDNA;
+				nano_database.CreateDataDB( NanoSqlDatabase.MEASURE_MODE_DNA );
+				blank_valid = false;
+				
+				btn_blank = ( ImageButton ) NanoActivity.this.findViewById ( R.id.imageButton1 );
+				btn_sample = ( ImageButton ) NanoActivity.this.findViewById ( R.id.imageButton2 );
 				table.gvUpdatePageBar("select count(*) from " + NanoSqlDatabase.DNA_VALUE_TABLE_NAME, nano_database.get_database());
 			    table.gvReadyTable("select * from " + NanoSqlDatabase.DNA_VALUE_TABLE_NAME, nano_database.get_database());
 				table.refresh_last_table();
+				
+				btn_blank.setOnClickListener (new OnClickListener() {
+
+					@Override
+					public void onClick(View v) {
+						// TODO Auto-generated method stub
+					    msg = mWorker_thread_handler.obtainMessage( EXPERIMENT_MEASURE_BLANK );
+					    msg.sendToTarget ( );						
+					}
+					
+				});
+				
+				btn_sample.setOnClickListener (new OnClickListener() {
+
+					@Override
+					public void onClick(View v) {
+						// TODO Auto-generated method stub
+					    msg = mWorker_thread_handler.obtainMessage( EXPERIMENT_MEASURE_SAMPLE );
+					    msg.sendToTarget ( );						
+					}
+					
+				});
 			}
 			
 		});
@@ -293,7 +328,8 @@ import android.database.Cursor;
 		imageButton3.setOnClickListener( click_listener );
 		imageButton4 = ( ImageButton ) findViewById( R.id.imageButton4 );
 		imageButton4.setOnClickListener( new OnClickListener() {
-
+			ImageButton btn_blank, btn_sample;
+			
 			@Override
 			public void onClick(View v) {
 				// TODO Auto-generated method stub
@@ -303,9 +339,37 @@ import android.database.Cursor;
 				tv = (TextView) NanoActivity.this.findViewById( R.id.main_title_id );
 				tv.setText( R.string.main_title_rna );
 				measure_mode = NanoActivity.this.MEASURE_MODE_RNA;
+				nano_database.CreateDataDB( NanoSqlDatabase.MEASURE_MODE_DNA );
+				blank_valid = false;
+				
+				btn_blank = ( ImageButton ) NanoActivity.this.findViewById ( R.id.imageButton1 );
+				btn_sample = ( ImageButton ) NanoActivity.this.findViewById ( R.id.imageButton2 );
+
 				table.gvUpdatePageBar("select count(*) from " + NanoSqlDatabase.DNA_VALUE_TABLE_NAME, nano_database.get_database());
 			    table.gvReadyTable("select * from " + NanoSqlDatabase.DNA_VALUE_TABLE_NAME, nano_database.get_database());
 				table.refresh_last_table();
+				
+				btn_blank.setOnClickListener (new OnClickListener() {
+
+					@Override
+					public void onClick(View v) {
+						// TODO Auto-generated method stub
+					    msg = mWorker_thread_handler.obtainMessage( EXPERIMENT_MEASURE_BLANK );
+					    msg.sendToTarget ( );						
+					}
+					
+				});
+				
+				btn_sample.setOnClickListener (new OnClickListener() {
+
+					@Override
+					public void onClick(View v) {
+						// TODO Auto-generated method stub
+					    msg = mWorker_thread_handler.obtainMessage( EXPERIMENT_MEASURE_SAMPLE );
+					    msg.sendToTarget ( );						
+					}
+					
+				});
 			}
 			
 		});
@@ -356,7 +420,7 @@ import android.database.Cursor;
 		});
 		
 		nano_database = new NanoSqlDatabase ( this );
-		nano_database.CreateDataDB( 4 );
+		//nano_database.CreateDataDB( 4 );
 
 		new LooperThread ( ).start();
 		measure_mode = 0;
@@ -407,6 +471,11 @@ import android.database.Cursor;
     	if ( nano_database.get_database() != null )
     		if ( nano_database.get_database().isOpen() == true )
     			nano_database.get_database().close();
+    	
+	    ( ( TextView ) NanoActivity.this.findViewById( R.id.textView1 ) ).setText( "" );
+	    ( ( TextView ) NanoActivity.this.findViewById( R.id.textView3 ) ).setText( "" );
+	    ( ( TextView ) NanoActivity.this.findViewById( R.id.textView4 ) ).setText( "" );
+	    ( ( TextView ) NanoActivity.this.findViewById( R.id.textView5 ) ).setText( "" );
 	}
 	
 	public void switch_to_protein_measure_page ( ) {
@@ -685,6 +754,151 @@ import android.database.Cursor;
     /*20160318 added by michael*/
     public static final int EXPERIMENT_MEASURE_BLANK = 0;
     public static final int EXPERIMENT_MEASURE_SAMPLE = 1;
+    channel_raw_data channel_blank = new channel_raw_data ( 100 ); 
+    channel_raw_data channel_sample = new channel_raw_data ( 100 );
+    byte [] composite_raw_data = new byte [ 4096 ];
+    boolean blank_valid = false;
+    class channel_raw_data {
+    	int [] ch1_xenon_raw_data, ch1_no_xenon_raw_data, ch2_xenon_raw_data, ch2_no_xenon_raw_data, ch3_xenon_raw_data, ch3_no_xenon_raw_data, ch4_xenon_raw_data, ch4_no_xenon_raw_data;
+    	static final int default_ch_data_num = 100;
+    	int channel_elements = 0;
+        double ch1_xenon_sum, ch1_no_xenon_sum, ch2_xenon_sum, ch2_no_xenon_sum, ch3_xenon_sum, ch3_no_xenon_sum, ch4_xenon_sum, ch4_no_xenon_sum;
+        double ch1_xenon_mean, ch1_no_xenon_mean, ch2_xenon_mean, ch2_no_xenon_mean, ch3_xenon_mean, ch3_no_xenon_mean, ch4_xenon_mean, ch4_no_xenon_mean;
+        double ch1_xenon_stdev, ch1_no_xenon_stdev, ch2_xenon_stdev, ch2_no_xenon_stdev, ch3_xenon_stdev, ch3_no_xenon_stdev, ch4_xenon_stdev, ch4_no_xenon_stdev;
+
+    	channel_raw_data () {
+    		ch1_xenon_raw_data = new int [ default_ch_data_num ];
+    		ch1_no_xenon_raw_data = new int [ default_ch_data_num ];
+    		ch2_xenon_raw_data = new int [ default_ch_data_num ];
+    		ch2_no_xenon_raw_data = new int [ default_ch_data_num ];
+    		ch3_xenon_raw_data = new int [ default_ch_data_num ];
+    		ch3_no_xenon_raw_data = new int [ default_ch_data_num ];
+    		ch4_xenon_raw_data = new int [ default_ch_data_num ];
+    		ch4_no_xenon_raw_data = new int [ default_ch_data_num ];
+    		channel_elements = default_ch_data_num;
+    	}
+
+		channel_raw_data ( int data_num ) {
+    		ch1_xenon_raw_data = new int [ data_num ];
+    		ch1_no_xenon_raw_data = new int [ data_num ];
+    		ch2_xenon_raw_data = new int [ data_num ];
+    		ch2_no_xenon_raw_data = new int [ data_num ];
+    		ch3_xenon_raw_data = new int [ data_num ];
+    		ch3_no_xenon_raw_data = new int [ data_num ];
+    		ch4_xenon_raw_data = new int [ data_num ];
+    		ch4_no_xenon_raw_data = new int [ data_num ];
+    		channel_elements = data_num;
+    	}
+		
+		public int set_channel_raw_data ( byte [] composite_data) {
+			int ch_ocuupy_pages;
+			
+			if ( channel_elements * ( Integer.SIZE / Byte.SIZE ) / 256 != 0) {
+				ch_ocuupy_pages = channel_elements * ( Integer.SIZE / Byte.SIZE ) / 256 + 1;
+			}
+			else {
+				ch_ocuupy_pages = channel_elements * ( Integer.SIZE / Byte.SIZE ) / 256;
+			}
+			
+			byte [] one_ch_raw_data = new byte [ ch_ocuupy_pages * 256 ];			
+		    for ( int i = 0; i < 8; i++ ) {
+		    	System.arraycopy( composite_data , i * ch_ocuupy_pages * 256 , one_ch_raw_data, 0, one_ch_raw_data.length );	
+		    	switch ( i ) {
+		    	case 0:
+		    		ByteBuffer.wrap ( one_ch_raw_data ).order( ByteOrder.LITTLE_ENDIAN ).asIntBuffer().get( ch1_no_xenon_raw_data );
+		    		ch1_no_xenon_sum = sum_of_raw_data ( ch1_no_xenon_raw_data );
+		    		ch1_no_xenon_mean = ch1_no_xenon_sum / channel_elements;
+		    		ch1_no_xenon_stdev = stdev_of_raw_data ( ch1_no_xenon_raw_data, ch1_no_xenon_mean );
+		    		break;
+		    	case 1:
+		    		ByteBuffer.wrap ( one_ch_raw_data ).order( ByteOrder.LITTLE_ENDIAN ).asIntBuffer().get( ch1_xenon_raw_data );
+		    		ch1_xenon_sum = sum_of_raw_data ( ch1_xenon_raw_data );
+		    		ch1_xenon_mean = ch1_xenon_sum / channel_elements;
+		    		ch1_xenon_stdev = stdev_of_raw_data ( ch1_xenon_raw_data, ch1_xenon_mean );
+		    		break;
+		    	case 2:
+		    		ByteBuffer.wrap ( one_ch_raw_data ).order( ByteOrder.LITTLE_ENDIAN ).asIntBuffer().get( ch2_no_xenon_raw_data );
+		    		ch2_no_xenon_sum = sum_of_raw_data ( ch2_no_xenon_raw_data );
+		    		ch2_no_xenon_mean = ch2_no_xenon_sum / channel_elements;
+		    		ch2_no_xenon_stdev = stdev_of_raw_data ( ch2_no_xenon_raw_data, ch2_no_xenon_mean );
+		    		break;
+		    	case 3:
+		    		ByteBuffer.wrap ( one_ch_raw_data ).order( ByteOrder.LITTLE_ENDIAN ).asIntBuffer().get( ch2_xenon_raw_data );
+		    		ch2_xenon_sum = sum_of_raw_data ( ch2_xenon_raw_data );
+		    		ch2_xenon_mean = ch2_xenon_sum / channel_elements;
+		    		ch2_xenon_stdev = stdev_of_raw_data ( ch2_xenon_raw_data, ch2_xenon_mean );
+		    		break;
+		    	case 4:
+		    		ByteBuffer.wrap ( one_ch_raw_data ).order( ByteOrder.LITTLE_ENDIAN ).asIntBuffer().get( ch3_no_xenon_raw_data );
+		    		ch3_no_xenon_sum = sum_of_raw_data ( ch3_no_xenon_raw_data );
+		    		ch3_no_xenon_mean = ch3_no_xenon_sum / channel_elements;
+		    		ch3_no_xenon_stdev = stdev_of_raw_data ( ch3_no_xenon_raw_data, ch3_no_xenon_mean );
+		    		break;
+		    	case 5:
+		    		ByteBuffer.wrap ( one_ch_raw_data ).order( ByteOrder.LITTLE_ENDIAN ).asIntBuffer().get( ch3_xenon_raw_data );
+		    		ch3_xenon_sum = sum_of_raw_data ( ch3_xenon_raw_data );
+		    		ch3_xenon_mean = ch3_xenon_sum / channel_elements;
+		    		ch3_xenon_stdev = stdev_of_raw_data ( ch3_xenon_raw_data, ch3_xenon_mean );
+		    		break;
+		    	case 6:
+		    		ByteBuffer.wrap ( one_ch_raw_data ).order( ByteOrder.LITTLE_ENDIAN ).asIntBuffer().get( ch4_no_xenon_raw_data );
+		    		ch4_no_xenon_sum = sum_of_raw_data ( ch4_no_xenon_raw_data );
+		    		ch4_no_xenon_mean = ch4_no_xenon_sum / channel_elements;
+		    		ch4_no_xenon_stdev = stdev_of_raw_data ( ch4_no_xenon_raw_data, ch4_no_xenon_mean );
+		    		break;
+		    	case 7:
+		    		ByteBuffer.wrap ( one_ch_raw_data ).order( ByteOrder.LITTLE_ENDIAN ).asIntBuffer().get( ch4_xenon_raw_data );
+		    		ch4_xenon_sum = sum_of_raw_data ( ch4_xenon_raw_data );
+		    		ch4_xenon_mean = ch4_xenon_sum / channel_elements;
+		    		ch4_xenon_stdev = stdev_of_raw_data ( ch4_xenon_raw_data, ch4_xenon_mean );
+		    		break;
+		    	}
+		    }
+		    //Log.d ( Tag, "ch1 xenon: " + Double.toString( ch1_xenon_mean ) + " ch2 xenon: " + Double.toString( ch2_xenon_mean ) + " ch3 xenon: " + Double.toString( ch3_xenon_mean ) + " ch4 xenon: " + Double.toString( ch4_xenon_mean ) );
+		    //Log.d ( Tag, "ch1 no xenon: " + Double.toString( ch1_no_xenon_mean ) + " ch2 no xenon: " + Double.toString( ch2_no_xenon_mean ) + " ch3 no xenon: " + Double.toString( ch3_no_xenon_mean ) + " ch4 no xenon: " + Double.toString( ch4_no_xenon_mean ) );
+		    //Log.d ( Tag, "ch1 no xenon: " + Double.toString( ch1_no_xenon_stdev ) + " ch2 no xenon: " + Double.toString( ch2_no_xenon_stdev ) + " ch3 no xenon: " + Double.toString( ch3_no_xenon_stdev ) + " ch4 no xenon: " + Double.toString( ch4_no_xenon_stdev ) );
+		    //Log.d ( Tag, "ch1 xenon: " + Double.toString( ch1_xenon_stdev ) + " ch2 xenon: " + Double.toString( ch2_xenon_stdev ) + " ch3 xenon: " + Double.toString( ch3_xenon_stdev ) + " ch4 xenon: " + Double.toString( ch4_xenon_stdev ) );
+			return 0;
+		}
+		
+		double sum_of_raw_data ( int [] data ) {
+			double sum = 0.0f;
+			for ( int value  : data ) {
+				sum += value;
+			}
+			return sum;
+		}
+		
+		double stdev_of_raw_data ( int [] data, double mean ) {
+			double mse = 0.0f;
+			for ( int value  : data ) {
+				mse += Math.pow( value - mean,  2);
+			}
+			mse /= data.length;
+			mse = Math.pow( mse, .5);
+			return mse;
+		}
+    }
+    
+    /*20160323 added by michael*/
+    static final int UPDATE_DNA_RESULT_UI = 0x81;
+    Handler mHandler = new Handler () {
+    	public void handleMessage ( Message msg ) {
+    		switch ( msg.what ) {
+    		case UPDATE_DNA_RESULT_UI:
+    			table.gvUpdatePageBar("select count(*) from " + NanoSqlDatabase.DNA_VALUE_TABLE_NAME, nano_database.get_database());
+    		    table.gvReadyTable("select * from " + NanoSqlDatabase.DNA_VALUE_TABLE_NAME, nano_database.get_database());
+    		    table.refresh_last_table();
+    		    DNA_measure_data dna_data = ( DNA_measure_data ) msg.obj;
+    		    ( ( TextView ) NanoActivity.this.findViewById( R.id.textView1 ) ).setText( Double.toString( NanoSqlDatabase.truncateDecimal(  dna_data.Conc, 3 ).doubleValue() ) );
+    		    ( ( TextView ) NanoActivity.this.findViewById( R.id.textView3 ) ).setText( Double.toString( NanoSqlDatabase.truncateDecimal(  dna_data.A260 / dna_data.A280, 3 ).doubleValue() ) );
+    		    ( ( TextView ) NanoActivity.this.findViewById( R.id.textView4 ) ).setText( Double.toString( NanoSqlDatabase.truncateDecimal(  dna_data.A260 / dna_data.A230, 3 ).doubleValue() ) );
+    		    ( ( TextView ) NanoActivity.this.findViewById( R.id.textView5 ) ).setText( Double.toString( NanoSqlDatabase.truncateDecimal(  dna_data.A260, 3 ).doubleValue() ) );
+    			break;    		
+    		}
+    	}
+    };
+    
     class LooperThread extends Thread {
 
         public void run() {
@@ -698,10 +912,11 @@ import android.database.Cursor;
                 		  if ( Is_MN913A_Online == true ) {
                 			mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_MEASURE, 0, 0, null, 1);
                 			try {
-								while ( mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_STATUS, 0, 0, null, 1) ) {
-									sleep ( 3500 );
+                				sleep ( 2500 );
+								while ( mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_STATUS, 0, 0, null, 0) ) {
+									sleep ( 1000 );
 									if ( mNano_dev.is_dev_busy == 0 ) {
-										Log.d ( Tag, "MN913A device not busy");
+										//Log.d ( Tag, "MN913A device not busy");
 										break;
 									}
 								}
@@ -711,10 +926,33 @@ import android.database.Cursor;
 								e.printStackTrace();
 							}
                 		  }
+                		  
+                		  if ( mNano_dev.Itracker_IOCTL ( CMD_T.HID_CMD_MN913A_RAW_DATA, 0, 16, composite_raw_data, 0) )
+                			  channel_blank.set_channel_raw_data ( composite_raw_data );
                 		  break;
+                		  
                 	  case EXPERIMENT_MEASURE_SAMPLE:
                 		  if ( Is_MN913A_Online == true ) {
-                			  mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_MEASURE, 0, 0, null, 1);
+                			mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_MEASURE, 0, 0, null, 0);
+                			try {
+                				sleep ( 2500 );
+								while ( mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_STATUS, 0, 0, null, 0) ) {
+									sleep ( 1000 );
+									if ( mNano_dev.is_dev_busy == 0 ) {
+										//Log.d ( Tag, "MN913A device not busy");
+										break;
+									}
+								}
+								Log.d ( Tag, "Getting MN913A status finish");
+							} catch (InterruptedException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+                		  }
+                		  
+                		  if ( mNano_dev.Itracker_IOCTL ( CMD_T.HID_CMD_MN913A_RAW_DATA, 0, 16, composite_raw_data, 0) ) {
+                			  channel_sample.set_channel_raw_data ( composite_raw_data );
+                			  OD_Calculate ();
                 		  }
                 		  break;
                 	}
@@ -723,5 +961,74 @@ import android.database.Cursor;
 
             Looper.loop();
         }
+    }
+    
+    public void check_blank () {
+    	
+    	
+    }
+    
+    class DNA_measure_data {
+    	int index;
+    	double A260, A230, A280, Conc;
+    }
+
+    class Protein_measure_data {
+    	int index;
+    	double A280;
+    }
+    
+    LinkedList<DNA_measure_data> dna_data_list = new LinkedList <DNA_measure_data>();
+    LinkedList<Protein_measure_data> protein_data_list = new LinkedList <Protein_measure_data>();
+    static final double dsDNA_CONC_FACTOR = 50;
+    static final double ssDNA_CONC_FACTOR = 33;
+    static final double RNA_CONC_FACTOR = 40;
+    public void OD_Calculate () {
+    	double I_blank, I_sample;
+    	DNA_measure_data dna_data = new DNA_measure_data ();
+    	Protein_measure_data protein_data = new Protein_measure_data ();
+    	Message msg;
+    	
+    	switch ( measure_mode ) {
+    	case MEASURE_MODE_dsDNA:
+    	case MEASURE_MODE_ssDNA:
+    	case MEASURE_MODE_RNA:
+    		//channel_blank.ch1_xenon_mean - channel_blank.ch1_no_xenon_mean
+    		//channel_blank.ch2_xenon_mean - channel_blank.ch2_no_xenon_mean
+    		//channel_blank.ch3_xenon_mean - channel_blank.ch3_no_xenon_mean
+    		//channel_blank.ch4_xenon_mean - channel_blank.ch4_no_xenon_mean
+    		I_blank = Math.abs( channel_blank.ch2_xenon_mean - channel_blank.ch2_no_xenon_mean );
+    		I_sample = Math.abs ( channel_sample.ch2_xenon_mean - channel_sample.ch2_no_xenon_mean );    		
+    		dna_data.A260 = Math.log( I_blank / I_sample );
+    		I_blank = channel_blank.ch1_xenon_mean - channel_blank.ch1_no_xenon_mean;
+    		I_sample = channel_sample.ch1_xenon_mean - channel_sample.ch1_no_xenon_mean;
+    		dna_data.A280 = Math.log( I_blank / I_sample );
+    		I_blank = channel_blank.ch3_xenon_mean - channel_blank.ch3_no_xenon_mean;
+    		I_sample = channel_sample.ch3_xenon_mean - channel_sample.ch3_no_xenon_mean;
+    		dna_data.A230 = Math.log( I_blank / I_sample );
+    		if ( measure_mode == MEASURE_MODE_dsDNA )
+    			dna_data.Conc = dna_data.A260 * dsDNA_CONC_FACTOR;
+    		else
+    			if ( measure_mode == MEASURE_MODE_ssDNA )
+    				dna_data.Conc = dna_data.A260 * ssDNA_CONC_FACTOR;
+    			else
+    				if ( measure_mode == MEASURE_MODE_RNA )
+    					dna_data.Conc = dna_data.A260 * RNA_CONC_FACTOR;
+    		dna_data.index = dna_data_list.size();
+    		dna_data_list.add( dna_data );
+    		nano_database.InsertDNADataToDB( dna_data );
+			//table.gvUpdatePageBar("select count(*) from " + NanoSqlDatabase.DNA_VALUE_TABLE_NAME, nano_database.get_database());
+		    //table.gvReadyTable("select * from " + NanoSqlDatabase.DNA_VALUE_TABLE_NAME, nano_database.get_database());
+		    //table.refresh_last_table();
+		    msg = this.mHandler.obtainMessage( this.UPDATE_DNA_RESULT_UI, dna_data );
+		    msg.sendToTarget ( );
+    		break;
+    	case MEASURE_MODE_PROTEIN:
+    		I_blank = channel_blank.ch1_xenon_mean - channel_blank.ch1_no_xenon_mean;
+    		I_sample = channel_sample.ch1_xenon_mean - channel_sample.ch1_no_xenon_mean;
+    		protein_data.A280 = Math.log( I_blank / I_sample );
+    		protein_data_list.add( protein_data );
+    		break;
+    	}
     }
 }

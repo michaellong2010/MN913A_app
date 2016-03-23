@@ -287,8 +287,8 @@ public class MN_913A_Device {
     		if (isDeviceOnline()) {
     			message.set(itracker_cmd, arg0, arg1, dataBytes, debug);
     			result = message.process_command(0);
-    			if (itracker_cmd==CMD_T.HID_CMD_MN913A_RAW_DATA && result) {
-    				MN913A_dev_data = message.mDataBuffer.asIntBuffer();
+    			if (itracker_cmd==CMD_T.HID_CMD_MN913A_RAW_DATA && result) {    				
+    				System.arraycopy( message.mDataBuffer.array(), 0, dataBytes, 0, 4096 );
     			}
     			else
     				if (itracker_cmd==CMD_T.HID_CMD_MN913A_STATUS && result) {
@@ -495,7 +495,7 @@ public class MN_913A_Device {
 			case HID_CMD_MN913A_RAW_DATA:
 				if (debug != 0)
 					Log.d(Tag, ">>> Retrieve MN913A raw data\n");
-				arg1 = 0;
+				arg1 = argu0;
 				remainder = SZ_MN913A_raw_data_type % PAGE_SIZE;
 				if (remainder != 0)
 					arg2 = (SZ_MN913A_raw_data_type / PAGE_SIZE) + 1;
