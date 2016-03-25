@@ -3,6 +3,7 @@ package com.example.mn913a;
 import java.math.BigDecimal;
 
 import com.example.mn913a.NanoActivity.DNA_measure_data;
+import com.example.mn913a.NanoActivity.Protein_measure_data;
 
 import android.content.Context;
 import android.database.SQLException;
@@ -24,7 +25,7 @@ public class NanoSqlDatabase {
 	private static final String PAD_EMPTY = "";
 	
 	public static final int MEASURE_MODE_DNA = 0x01;
-	public static final int MEASURE_MODE_PROTEIN = 0x01;
+	public static final int MEASURE_MODE_PROTEIN = 0x02;
 
 	
 	public NanoSqlDatabase ( Context parent ) {
@@ -54,8 +55,8 @@ public class NanoSqlDatabase {
 			if ( measure_mode == MEASURE_MODE_PROTEIN ) {
 		
 		String sql_protein_value = "CREATE TABLE " + PROTEIN_VALUE_TABLE_NAME + " (" + 
-		        INDEX	+ " text not null, " +  A280 + " text not null " +  PAD_EMPTY + " text not null " +  PAD_EMPTY + " text not null " +  PAD_EMPTY + " text not null "
-				+ ");";
+		        INDEX	+ " text not null, " +  A280 + " text not null "+");";
+		 //+  PAD_EMPTY + " text not null, " +  PAD_EMPTY + " text not null, " +  PAD_EMPTY + " text not null "
 		try {
 			Nano_db.execSQL( "DROP TABLE IF EXISTS " + PROTEIN_VALUE_TABLE_NAME );
 			Nano_db.execSQL( sql_protein_value );
@@ -80,5 +81,18 @@ public class NanoSqlDatabase {
 	
 	static BigDecimal truncateDecimal(final double x, final int numberofDecimals) {
 	    return new BigDecimal(String.valueOf(x)).setScale(numberofDecimals, BigDecimal.ROUND_DOWN);
+	}
+	
+	public void InsertPROTEINDataToDB( Protein_measure_data protein_data ) {
+		String index = Integer.toString( protein_data.index );
+		String A280_value = Double.toString( truncateDecimal ( protein_data.A280, 3 ).doubleValue() );
+		
+		String sql_protein_value = "insert into " + PROTEIN_VALUE_TABLE_NAME + " ("
+				+ INDEX + ", " + A280 + ") values('" + index + "', '" + A280_value +"');";
+
+		try {
+			Nano_db.execSQL( sql_protein_value );
+		} catch (SQLException e) {
+		}
 	}
 }

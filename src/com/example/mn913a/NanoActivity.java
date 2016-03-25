@@ -16,6 +16,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import com.example.mn913a.MN_913A_Device.CMD_T;
+import com.example.mn913a.file.FileOperateByteArray;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -54,6 +55,7 @@ import android.widget.SeekBar;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
 import android.widget.Switch;
+import android.widget.Toast;
 import android.database.Cursor;
 
 @SuppressLint("NewApi") public class NanoActivity extends Activity {
@@ -325,7 +327,7 @@ import android.database.Cursor;
 			
 		});
 		imageButton3 = ( ImageButton ) findViewById( R.id.imageButton3 );
-		imageButton3.setOnClickListener( click_listener );
+		//imageButton3.setOnClickListener( click_listener );
 		imageButton4 = ( ImageButton ) findViewById( R.id.imageButton4 );
 		imageButton4.setOnClickListener( new OnClickListener() {
 			ImageButton btn_blank, btn_sample;
@@ -375,6 +377,7 @@ import android.database.Cursor;
 		});
 		btn_protein = ( ImageButton ) findViewById( R.id.imageButton5 );
 		btn_protein.setOnClickListener( new OnClickListener() {
+			ImageButton btn_blank, btn_sample;
 
 			@Override
 			public void onClick(View v) {
@@ -384,9 +387,37 @@ import android.database.Cursor;
 				tv = (TextView) NanoActivity.this.findViewById( R.id.main_title_id );
 				tv.setText( R.string.main_title_protein );
 				measure_mode = NanoActivity.this.MEASURE_MODE_PROTEIN;
-				table.gvUpdatePageBar("select count(*) from " + NanoSqlDatabase.DNA_VALUE_TABLE_NAME, nano_database.get_database());
-			    table.gvReadyTable("select * from " + NanoSqlDatabase.DNA_VALUE_TABLE_NAME, nano_database.get_database());
+				nano_database.CreateDataDB( NanoSqlDatabase.MEASURE_MODE_PROTEIN );
+				blank_valid = false;
+				
+				btn_blank = ( ImageButton ) NanoActivity.this.findViewById ( R.id.imageButton1 );
+				btn_sample = ( ImageButton ) NanoActivity.this.findViewById ( R.id.imageButton2 );
+
+				table.gvUpdatePageBar("select count(*) from " + NanoSqlDatabase.PROTEIN_VALUE_TABLE_NAME, nano_database.get_database());
+			    table.gvReadyTable("select * from " + NanoSqlDatabase.PROTEIN_VALUE_TABLE_NAME, nano_database.get_database());
 				table.refresh_last_table();
+				
+				btn_blank.setOnClickListener (new OnClickListener() {
+
+					@Override
+					public void onClick(View v) {
+						// TODO Auto-generated method stub
+					    msg = mWorker_thread_handler.obtainMessage( EXPERIMENT_MEASURE_BLANK );
+					    msg.sendToTarget ( );						
+					}
+					
+				});
+				
+				btn_sample.setOnClickListener (new OnClickListener() {
+
+					@Override
+					public void onClick(View v) {
+						// TODO Auto-generated method stub
+					    msg = mWorker_thread_handler.obtainMessage( EXPERIMENT_MEASURE_SAMPLE );
+					    msg.sendToTarget ( );						
+					}
+					
+				});
 			}
 			
 		});
@@ -429,7 +460,23 @@ import android.database.Cursor;
 		app_data.addActivity(this);
 	}
 	
+	private void save_measurement_to_file () {
+		FileOperateByteArray write_file = new FileOperateByteArray ( "MaestroNano",write_file.generate_filename_no_date(), true );
+		
+		//write_file.create_file(filename);
+	}
+	
 	public void switch_to_main_page ( View v ) {
+		/* detach table from dna measure page */
+		if ( measure_mode <= MEASURE_MODE_PROTEIN) {
+			if ( this.findViewById( R.id.measure_top_ui ) != null) {
+				gridlayout.removeView( table );
+				//mLayout_DNA_MeasurePage.removeView( gridlayout );
+			}
+			Toast.makeText( this, "save to file", Toast.LENGTH_SHORT).show();
+			save_measurement_to_file ();
+		}
+		
 		mLayout_Content.removeAllViews ( );
 		if ( mLayout_MainPage == null )
 			mLayout_MainPage = ( LinearLayout ) inflater.inflate( R.layout.activity_main1, null );
@@ -492,6 +539,13 @@ import android.database.Cursor;
     		else
     			this.table.gvRemoveAll ( );
     	}
+
+    	/*20160323 added by michael*/
+    	if ( nano_database.get_database() != null )
+    		if ( nano_database.get_database().isOpen() == true )
+    			nano_database.get_database().close();
+    	
+	    ( ( TextView ) NanoActivity.this.findViewById( R.id.textView1 ) ).setText( "" );
 	}
 	
 	public void switch_to_setting_page ( View v) {
@@ -882,6 +936,7 @@ import android.database.Cursor;
     
     /*20160323 added by michael*/
     static final int UPDATE_DNA_RESULT_UI = 0x81;
+    static final int UPDATE_PROTEIN_RESULT_UI = 0x82;
     Handler mHandler = new Handler () {
     	public void handleMessage ( Message msg ) {
     		switch ( msg.what ) {
@@ -894,7 +949,15 @@ import android.database.Cursor;
     		    ( ( TextView ) NanoActivity.this.findViewById( R.id.textView3 ) ).setText( Double.toString( NanoSqlDatabase.truncateDecimal(  dna_data.A260 / dna_data.A280, 3 ).doubleValue() ) );
     		    ( ( TextView ) NanoActivity.this.findViewById( R.id.textView4 ) ).setText( Double.toString( NanoSqlDatabase.truncateDecimal(  dna_data.A260 / dna_data.A230, 3 ).doubleValue() ) );
     		    ( ( TextView ) NanoActivity.this.findViewById( R.id.textView5 ) ).setText( Double.toString( NanoSqlDatabase.truncateDecimal(  dna_data.A260, 3 ).doubleValue() ) );
-    			break;    		
+    			break;
+    			
+    		case UPDATE_PROTEIN_RESULT_UI:
+    			table.gvUpdatePageBar("select count(*) from " + NanoSqlDatabase.PROTEIN_VALUE_TABLE_NAME, nano_database.get_database());
+    		    table.gvReadyTable("select * from " + NanoSqlDatabase.PROTEIN_VALUE_TABLE_NAME, nano_database.get_database());
+    		    table.refresh_last_table();
+    		    Protein_measure_data protein_data = ( Protein_measure_data ) msg.obj;
+    		    ( ( TextView ) NanoActivity.this.findViewById( R.id.textView1 ) ).setText( Double.toString( NanoSqlDatabase.truncateDecimal(  protein_data.A280, 3 ).doubleValue() ) );
+    			break;
     		}
     	}
     };
@@ -1028,6 +1091,9 @@ import android.database.Cursor;
     		I_sample = channel_sample.ch1_xenon_mean - channel_sample.ch1_no_xenon_mean;
     		protein_data.A280 = Math.log( I_blank / I_sample );
     		protein_data_list.add( protein_data );
+    		nano_database.InsertPROTEINDataToDB( protein_data );
+		    msg = this.mHandler.obtainMessage( this.UPDATE_PROTEIN_RESULT_UI, protein_data );
+		    msg.sendToTarget ( );
     		break;
     	}
     }
