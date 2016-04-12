@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+<item android:id="@+id/file_open"
+          android:icon="@drawable/file_open"
+          android:title="Open"
+          android:showAsAction="always|withText"/>    
+
+<item android:id="@+id/file_delete"
+          android:icon="@drawable/file_delete"
+          android:title="Delete"
+          android:showAsAction="always|withText"/>
+
+<item android:id="@+id/file_rename"
+          android:icon="@drawable/file_rename"
+          android:title="Rename"
+          android:showAsAction="always|withText"/>
+
+<item android:id="@+id/file_selection_all"
+          android:title="Select_All"
+          android:showAsAction="never"/>
+
+<item android:id="@+id/file_unselection_all"
+          android:title="Unselect_All"
+          android:showAsAction="never"/>
+
+<item android:id="@+id/filelist_sort_by_timestamp"
+          android:title="Sort_by_lastmodify"
+          android:showAsAction="never"/>
+
+<item android:id="@+id/filelist_sort_by_alphabet"
+          android:title="Sort_by_alphabet"
+          android:showAsAction="never"/>
+</menu>

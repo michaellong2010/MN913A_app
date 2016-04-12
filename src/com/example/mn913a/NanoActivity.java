@@ -3,6 +3,7 @@ package com.example.mn913a;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
@@ -17,6 +18,7 @@ import java.util.List;
 
 import com.example.mn913a.MN_913A_Device.CMD_T;
 import com.example.mn913a.file.FileOperateByteArray;
+import com.example.mn913a.file.FileOperation;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -29,6 +31,7 @@ import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
@@ -57,6 +60,7 @@ import android.widget.TextView;
 import android.widget.Switch;
 import android.widget.Toast;
 import android.database.Cursor;
+import ar.com.daidalos.afiledialog.FileChooserActivity;
 
 @SuppressLint("NewApi") public class NanoActivity extends Activity {
 	PendingIntent mPermissionIntent;
@@ -89,6 +93,9 @@ import android.database.Cursor;
 	public static final int MEASURE_MODE_ssDNA = 0x02;
 	public static final int MEASURE_MODE_RNA = 0x03;
 	public static final int MEASURE_MODE_PROTEIN = 0x05;
+	
+	File sdcard = Environment.getExternalStorageDirectory();
+	final String Nano_Data_Dir = sdcard.getPath() + "/MaestroNano/Measure/";
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -327,7 +334,27 @@ import android.database.Cursor;
 			
 		});
 		imageButton3 = ( ImageButton ) findViewById( R.id.imageButton3 );
-		//imageButton3.setOnClickListener( click_listener );
+		imageButton3.setOnClickListener(  new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				Intent intent = new Intent ( NanoActivity.this, LogFileChooserActivity.class );
+				//intent.putExtra(FileChooserActivity.INPUT_FOLDER_MODE, true);
+				intent.putExtra(FileChooserActivity.INPUT_SHOW_FULL_PATH_IN_TITLE, true);
+				intent.putExtra(FileChooserActivity.INPUT_START_FOLDER, Nano_Data_Dir);
+				/*20141022 added by michael
+				 * add the option to allow reverse the file list ording*/
+				intent.putExtra(FileChooserActivity.INPUT_REVERSE_FILELIST_ORDER, true);
+				/*20140819 added by michael
+				 * add the additional extra param INPUT_ACTIVITY_ORIENTATION to handle the activity screen orientation¡Athese values(SCREEN_ORIENTATION_SENSOR_PORTRAIT¡BSCREEN_ORIENTATION_REVERSE_PORTRAIT...etc) define in  class ActivityInfo*/
+				intent.putExtra(LogFileChooserActivity.INPUT_ACTIVITY_ORIENTATION, getRequestedOrientation());
+				intent.putExtra(LogFileChooserActivity.INPUT_REGEX_FILTER, ".*\\.csv");
+				//startActivity(intent);
+				NanoActivity.this.startActivityForResult ( intent, 1023 );
+			}
+			
+		});
 		imageButton4 = ( ImageButton ) findViewById( R.id.imageButton4 );
 		imageButton4.setOnClickListener( new OnClickListener() {
 			ImageButton btn_blank, btn_sample;
@@ -461,7 +488,56 @@ import android.database.Cursor;
 	}
 	
 	private void save_measurement_to_file () {
-		FileOperateByteArray write_file = new FileOperateByteArray ( "MaestroNano",write_file.generate_filename_no_date(), true );
+		String file_name, measure_result;
+		
+		if ( measure_mode == MEASURE_MODE_dsDNA ) {
+			file_name = "dsDNA";
+		}
+		else
+			if ( measure_mode == MEASURE_MODE_ssDNA ) {
+				file_name = "ssDNA";
+			}
+			else
+				if ( measure_mode == MEASURE_MODE_RNA ) {
+					file_name = "RNA";
+				}
+				else
+					if ( measure_mode == MEASURE_MODE_PROTEIN ) {
+						file_name = "PROTEIN";
+					}
+					else
+						file_name = "";
+		
+		FileOperation write_file = new FileOperation ( "Measure", file_name, true );
+		try {
+			write_file.set_file_extension ( ".csv" ); 
+			write_file.create_file ( write_file.generate_filename() );
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		write_file.write_file ( file_name, true );
+		switch ( measure_mode ) {
+		case MEASURE_MODE_dsDNA:
+		case MEASURE_MODE_ssDNA:
+		case MEASURE_MODE_RNA:
+			for ( DNA_measure_data dna_data: dna_data_list ) {
+				measure_result = Integer.toString( dna_data.index ) + ", " + NanoSqlDatabase.truncateDecimal(  dna_data.Conc, 3 ).doubleValue() +  ", " +
+						NanoSqlDatabase.truncateDecimal(  dna_data.A260, 3 ).doubleValue() +  ", " +
+						NanoSqlDatabase.truncateDecimal(  dna_data.A260 / dna_data.A280, 3 ).doubleValue() + ", " +
+						NanoSqlDatabase.truncateDecimal(  dna_data.A260 / dna_data.A230, 3 ).doubleValue();
+				write_file.write_file ( measure_result, true );
+			}
+			break;
+		case MEASURE_MODE_PROTEIN:
+			for ( Protein_measure_data protein_data: protein_data_list ) {
+				measure_result = Integer.toString( protein_data.index ) + ", " + NanoSqlDatabase.truncateDecimal(  protein_data.A280, 3 ).doubleValue();
+				write_file.write_file ( measure_result, true );
+			}
+			break;
+		}
+		write_file.flush_close_file();
 		
 		//write_file.create_file(filename);
 	}
@@ -1090,11 +1166,28 @@ import android.database.Cursor;
     		I_blank = channel_blank.ch1_xenon_mean - channel_blank.ch1_no_xenon_mean;
     		I_sample = channel_sample.ch1_xenon_mean - channel_sample.ch1_no_xenon_mean;
     		protein_data.A280 = Math.log( I_blank / I_sample );
+    		protein_data.index = protein_data_list.size();
     		protein_data_list.add( protein_data );
     		nano_database.InsertPROTEINDataToDB( protein_data );
 		    msg = this.mHandler.obtainMessage( this.UPDATE_PROTEIN_RESULT_UI, protein_data );
 		    msg.sendToTarget ( );
     		break;
     	}
+    }
+    
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        // Check which request we're responding to
+        if (requestCode == 1023) {
+            // Make sure the request was successful
+            if (resultCode == RESULT_OK) {
+                // The user picked a contact.
+                // The Intent's data Uri identifies which contact was selected.
+
+                // Do something with the contact here (bigger example below)
+            }
+        }
+        else
+        	super.onActivityResult ( requestCode, resultCode, data );
     }
 }

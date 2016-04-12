@@ -16,7 +16,7 @@ import android.util.Log;
 
 public class FileOperation {
 	private String Tag = "FileOperation";
-	public final static String work_directory = "/OD_Monitor/";
+	public final static String work_directory = "/MaestroNano/";
 	public File sdcard = Environment.getExternalStorageDirectory();
 	private String file_Dir = sdcard.getPath() + work_directory; 
 	protected String CreateFileName = "Default";
@@ -110,7 +110,7 @@ public class FileOperation {
 	 /* file naming format logyyyymmdd-hhmmss.txt*/
 	public String generate_filename() {
 		String filename;
-		filename = CreateFileName + df.format(new Date()) + file_extension;
+		filename = CreateFileName + "-" +  df_Hms.format(new Date()) + file_extension;
 		Log.d(Tag, filename);
 		return filename;
 	}

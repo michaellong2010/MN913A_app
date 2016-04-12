@@ -10,5 +10,7 @@
     <string name="main_title_rna">RNA</string>
     <string name="main_title_protein">Protein</string>
     <string name="main_title_setting">Setting</string>
+    <string name="ok_button_caption">OK</string>
+    <string name="cancel_button_caption">Cancel</string>
 
 </resources>

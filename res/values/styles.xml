@@ -19,5 +19,25 @@
         <item name="android:windowActionBar">true</item>
         <item name="android:windowFullscreen">true</item>
     </style>
+    
+    <!-- 20140221 added by michael
+    custom preference dialog style -->
+    <style name="CenterDialog" parent="@android:style/Theme.Dialog">
+        <item name="android:windowTitleStyle">@style/CenterDialogTitle</item>
+        <item name="android:windowNoTitle">false</item>
+    </style>
+
+    <style name="CenterDialogTitle" parent="@android:style/TextAppearance.DialogWindowTitle">
+        <item name="android:gravity">center_horizontal</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:scrollHorizontally">true</item>
+        <item name="android:background">#FF555555</item>
+    </style>
+    
+    <!-- 20131213 added by michael -->
+    <style name="AppTheme_title" parent="AppBaseTheme">
+        <item name="android:windowNoTitle">false</item>
+        <item name="android:windowActionBar">true</item>
+    </style>
 
 </resources>
