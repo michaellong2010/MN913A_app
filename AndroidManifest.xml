@@ -21,7 +21,7 @@
         <activity
             android:name=".NanoActivity"
             android:label="@string/app_name"  android:launchMode="singleTask" android:screenOrientation="landscape">
-            <intent-filter>
+            <!-- <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -30,7 +30,7 @@
                 <category android:name="android.intent.category.DEFAULT"/>
                 <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"/>
             </intent-filter>
-            <meta-data android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" android:resource="@xml/device_filter"/>
+            <meta-data android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" android:resource="@xml/device_filter"/> -->
         </activity>
         
 <!--         <receiver android:name="MN913A_Receiver">
@@ -48,8 +48,22 @@
             </intent-filter>
         </receiver>
         
-        <activity android:name="com.example.mn913a.LogFileChooserActivity" android:theme="@style/AppTheme_title" android:screenOrientation="landscape"/>
+        <activity android:name="com.example.mn913a.LogFileChooserActivity" android:theme="@style/AppTheme_title" android:screenOrientation="landscape"  android:launchMode="singleTask">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
         <activity android:name="com.example.mn913a.LogFileDisplayActivity" android:theme="@style/AppTheme_title" android:screenOrientation="landscape" android:launchMode="singleTask"/>
+        
+        <activity android:name="com.example.mn913a.testlist" android:theme="@style/AppTheme_title" android:screenOrientation="landscape" >
+<!--             <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter> -->
+        </activity>
     </application>
 
 </manifest>

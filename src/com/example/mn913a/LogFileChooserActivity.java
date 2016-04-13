@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -14,13 +15,16 @@ import android.annotation.SuppressLint;
 import android.app.ActionBar;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.StateListDrawable;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
+import android.view.ActionMode;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -29,10 +33,19 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.AbsListView;
+import android.widget.AbsListView.MultiChoiceModeListener;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.AdapterView.OnItemSelectedListener;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ListView;
+import android.widget.SimpleAdapter;
 import android.widget.TextView;
 import ar.com.daidalos.afiledialog.FileChooserActivity;
 import ar.com.daidalos.afiledialog.FileChooserCore;
@@ -59,9 +72,24 @@ public class LogFileChooserActivity extends FileChooserActivity {
 	String alert_message = "Are you sure that you want to delete the file \'$file_name\'?";
 	FileItem[] Array_file_item = null;
 	boolean filelist_reverse_order_by_modyfy, filelist_reverse_order_by_alphabet;
+	
+	/*20160412 added by michael*/
+	List<HashMap<String, String>> fillMaps = new ArrayList<HashMap<String, String>>();
+	String[] from = new String[] { "No.", "Conc.", "A260", "A260_A230", "A260_A280" };
+	int[] to = new int [] { R.id.item1, R.id.item2, R.id.item3, R.id.item4, R.id.item5 };
+	ListView result_listview;
     @Override
     public void onCreate(Bundle savedInstanceState) {
-    	
+		this.getIntent().putExtra(FileChooserActivity.INPUT_SHOW_FULL_PATH_IN_TITLE, true);
+		this.getIntent().putExtra(FileChooserActivity.INPUT_START_FOLDER, Environment.getExternalStorageDirectory().getPath() + "/MaestroNano/Measure/" );
+		/*20141022 added by michael
+		 * add the option to allow reverse the file list ording*/
+		this.getIntent().putExtra(FileChooserActivity.INPUT_REVERSE_FILELIST_ORDER, true);
+		/*20140819 added by michael
+		 * add the additional extra param INPUT_ACTIVITY_ORIENTATION to handle the activity screen orientation¡Athese values(SCREEN_ORIENTATION_SENSOR_PORTRAIT¡BSCREEN_ORIENTATION_REVERSE_PORTRAIT...etc) define in  class ActivityInfo*/
+		this.getIntent().putExtra(LogFileChooserActivity.INPUT_ACTIVITY_ORIENTATION, getRequestedOrientation());
+		this.getIntent().putExtra(LogFileChooserActivity.INPUT_REGEX_FILTER, ".*\\.csv");
+
     	Log.d(Tag, Boolean.toString(getWindow().hasFeature(Window.FEATURE_ACTION_BAR)));
     	Log.d(Tag, Boolean.toString(getWindow().hasFeature((Window.FEATURE_NO_TITLE))));
     	super.onCreate(savedInstanceState);
@@ -264,10 +292,122 @@ public class LogFileChooserActivity extends FileChooserActivity {
 			  alert_dlg.show();
 			  return true;
 		  case R.id.file_open:
-			intent = new Intent(LogFileChooserActivity.this, LogFileDisplayActivity.class);
+			/*intent = new Intent(LogFileChooserActivity.this, LogFileDisplayActivity.class);
 			intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
 			intent.putExtra(OUTPUT_FILE_OBJECT, selected_file_items.get(0).getFile());
-			startActivity(intent);
+			startActivity(intent);*/
+			LinearLayout measure_root_layout;
+			measure_root_layout = this.getMeasureResultLayout();
+			LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+			result_listview = ( ListView ) inflater.inflate ( R.layout.dna_result_listview, measure_root_layout, false );
+			SimpleAdapter adapter = null;// = new SimpleAdapter(this, fillMaps, R.layout.grid_item, from, to);
+			String[] sports = new String [] { "123", "111", "234" };
+			ArrayAdapter<String> adapter1 = new ArrayAdapter<String>(this, R.layout.simple_list_item_multiple_choice, sports );
+			dna_result_adapter adapter2 = new dna_result_adapter ( this, fillMaps ); 
+			
+			
+			measure_root_layout.removeAllViews();
+			if ( selected_file_items.get(0).getFile().getName().contains( "dsDNA" ) == true ||
+				 selected_file_items.get(0).getFile().getName().contains( "ssDNA" ) == true ||
+				 selected_file_items.get(0).getFile().getName().contains( "RNA" ) == true ) {
+				fillMaps.clear();
+				for ( int j = 0; j < 50; j++ ) {
+				HashMap<String, String> map = new HashMap<String, String>();
+				map.put( "No.", Integer.toString( j ) );
+				map.put( "Conc.", "Conc." );
+				map.put( "A260", "A260" );
+				map.put( "A260_A230", "A260/A230" );
+				map.put( "A260_A280", "A260/A280" );
+				fillMaps.add( map );
+				}
+				adapter = new SimpleAdapter ( this, fillMaps, R.layout.dna_result_listview_item, from, to );
+				result_listview.setAdapter( adapter2 );
+				//result_listview.setChoiceMode( ListView.CHOICE_MODE_MULTIPLE );
+				result_listview.setMultiChoiceModeListener( new MultiChoiceModeListener () {
+
+					@Override
+					public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+						// TODO Auto-generated method stub
+						return false;
+					}
+
+					@Override
+					public boolean onPrepareActionMode(ActionMode mode,
+							Menu menu) {
+						// TODO Auto-generated method stub
+						return false;
+					}
+
+					@Override
+					public boolean onActionItemClicked(ActionMode mode,
+							MenuItem item) {
+						// TODO Auto-generated method stub
+						return false;
+					}
+
+					@Override
+					public void onDestroyActionMode(ActionMode mode) {
+						// TODO Auto-generated method stub
+						
+					}
+
+					@Override
+					public void onItemCheckedStateChanged(ActionMode mode,
+							int position, long id, boolean checked) {
+						// TODO Auto-generated method stub
+						int count = result_listview.getCheckedItemCount();
+
+						mode.setTitle(String.format("%d Selected", count));
+					}
+					
+				});
+				result_listview.setDividerHeight( 3 );
+				result_listview.setOnItemSelectedListener( new OnItemSelectedListener() {
+
+					@Override
+					public void onItemSelected(AdapterView<?> parent,
+							View view, int position, long id) {
+						// TODO Auto-generated method stub
+						Log.d ( "tag", "select");
+						view.setBackgroundResource(android.R.color.black );
+					}
+
+					@Override
+					public void onNothingSelected(AdapterView<?> parent) {
+						// TODO Auto-generated method stub
+						Log.d ( "tag", "unselect");
+					}
+					
+				});
+				result_listview.setOnItemClickListener( new OnItemClickListener () {
+					CheckBox checkbox1;
+
+					@Override
+					public void onItemClick(AdapterView<?> parent, View view,
+							int position, long id) {
+						// TODO Auto-generated method stub
+						checkbox1 = ( CheckBox ) view.findViewById( R.id.checkbox2 );
+						Log.d ( "tag", "click");
+						if ( view.isSelected() ) {
+							view.setSelected( false );
+							Log.d ( "Tag: ", Boolean.toString( view.isSelected() ) );
+						}
+						else {
+							view.setSelected( true );
+							Log.d ( "Tag: ", Integer.toString( parent.getChildCount() ) );							
+						}
+						
+						checkbox1.toggle();
+					}
+					
+				});
+        	}
+			else
+				if ( selected_file_items.get(0).getFile().getName().contains( "PROTEIN" ) == true ) {
+					
+				}
+			adapter.notifyDataSetChanged();
+			measure_root_layout.addView( result_listview );
 			return true;			
 		  case R.id.file_rename:
 			  file_item = selected_file_items.get( 0 );

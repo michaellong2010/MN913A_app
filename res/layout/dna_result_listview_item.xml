@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:weightSum="1"
+    android:descendantFocusability="blocksDescendants" >
+<!-- android:descendantFocusability="blocksDescendants" -->
+    <TextView
+        android:id="@+id/item1"
+        android:layout_width="wrap_content"
+        android:layout_height="fill_parent"
+        android:layout_weight=".18"
+        android:gravity="center"
+        android:text="row_id"
+        android:textAppearance="@android:attr/textAppearanceLarge"
+        android:clickable="true"
+        android:focusable="false"
+        android:focusableInTouchMode="false" />
+
+    <TextView
+        android:id="@+id/item2"
+        android:layout_width="wrap_content"
+        android:layout_height="fill_parent"
+        android:layout_weight=".18"
+        android:gravity="center"
+        android:text="col_1"
+        android:textAppearance="@android:attr/textAppearanceLarge"
+        android:clickable="false"
+        android:focusable="false"
+        android:focusableInTouchMode="false" />
+
+    <TextView
+        android:id="@+id/item3"
+        android:layout_width="wrap_content"
+        android:layout_height="fill_parent"
+        android:layout_weight=".18"
+        android:gravity="center"
+        android:text="col_2"
+        android:textAppearance="@android:attr/textAppearanceLarge"
+        android:clickable="false"
+        android:focusable="false"
+        android:focusableInTouchMode="false" />
+
+    <TextView
+        android:id="@+id/item4"
+        android:layout_width="wrap_content"
+        android:layout_height="fill_parent"
+        android:layout_weight=".18"
+        android:gravity="center"
+        android:text="col_3"
+        android:textAppearance="@android:attr/textAppearanceLarge"
+        android:clickable="false"
+        android:focusable="false"
+        android:focusableInTouchMode="false" />
+
+    <TextView
+        android:id="@+id/item5"
+        android:layout_width="wrap_content"
+        android:layout_height="fill_parent"
+        android:layout_weight=".18"
+        android:gravity="center"
+        android:text="col_4"
+        android:textAppearance="@android:attr/textAppearanceLarge"
+        android:clickable="false"
+        android:focusable="false"
+        android:focusableInTouchMode="false" />
+
+     <CheckBox android:id="@+id/checkbox2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:layout_weight=".1"
+        android:clickable="false"
+        android:focusable="false"
+        android:focusableInTouchMode="false"/>
+</LinearLayout>
