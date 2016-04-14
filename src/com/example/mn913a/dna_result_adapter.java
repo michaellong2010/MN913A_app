@@ -8,6 +8,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.CheckBox;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -55,7 +56,7 @@ public class dna_result_adapter extends BaseAdapter {
         dna_result_layout = ( LinearLayout ) v;
         
         tv =  ( TextView ) dna_result_layout.findViewById( R.id.item1 );
-        tv.setText( Integer.toString ( position ) );
+        tv.setText( map.get("No.") );
         tv =  ( TextView ) dna_result_layout.findViewById( R.id.item2 );
         tv.setText( map.get("Conc.") );
         tv =  ( TextView ) dna_result_layout.findViewById( R.id.item3 );
@@ -64,7 +65,18 @@ public class dna_result_adapter extends BaseAdapter {
         tv.setText( map.get("A260_A230") );
         tv =  ( TextView ) dna_result_layout.findViewById( R.id.item5 );
         tv.setText( map.get("A260_A280") );
+        CheckBox checkbox1 = ( CheckBox ) dna_result_layout.findViewById( R.id.checkbox2 );
+        if ( map.get("isSelected") != null && map.get("isSelected").equals( "true" ) ) {
+        	checkbox1.setChecked( true );
+        }
+        else {
+        	checkbox1.setChecked( false );
+        }
 		return v;
+	}
+	
+	public void setItemSelection ( int position ) {
+		
 	}
 
 }

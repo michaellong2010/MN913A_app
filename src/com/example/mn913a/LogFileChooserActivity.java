@@ -1,6 +1,7 @@
 package com.example.mn913a;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -10,6 +11,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+
+import com.example.mn913a.file.FileOperation;
+
 
 import android.annotation.SuppressLint;
 import android.app.ActionBar;
@@ -78,6 +82,11 @@ public class LogFileChooserActivity extends FileChooserActivity {
 	String[] from = new String[] { "No.", "Conc.", "A260", "A260_A230", "A260_A280" };
 	int[] to = new int [] { R.id.item1, R.id.item2, R.id.item3, R.id.item4, R.id.item5 };
 	ListView result_listview;
+	ActionMode mMode = null;
+	ActionMode.Callback mCallback;
+	File mActiveFile = null;
+	String measure_type, measure_result;
+	
     @Override
     public void onCreate(Bundle savedInstanceState) {
 		this.getIntent().putExtra(FileChooserActivity.INPUT_SHOW_FULL_PATH_IN_TITLE, true);
@@ -230,6 +239,79 @@ public class LogFileChooserActivity extends FileChooserActivity {
             				icon.setImageDrawable(getResources().getDrawable( com.example.mn913a.R.drawable.file_protein ));
             			}
     	}
+    	
+
+    	mCallback = new ActionMode.Callback() {
+
+			@Override
+			public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+				// TODO Auto-generated method stub
+				mode.setTitle( "1 Item Selected" );
+				getMenuInflater().inflate(R.menu.dna_result_menu, menu);
+				
+				menu.findItem( R.id.item_selection_all );
+				menu.findItem( R.id.item_unselection_all );
+				menu.findItem( R.id.item_delete );
+				menu.findItem( R.id.item_print );
+				return true;
+			}
+
+			@Override
+			public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+				// TODO Auto-generated method stub
+				return false;
+			}
+
+			@Override
+			public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+				// TODO Auto-generated method stub
+				switch (item.getItemId()) {
+				case R.id.item_delete:
+					Iterator<HashMap<String, String>> it;
+					HashMap <String, String> map1;
+					it = fillMaps.iterator();
+					while ( it.hasNext() ) {
+						map1 = it.next();
+						if ( map1.get( "isSelected" ) != null && map1.get( "isSelected" ).equals( "true" ) ) {
+							it.remove();
+							//fillMaps.remove( map1 );
+						}
+					}
+					/*for ( HashMap <String, String> map : fillMaps ) {
+						if ( map.get( "isSelected" ) != null && map.get( "isSelected" ).equals( "true" ) )
+							fillMaps.remo
+					}*/
+					( ( dna_result_adapter ) result_listview.getAdapter() ).notifyDataSetChanged();
+					mMode.setTitle( Integer.toString ( 0 ) + " Item Selected");
+					return true;
+				case R.id.item_print:
+					break;
+				case R.id.item_selection_all:
+					for ( HashMap <String, String> map : fillMaps )
+						map.put( "isSelected", "true" );
+					( ( dna_result_adapter ) result_listview.getAdapter() ).notifyDataSetChanged();
+					mMode.setTitle( Integer.toString ( fillMaps.size() ) + " Item Selected");
+					return true;
+				case R.id.item_unselection_all:
+					for ( HashMap <String, String> map : fillMaps )
+						map.put( "isSelected", "false" );
+					( ( dna_result_adapter ) result_listview.getAdapter() ).notifyDataSetChanged();
+					mMode.setTitle( Integer.toString ( 0 ) + " Item Selected");
+					return true;
+
+				default:
+					return false;
+				}
+				return false;
+			}
+
+			@Override
+			public void onDestroyActionMode(ActionMode mode) {
+				// TODO Auto-generated method stub
+				mMode = null;
+			}
+    		
+    	};
     }
     
 	@Override
@@ -296,6 +378,63 @@ public class LogFileChooserActivity extends FileChooserActivity {
 			intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
 			intent.putExtra(OUTPUT_FILE_OBJECT, selected_file_items.get(0).getFile());
 			startActivity(intent);*/
+			if ( mActiveFile == selected_file_items.get(0).getFile() )
+				return true;
+			else {
+				if ( mActiveFile != null ) {
+					alert_message = "The file \'$file_name\' has been changed, save or discard change?";
+					alert_message = alert_message.replace( "$file_name", mActiveFile.getName());
+					alert_dlg.setMessage( alert_message );
+					alert_dlg.setTitle( "Save file" );
+					alert_dlg.setButton(DialogInterface.BUTTON_POSITIVE, "Yes", new DialogInterface.OnClickListener() {
+
+						@Override
+						public void onClick(DialogInterface dialog, int which) {
+							// TODO Auto-generated method stub
+							FileOperation write_file = new FileOperation ( "Measure", mActiveFile.getName(), false );
+							try {
+								write_file.set_file_extension ( ".csv" ); 
+								write_file.create_file ( mActiveFile.getName() );
+							} catch (IOException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+							
+							if ( mActiveFile.getName().contains( "dsDNA" ) )
+								measure_type = "dsDNA";
+							else
+								if ( mActiveFile.getName().contains( "ssDNA" ) )
+									measure_type = "ssDNA";
+								else
+									if ( mActiveFile.getName().contains( "RNA" ) )
+										measure_type = "RNA";
+									else
+										if ( mActiveFile.getName().contains( "PROTEIN" ) )
+											measure_type = "PROTEIN";
+									
+							write_file.write_file ( measure_type, true );
+							
+							for ( HashMap<String, String> map : fillMaps ) {
+								measure_result = map.get( "No." ) + ", " + map.get( "Conc." ) + ", " + map.get( "A260" ) + ", " + map.get( "A260_A280" ) + ", " + map.get( "A260_A230" );
+								write_file.write_file ( measure_result, true );
+							}
+							write_file.flush_close_file();
+						}
+						
+					});
+					alert_dlg.setButton(DialogInterface.BUTTON_NEGATIVE, "No", new DialogInterface.OnClickListener() {
+
+						@Override
+						public void onClick(DialogInterface dialog, int which) {
+							// TODO Auto-generated method stub
+							
+						}
+						
+					});
+					alert_dlg.show();
+				}
+				mActiveFile = selected_file_items.get(0).getFile();
+			}
 			LinearLayout measure_root_layout;
 			measure_root_layout = this.getMeasureResultLayout();
 			LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -303,8 +442,7 @@ public class LogFileChooserActivity extends FileChooserActivity {
 			SimpleAdapter adapter = null;// = new SimpleAdapter(this, fillMaps, R.layout.grid_item, from, to);
 			String[] sports = new String [] { "123", "111", "234" };
 			ArrayAdapter<String> adapter1 = new ArrayAdapter<String>(this, R.layout.simple_list_item_multiple_choice, sports );
-			dna_result_adapter adapter2 = new dna_result_adapter ( this, fillMaps ); 
-			
+			dna_result_adapter adapter2 = new dna_result_adapter ( this, fillMaps );			
 			
 			measure_root_layout.removeAllViews();
 			if ( selected_file_items.get(0).getFile().getName().contains( "dsDNA" ) == true ||
@@ -381,11 +519,13 @@ public class LogFileChooserActivity extends FileChooserActivity {
 				});
 				result_listview.setOnItemClickListener( new OnItemClickListener () {
 					CheckBox checkbox1;
+					int selection_count = 0;
 
 					@Override
 					public void onItemClick(AdapterView<?> parent, View view,
 							int position, long id) {
 						// TODO Auto-generated method stub
+						selection_count = 0;
 						checkbox1 = ( CheckBox ) view.findViewById( R.id.checkbox2 );
 						Log.d ( "tag", "click");
 						if ( view.isSelected() ) {
@@ -397,7 +537,32 @@ public class LogFileChooserActivity extends FileChooserActivity {
 							Log.d ( "Tag: ", Integer.toString( parent.getChildCount() ) );							
 						}
 						
+						//parent.getAdapter().
 						checkbox1.toggle();
+						if ( checkbox1.isChecked() ) {
+							fillMaps.get( position ).put( "isSelected", "true" );
+						}
+						else {
+							fillMaps.get( position ).put( "isSelected", "false" );
+						}
+						
+						for ( HashMap <String, String> map : fillMaps ) {
+							if ( map.get( "isSelected" ) != null && fillMaps.get( position ).get( "isSelected" ).equals( "true" )) {
+								selection_count++;
+								//break;
+							}
+						}
+						
+						if ( selection_count > 0 ) {
+							if (mMode == null)
+								mMode = startActionMode(mCallback);
+							else {
+								mMode.setTitle( Integer.toString ( selection_count ) + " Item Selected");
+							}
+						}
+						else {
+							mMode.finish();
+						}
 					}
 					
 				});
