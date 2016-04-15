@@ -75,6 +75,12 @@ public class FileOperation {
 			//	Show_Toast_Msg(Flush_File);
 				file_buf = null;
 			}
+			
+			if ( file_buf_read != null ) {
+				file_buf_read.close();
+				Flush_File = "log file saved: " + file.getPath(); 
+				file_buf_read = null;
+			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

@@ -45,7 +45,7 @@ public class testlist extends Activity {
 		}
 		
 		measure_root_layout = ( LinearLayout ) this.findViewById( R.id.measure_result_Layout );
-		measure_root_layout.addView( ((LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate ( com.example.mn913a.R.layout.dna_result_listview, measure_root_layout, false ) );
+		measure_root_layout.addView( ((LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate ( com.example.mn913a.R.layout.result_listview, measure_root_layout, false ) );
 		adapter = new SimpleAdapter ( this, fillMaps, com.example.mn913a.R.layout.dna_result_listview_item, from, to );
 		lv = ( ListView ) this.findViewById( com.example.mn913a.R.id.listview );
 		lv.setAdapter( adapter );

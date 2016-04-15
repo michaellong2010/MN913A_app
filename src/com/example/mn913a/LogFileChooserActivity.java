@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import com.example.mn913a.file.FileOperation;
 
@@ -79,13 +80,18 @@ public class LogFileChooserActivity extends FileChooserActivity {
 	
 	/*20160412 added by michael*/
 	List<HashMap<String, String>> fillMaps = new ArrayList<HashMap<String, String>>();
+	List<HashMap<String, String>> fillMaps1 = new ArrayList<HashMap<String, String>>();
 	String[] from = new String[] { "No.", "Conc.", "A260", "A260_A230", "A260_A280" };
 	int[] to = new int [] { R.id.item1, R.id.item2, R.id.item3, R.id.item4, R.id.item5 };
 	ListView result_listview;
 	ActionMode mMode = null;
 	ActionMode.Callback mCallback;
-	File mActiveFile = null;
+	File mActiveFile = null, mActiveFile1 = null;
 	String measure_type, measure_result;
+	String [] measure_result_array;
+	String[] dna_from = new String[] { "No.", "Conc.", "A260", "A260_A280", "A260_A230" };
+	String[] protein_from = new String[] { "No.", "A280" };
+	Boolean mIsFileDirty = false, mIsFileDirty1 = false;
 	
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -158,6 +164,8 @@ public class LogFileChooserActivity extends FileChooserActivity {
 					selected_file_items.removeAll ( Collections.singletonList( source ) );
 				
 				update_actionbar_optiomenu();
+				if ( mMode != null )
+					mMode.finish ( );
 			}
 
 			@Override
@@ -281,21 +289,34 @@ public class LogFileChooserActivity extends FileChooserActivity {
 						if ( map.get( "isSelected" ) != null && map.get( "isSelected" ).equals( "true" ) )
 							fillMaps.remo
 					}*/
-					( ( dna_result_adapter ) result_listview.getAdapter() ).notifyDataSetChanged();
+					if ( result_listview.getAdapter() instanceof dna_result_adapter )
+						( ( dna_result_adapter ) result_listview.getAdapter() ).notifyDataSetChanged();
+					else
+						if ( result_listview.getAdapter() instanceof protein_result_adapter )
+							( ( protein_result_adapter ) result_listview.getAdapter() ).notifyDataSetChanged();
 					mMode.setTitle( Integer.toString ( 0 ) + " Item Selected");
+					mIsFileDirty = true;
 					return true;
 				case R.id.item_print:
 					break;
 				case R.id.item_selection_all:
 					for ( HashMap <String, String> map : fillMaps )
 						map.put( "isSelected", "true" );
-					( ( dna_result_adapter ) result_listview.getAdapter() ).notifyDataSetChanged();
+					if ( result_listview.getAdapter() instanceof dna_result_adapter )
+						( ( dna_result_adapter ) result_listview.getAdapter() ).notifyDataSetChanged();
+					else
+						if ( result_listview.getAdapter() instanceof protein_result_adapter )
+							( ( protein_result_adapter ) result_listview.getAdapter() ).notifyDataSetChanged();
 					mMode.setTitle( Integer.toString ( fillMaps.size() ) + " Item Selected");
 					return true;
 				case R.id.item_unselection_all:
 					for ( HashMap <String, String> map : fillMaps )
 						map.put( "isSelected", "false" );
-					( ( dna_result_adapter ) result_listview.getAdapter() ).notifyDataSetChanged();
+					if ( result_listview.getAdapter() instanceof dna_result_adapter )
+						( ( dna_result_adapter ) result_listview.getAdapter() ).notifyDataSetChanged();
+					else
+						if ( result_listview.getAdapter() instanceof protein_result_adapter )
+							( ( protein_result_adapter ) result_listview.getAdapter() ).notifyDataSetChanged();
 					mMode.setTitle( Integer.toString ( 0 ) + " Item Selected");
 					return true;
 
@@ -386,37 +407,55 @@ public class LogFileChooserActivity extends FileChooserActivity {
 					alert_message = alert_message.replace( "$file_name", mActiveFile.getName());
 					alert_dlg.setMessage( alert_message );
 					alert_dlg.setTitle( "Save file" );
+					fillMaps1.clear();
+					for ( HashMap<String, String> map : fillMaps ) {
+						HashMap<String, String> map1 = new HashMap<String, String> ( );
+						for ( Map.Entry<String, String> entry: map.entrySet() )
+							map1.put( entry.getKey ( ), new String(entry.getValue ( ) ) );
+						fillMaps1.add ( map1 );
+						//fillMaps1.add( (HashMap<String, String>) map.clone() );
+					}
+					mActiveFile1 = mActiveFile;
+					mIsFileDirty1 = mIsFileDirty;
 					alert_dlg.setButton(DialogInterface.BUTTON_POSITIVE, "Yes", new DialogInterface.OnClickListener() {
 
 						@Override
 						public void onClick(DialogInterface dialog, int which) {
 							// TODO Auto-generated method stub
-							FileOperation write_file = new FileOperation ( "Measure", mActiveFile.getName(), false );
+							FileOperation write_file = new FileOperation ( "Measure", mActiveFile1.getName(), false );
 							try {
 								write_file.set_file_extension ( ".csv" ); 
-								write_file.create_file ( mActiveFile.getName() );
+								write_file.create_file ( mActiveFile1.getName() );
 							} catch (IOException e) {
 								// TODO Auto-generated catch block
 								e.printStackTrace();
 							}
 							
-							if ( mActiveFile.getName().contains( "dsDNA" ) )
+							if ( mActiveFile1.getName().contains( "dsDNA" ) )
 								measure_type = "dsDNA";
 							else
-								if ( mActiveFile.getName().contains( "ssDNA" ) )
+								if ( mActiveFile1.getName().contains( "ssDNA" ) )
 									measure_type = "ssDNA";
 								else
-									if ( mActiveFile.getName().contains( "RNA" ) )
+									if ( mActiveFile1.getName().contains( "RNA" ) )
 										measure_type = "RNA";
 									else
-										if ( mActiveFile.getName().contains( "PROTEIN" ) )
+										if ( mActiveFile1.getName().contains( "PROTEIN" ) )
 											measure_type = "PROTEIN";
 									
 							write_file.write_file ( measure_type, true );
 							
-							for ( HashMap<String, String> map : fillMaps ) {
+							if ( measure_type == "dsDNA" || measure_type == "ssDNA" || measure_type == "RNA" ) {
+							for ( HashMap<String, String> map : fillMaps1 ) {
 								measure_result = map.get( "No." ) + ", " + map.get( "Conc." ) + ", " + map.get( "A260" ) + ", " + map.get( "A260_A280" ) + ", " + map.get( "A260_A230" );
 								write_file.write_file ( measure_result, true );
+							}
+							}
+							else {
+								for ( HashMap<String, String> map : fillMaps1 ) {
+									measure_result = map.get( "No." ) + ", " + map.get( "A280" );
+									write_file.write_file ( measure_result, true );
+								}								
 							}
 							write_file.flush_close_file();
 						}
@@ -431,25 +470,30 @@ public class LogFileChooserActivity extends FileChooserActivity {
 						}
 						
 					});
-					alert_dlg.show();
+					if ( mIsFileDirty == true )
+						alert_dlg.show();
 				}
 				mActiveFile = selected_file_items.get(0).getFile();
 			}
 			LinearLayout measure_root_layout;
 			measure_root_layout = this.getMeasureResultLayout();
 			LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-			result_listview = ( ListView ) inflater.inflate ( R.layout.dna_result_listview, measure_root_layout, false );
+			result_listview = ( ListView ) inflater.inflate ( R.layout.result_listview, measure_root_layout, false );
 			SimpleAdapter adapter = null;// = new SimpleAdapter(this, fillMaps, R.layout.grid_item, from, to);
 			String[] sports = new String [] { "123", "111", "234" };
 			ArrayAdapter<String> adapter1 = new ArrayAdapter<String>(this, R.layout.simple_list_item_multiple_choice, sports );
-			dna_result_adapter adapter2 = new dna_result_adapter ( this, fillMaps );			
+			dna_result_adapter adapter2 = new dna_result_adapter ( this, fillMaps );
+			protein_result_adapter adapter3 = new protein_result_adapter ( this, fillMaps );
 			
 			measure_root_layout.removeAllViews();
+			FileOperation read_file = new FileOperation ( "Measure", mActiveFile.getName(), false );
+			fillMaps.clear();
+			result_listview.setDividerHeight( 3 );
+			mIsFileDirty = false;
 			if ( selected_file_items.get(0).getFile().getName().contains( "dsDNA" ) == true ||
 				 selected_file_items.get(0).getFile().getName().contains( "ssDNA" ) == true ||
 				 selected_file_items.get(0).getFile().getName().contains( "RNA" ) == true ) {
-				fillMaps.clear();
-				for ( int j = 0; j < 50; j++ ) {
+				/*for ( int j = 0; j < 50; j++ ) {
 				HashMap<String, String> map = new HashMap<String, String>();
 				map.put( "No.", Integer.toString( j ) );
 				map.put( "Conc.", "Conc." );
@@ -457,6 +501,25 @@ public class LogFileChooserActivity extends FileChooserActivity {
 				map.put( "A260_A230", "A260/A230" );
 				map.put( "A260_A280", "A260/A280" );
 				fillMaps.add( map );
+				}*/
+				try {
+					read_file.open_read_file( mActiveFile.getName() );
+					while ( ( measure_result = read_file.read_file() ) != null ) {
+					  Log.d ( "Tag", measure_result);
+					  measure_result_array = measure_result.split( ", " );
+					  if ( measure_result_array.length == dna_from.length ) {
+							HashMap<String, String> map = new HashMap<String, String>();
+							for (int j = 0; j < measure_result_array.length; j++) {
+								map.put(dna_from[j], measure_result_array[j]);
+								//map.put( "isSelected", "false" );
+							}
+							fillMaps.add(map);
+					  }
+					}
+					read_file.flush_close_file();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				}
 				adapter = new SimpleAdapter ( this, fillMaps, R.layout.dna_result_listview_item, from, to );
 				result_listview.setAdapter( adapter2 );
@@ -499,7 +562,6 @@ public class LogFileChooserActivity extends FileChooserActivity {
 					}
 					
 				});
-				result_listview.setDividerHeight( 3 );
 				result_listview.setOnItemSelectedListener( new OnItemSelectedListener() {
 
 					@Override
@@ -547,7 +609,7 @@ public class LogFileChooserActivity extends FileChooserActivity {
 						}
 						
 						for ( HashMap <String, String> map : fillMaps ) {
-							if ( map.get( "isSelected" ) != null && fillMaps.get( position ).get( "isSelected" ).equals( "true" )) {
+							if ( map.get( "isSelected" ) != null && map.get( "isSelected" ).equals( "true" )) {
 								selection_count++;
 								//break;
 							}
@@ -569,9 +631,73 @@ public class LogFileChooserActivity extends FileChooserActivity {
         	}
 			else
 				if ( selected_file_items.get(0).getFile().getName().contains( "PROTEIN" ) == true ) {
-					
+					/*for ( int j = 0; j < 50; j++ ) {
+					HashMap<String, String> map = new HashMap<String, String>();
+					map.put( "No.", Integer.toString( j ) );
+					map.put( "A280", "OD" );
+					fillMaps.add( map );
+					}*/
+					try {
+						read_file.open_read_file( mActiveFile.getName() );
+						while ( ( measure_result = read_file.read_file() ) != null ) {
+						  Log.d ( "Tag", measure_result);
+						  measure_result_array = measure_result.split( ", " );
+						  if ( measure_result_array.length == protein_from.length ) {
+								HashMap<String, String> map = new HashMap<String, String>();
+								for (int j = 0; j < measure_result_array.length; j++) {
+									map.put(protein_from[j], measure_result_array[j]);
+									//map.put( "isSelected", "false" );
+								}
+								fillMaps.add(map);
+						  }
+						}
+						read_file.flush_close_file();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					result_listview.setAdapter( adapter3 );
+					result_listview.setOnItemClickListener( new OnItemClickListener () {
+						CheckBox checkbox1;
+						int selection_count = 0;
+						
+						@Override
+						public void onItemClick(AdapterView<?> parent,
+								View view, int position, long id) {
+							// TODO Auto-generated method stub
+							selection_count = 0;
+							checkbox1 = ( CheckBox ) view.findViewById( R.id.checkbox2 );
+							
+							checkbox1.toggle();
+							if ( checkbox1.isChecked() ) {
+								fillMaps.get( position ).put( "isSelected", "true" );
+							}
+							else {
+								fillMaps.get( position ).put( "isSelected", "false" );
+							}
+							
+							for ( HashMap <String, String> map : fillMaps ) {
+								if ( map.get( "isSelected" ) != null && map.get( "isSelected" ).equals( "true" )) {
+									selection_count++;
+									//break;
+								}
+							}
+							
+							if ( selection_count > 0 ) {
+								if (mMode == null)
+									mMode = startActionMode(mCallback);
+								else {
+									mMode.setTitle( Integer.toString ( selection_count ) + " Item Selected");
+								}
+							}
+							else {
+								mMode.finish();
+							}
+						}
+						
+					});
 				}
-			adapter.notifyDataSetChanged();
+			//adapter.notifyDataSetChanged();
 			measure_root_layout.addView( result_listview );
 			return true;			
 		  case R.id.file_rename:

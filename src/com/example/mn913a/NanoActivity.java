@@ -794,6 +794,12 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
     };
     
     @Override
+    protected void onStop() {
+    	super.onStop();
+    	show_system_bar();
+    }
+    
+    @Override
     protected void onStart() {
     	super.onStart();
 
@@ -879,6 +885,15 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
     	else
     		Log.d ( Tag, "hide system bar fail!" );
     	
+    }
+    
+    public void show_system_bar() {
+    	String result;
+    	result = exec_shell_command ( "am startservice -n com.android.systemui/.SystemUIService\n" );
+    	if ( result.equals( Msg_Shell_Command_Error) == false )
+    		Log.d ( Tag, "show system bar successfully!" );
+    	else
+    		Log.d ( Tag, "show system bar fail!" );
     }
     
     /*20160318 added by michael*/
