@@ -93,7 +93,8 @@
              android:layout_marginLeft="1104dp"
              android:layout_marginTop="447dp"
              android:background="@drawable/btn_setting"
-             android:onClick="switch_to_setting_page" />
+              />
+         <!-- android:onClick="switch_to_setting_page" -->
 
     </RelativeLayout>
     

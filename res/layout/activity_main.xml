@@ -48,5 +48,14 @@
         android:layout_alignTop="@+id/imageView1"
         android:layout_toRightOf="@+id/button1"
         android:text="Measure" />
+    
+    <ImageButton
+            android:id="@+id/main_home"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:src="@drawable/btn_home"
+            android:onClick="switch_to_main_page" />
 
 </RelativeLayout>

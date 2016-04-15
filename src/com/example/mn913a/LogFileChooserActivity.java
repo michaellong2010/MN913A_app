@@ -2,6 +2,8 @@ package com.example.mn913a;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -92,6 +94,7 @@ public class LogFileChooserActivity extends FileChooserActivity {
 	String[] dna_from = new String[] { "No.", "Conc.", "A260", "A260_A280", "A260_A230" };
 	String[] protein_from = new String[] { "No.", "A280" };
 	Boolean mIsFileDirty = false, mIsFileDirty1 = false;
+	int mSelected_items_count = 0;
 	
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -295,9 +298,30 @@ public class LogFileChooserActivity extends FileChooserActivity {
 						if ( result_listview.getAdapter() instanceof protein_result_adapter )
 							( ( protein_result_adapter ) result_listview.getAdapter() ).notifyDataSetChanged();
 					mMode.setTitle( Integer.toString ( 0 ) + " Item Selected");
+					mSelected_items_count = 0;
 					mIsFileDirty = true;
 					return true;
 				case R.id.item_print:
+					byte [] byte_array = new byte [8192];
+					byte[] bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt(mSelected_items_count).array();
+					System.arraycopy ( bytes, 0, byte_array, 0, bytes.length);
+					Log.d ( "Tag", Integer.toString( byte_array.length ) );
+					//double conc, A260, A260_A280, A260_A230;
+					if ( result_listview.getAdapter() instanceof dna_result_adapter ) {
+						for ( HashMap<String, String> map : fillMaps ) {
+							if ( map.get( "isSelected" ) != null && map.get( "isSelected" ).equals( "true" ) ) {
+								
+							}
+						}
+					}
+					else
+						if ( result_listview.getAdapter() instanceof protein_result_adapter ) {
+							for ( HashMap<String, String> map : fillMaps ) {
+								if ( map.get( "isSelected" ) != null && map.get( "isSelected" ).equals( "true" ) ) {
+									
+								}
+							}							
+						}
 					break;
 				case R.id.item_selection_all:
 					for ( HashMap <String, String> map : fillMaps )
@@ -308,6 +332,7 @@ public class LogFileChooserActivity extends FileChooserActivity {
 						if ( result_listview.getAdapter() instanceof protein_result_adapter )
 							( ( protein_result_adapter ) result_listview.getAdapter() ).notifyDataSetChanged();
 					mMode.setTitle( Integer.toString ( fillMaps.size() ) + " Item Selected");
+					mSelected_items_count = fillMaps.size();
 					return true;
 				case R.id.item_unselection_all:
 					for ( HashMap <String, String> map : fillMaps )
@@ -318,6 +343,7 @@ public class LogFileChooserActivity extends FileChooserActivity {
 						if ( result_listview.getAdapter() instanceof protein_result_adapter )
 							( ( protein_result_adapter ) result_listview.getAdapter() ).notifyDataSetChanged();
 					mMode.setTitle( Integer.toString ( 0 ) + " Item Selected");
+					mSelected_items_count = 0;
 					return true;
 
 				default:
@@ -621,6 +647,7 @@ public class LogFileChooserActivity extends FileChooserActivity {
 							else {
 								mMode.setTitle( Integer.toString ( selection_count ) + " Item Selected");
 							}
+							mSelected_items_count = selection_count;
 						}
 						else {
 							mMode.finish();
@@ -689,6 +716,7 @@ public class LogFileChooserActivity extends FileChooserActivity {
 								else {
 									mMode.setTitle( Integer.toString ( selection_count ) + " Item Selected");
 								}
+								mSelected_items_count = selection_count;
 							}
 							else {
 								mMode.finish();

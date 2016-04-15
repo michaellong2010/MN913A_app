@@ -183,7 +183,7 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 		
 		EnumerationDevice(getIntent());
 
-		ImageButton imageButton1, imageButton2, imageButton3, imageButton4, btn_protein;
+		ImageButton imageButton1, imageButton2, imageButton3, imageButton4, btn_protein, btn_analysis;
 		View.OnClickListener click_listener;
 		click_listener = new OnClickListener() {
 
@@ -445,6 +445,80 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 					}
 					
 				});
+			}
+			
+		});
+		btn_analysis = ( ImageButton ) findViewById( R.id.imageButton6 );
+		btn_analysis.setOnClickListener( new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				RelativeLayout setting_page = null;
+				mLayout_Content.removeAllViews ( );
+				if ( mLayout_SettingPage == null )
+					setting_page = ( RelativeLayout ) inflater.inflate( R.layout.activity_main, null );
+				//setting_page.setBackgroundColor( NanoActivity.this.getResources().getColor( android.R.color.background_dark ) );
+				mLayout_Content.addView( setting_page );
+				
+				SeekBar seekbar1;
+				seekbar1 = (SeekBar) findViewById(R.id.seekBar1);
+				//seekbar1.setEnabled(Adjust_Detection_Sensitivity);
+				seekbar1.setProgress ( 162 );
+				Cur_Voltage_Level = 162;
+				seekbar1.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+					
+					@Override
+					public void onStopTrackingTouch(SeekBar seekBar) {
+						// TODO Auto-generated method stub
+						if ( seekBar.getProgress() < 162 )
+							seekBar.setProgress ( 162 );
+					}
+					
+					@Override
+					public void onStartTrackingTouch(SeekBar seekBar) {
+						// TODO Auto-generated method stub
+						
+					}
+					
+					@Override
+					public void onProgressChanged(SeekBar seekBar, int progress,
+							boolean fromUser) {
+						// TODO Auto-generated method stub
+						Cur_Voltage_Level = progress;
+						TextView seekbar_value;
+						seekbar_value = (TextView) findViewById(R.id.textView1);
+						xenon_voltage = 3.17 + ( 4.7 - 3.17 ) * ( Cur_Voltage_Level - 162 ) / ( 242 - 162 );
+						seekbar_value.setText( String.format( "%.3f", xenon_voltage ) + "V");
+					}
+				});
+				TextView seekbar_value;
+				seekbar_value = (TextView) findViewById(R.id.textView1);
+				xenon_voltage = 3.17 + ( 4.7 - 3.17 ) * ( seekbar1.getProgress() - 162 ) / ( 242 - 162 );
+				seekbar_value.setText( String.format( "%.3f", xenon_voltage ) + "V");
+				
+				Setting_Btn = ( Button ) findViewById(R.id.button1);
+				Setting_Btn.setOnClickListener( new OnClickListener() {
+
+					@Override
+					public void onClick(View v) {
+						// TODO Auto-generated method stub
+						mNano_dev.Set_Xenon_Voltage_Level ( Cur_Voltage_Level );
+						mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_SETTING, 0, 0, null, 1);
+					}
+					
+				});
+				Measure_Btn = ( Button ) findViewById(R.id.button2);
+				Measure_Btn.setOnClickListener( new OnClickListener() {
+
+					@Override
+					public void onClick(View v) {
+						// TODO Auto-generated method stub
+						mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_MEASURE, 0, 0, null, 1);
+					}
+					
+				});
+				
 			}
 			
 		});
