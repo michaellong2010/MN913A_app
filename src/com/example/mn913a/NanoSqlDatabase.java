@@ -88,7 +88,7 @@ public class NanoSqlDatabase {
 		String A280_value = Double.toString( truncateDecimal ( protein_data.A280, 3 ).doubleValue() );
 		
 		String sql_protein_value = "insert into " + PROTEIN_VALUE_TABLE_NAME + " ("
-				+ INDEX + ", " + A280 + ") values('" + index + "', '" + A280_value +"');";
+				+ INDEX + ", " + A280 + ") values('" + index + "', '" + A280_value + "');";
 
 		try {
 			Nano_db.execSQL( sql_protein_value );

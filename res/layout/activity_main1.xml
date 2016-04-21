@@ -35,7 +35,7 @@
             android:layout_width="365dp"
             android:layout_height="150dp"
             android:layout_marginLeft="93dp"
-            android:layout_marginTop="91dp"
+            android:layout_marginTop="51dp"
             android:background="@drawable/btn_dsdna" />
 
          <ImageButton
@@ -43,7 +43,7 @@
              android:layout_width="365dp"
              android:layout_height="150dp"
              android:layout_marginLeft="93dp"
-             android:layout_marginTop="269dp"
+             android:layout_marginTop="239dp"
              android:background="@drawable/btn_ssdna" />
 
          <ImageButton
@@ -51,7 +51,7 @@
              android:layout_width="365dp"
              android:layout_height="150dp"
              android:layout_marginLeft="93dp"
-             android:layout_marginTop="447dp"
+             android:layout_marginTop="437dp"
              android:background="@drawable/btn_management" />
 
          <ImageButton
@@ -59,7 +59,7 @@
              android:layout_width="365dp"
              android:layout_height="150dp"
              android:layout_marginLeft="588dp"
-             android:layout_marginTop="91dp"
+             android:layout_marginTop="51dp"
              android:background="@drawable/btn_rna" />
 
          <ImageButton
@@ -67,7 +67,7 @@
              android:layout_width="365dp"
              android:layout_height="150dp"
              android:layout_marginLeft="588dp"
-             android:layout_marginTop="269dp"
+             android:layout_marginTop="239dp"
              android:background="@drawable/btn_protein" />
 
          <ImageButton
@@ -75,23 +75,25 @@
              android:layout_width="365dp"
              android:layout_height="150dp"
              android:layout_marginLeft="588dp"
-             android:layout_marginTop="447dp"
-             android:background="@drawable/btn_analysis" />
+             android:layout_marginTop="437dp"
+             android:background="@drawable/btn_analysis"
+             android:visibility="invisible" />
 
          <ImageButton
              android:id="@+id/imageButton7"
              android:layout_width="110dp"
              android:layout_height="110dp"
              android:layout_marginLeft="1113dp"
-             android:layout_marginTop="91dp"
-             android:background="@drawable/btn_about" />
+             android:layout_marginTop="51dp"
+             android:background="@drawable/btn_about"
+             android:visibility="invisible" />
 
          <ImageButton
              android:id="@+id/imageButton8"
              android:layout_width="110dp"
              android:layout_height="110dp"
              android:layout_marginLeft="1104dp"
-             android:layout_marginTop="447dp"
+             android:layout_marginTop="437dp"
              android:background="@drawable/btn_setting"
               />
          <!-- android:onClick="switch_to_setting_page" -->
@@ -113,7 +115,7 @@
             android:id="@+id/lbltime"
             android:textColor="@android:color/white"
             android:fontFamily="Calibri"
-            android:textSize="12pt" />
+            android:textSize="10pt" />
 
     </RelativeLayout>
 </LinearLayout>

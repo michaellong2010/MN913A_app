@@ -22,6 +22,7 @@ import com.example.mn913a.file.FileOperation;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -97,6 +98,10 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 	File sdcard = Environment.getExternalStorageDirectory();
 	final String Nano_Data_Dir = sdcard.getPath() + "/MaestroNano/Measure/";
 	
+	AlertDialog alert_dlg;
+	AlertDialog.Builder alert_dlg_builder;
+	String alert_message = "Are you sure that you want to delete the file \'$file_name\'?";
+	boolean Cur_A320_Involve = false, Cur_Led_Onoff_State = false, Cur_Auto_Measure = false;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -182,7 +187,12 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 		});*/
 		
 		EnumerationDevice(getIntent());
-
+		alert_dlg_builder = new AlertDialog.Builder( this );
+    	alert_dlg = alert_dlg_builder.create();
+		alert_message = "The file \'$file_name\' has been changed, save or discard change?";
+		alert_dlg.setMessage( alert_message );
+		alert_dlg.setTitle( "Message" );
+		
 		ImageButton imageButton1, imageButton2, imageButton3, imageButton4, btn_protein, btn_analysis;
 		View.OnClickListener click_listener;
 		click_listener = new OnClickListener() {
@@ -235,12 +245,16 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 				blank_valid = false;
 				
 				btn_blank = ( ImageButton ) NanoActivity.this.findViewById ( R.id.imageButton1 );
+				btn_blank.setEnabled( true );
 				btn_sample = ( ImageButton ) NanoActivity.this.findViewById ( R.id.imageButton2 );
+				btn_sample.setEnabled( false );
 				srcTable = new ArrayList<HashMap<String, String>>();
 				saTable = new SimpleAdapter ( NanoActivity.this , srcTable, R.layout.griditem, new String[] { "ItemText1", "ItemText2", "ItemText3" }, new int[] { R.id.ItemText1, R.id.ItemText2, R.id.ItemText3 } );
 				table.gvUpdatePageBar("select count(*) from " + NanoSqlDatabase.DNA_VALUE_TABLE_NAME, nano_database.get_database());
 			    table.gvReadyTable("select * from " + NanoSqlDatabase.DNA_VALUE_TABLE_NAME, nano_database.get_database());
 				table.refresh_last_table();
+				
+				dna_data_list.clear ( );
 				
 				btn_blank.setOnClickListener( new OnClickListener() {
 
@@ -265,10 +279,14 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 						table.gvUpdatePageBar("select count(*) from " + NanoSqlDatabase.DNA_VALUE_TABLE_NAME, nano_database.get_database());
 					    table.gvReadyTable("select * from " + NanoSqlDatabase.DNA_VALUE_TABLE_NAME, nano_database.get_database());
 					    table.refresh_last_table();*/
-					    
+
+					    btn_blank.setEnabled( false );
+					    alert_message = "blank measuring!";
+						alert_dlg.setMessage( alert_message );
+					    alert_dlg.show();
+
 					    msg = mWorker_thread_handler.obtainMessage( EXPERIMENT_MEASURE_BLANK );
 					    msg.sendToTarget ( );
-					    //btn_blank.setEnabled( false );
 					}
 					
 				});
@@ -278,12 +296,17 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 					@Override
 					public void onClick(View v) {
 						// TODO Auto-generated method stub
+					    btn_blank.setEnabled( false );
+					    btn_sample.setEnabled( false );
+					    alert_message = "sample measuring!";
+						alert_dlg.setMessage( alert_message );
+					    alert_dlg.show();
+					    
 					    msg = mWorker_thread_handler.obtainMessage( EXPERIMENT_MEASURE_SAMPLE );
-					    msg.sendToTarget ( );						
+					    msg.sendToTarget ( );
 					}
 					
 				});
-				
 			}
 			
 		});
@@ -304,10 +327,14 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 				blank_valid = false;
 				
 				btn_blank = ( ImageButton ) NanoActivity.this.findViewById ( R.id.imageButton1 );
+				btn_blank.setEnabled( true );
 				btn_sample = ( ImageButton ) NanoActivity.this.findViewById ( R.id.imageButton2 );
+				btn_sample.setEnabled( false );
 				table.gvUpdatePageBar("select count(*) from " + NanoSqlDatabase.DNA_VALUE_TABLE_NAME, nano_database.get_database());
 			    table.gvReadyTable("select * from " + NanoSqlDatabase.DNA_VALUE_TABLE_NAME, nano_database.get_database());
 				table.refresh_last_table();
+				
+				dna_data_list.clear ( );
 				
 				btn_blank.setOnClickListener (new OnClickListener() {
 
@@ -315,7 +342,12 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 					public void onClick(View v) {
 						// TODO Auto-generated method stub
 					    msg = mWorker_thread_handler.obtainMessage( EXPERIMENT_MEASURE_BLANK );
-					    msg.sendToTarget ( );						
+					    msg.sendToTarget ( );
+					    
+					    btn_blank.setEnabled( false );
+					    alert_message = "blank measuring!";
+						alert_dlg.setMessage( alert_message );
+					    alert_dlg.show();
 					}
 					
 				});
@@ -326,7 +358,13 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 					public void onClick(View v) {
 						// TODO Auto-generated method stub
 					    msg = mWorker_thread_handler.obtainMessage( EXPERIMENT_MEASURE_SAMPLE );
-					    msg.sendToTarget ( );						
+					    msg.sendToTarget ( );
+					    
+					    btn_blank.setEnabled( false );
+					    btn_sample.setEnabled( false );
+					    alert_message = "sample measuring!";
+						alert_dlg.setMessage( alert_message );
+					    alert_dlg.show();
 					}
 					
 				});
@@ -351,6 +389,7 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 				intent.putExtra(LogFileChooserActivity.INPUT_ACTIVITY_ORIENTATION, getRequestedOrientation());
 				intent.putExtra(LogFileChooserActivity.INPUT_REGEX_FILTER, ".*\\.csv");
 				//startActivity(intent);
+				intent.setAction( NanoActivity.this.getIntent().getAction() );
 				NanoActivity.this.startActivityForResult ( intent, 1023 );
 			}
 			
@@ -372,11 +411,15 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 				blank_valid = false;
 				
 				btn_blank = ( ImageButton ) NanoActivity.this.findViewById ( R.id.imageButton1 );
+				btn_blank.setEnabled( true );
 				btn_sample = ( ImageButton ) NanoActivity.this.findViewById ( R.id.imageButton2 );
+				btn_sample.setEnabled( false );
 
 				table.gvUpdatePageBar("select count(*) from " + NanoSqlDatabase.DNA_VALUE_TABLE_NAME, nano_database.get_database());
 			    table.gvReadyTable("select * from " + NanoSqlDatabase.DNA_VALUE_TABLE_NAME, nano_database.get_database());
 				table.refresh_last_table();
+				
+				dna_data_list.clear ( );
 				
 				btn_blank.setOnClickListener (new OnClickListener() {
 
@@ -384,7 +427,12 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 					public void onClick(View v) {
 						// TODO Auto-generated method stub
 					    msg = mWorker_thread_handler.obtainMessage( EXPERIMENT_MEASURE_BLANK );
-					    msg.sendToTarget ( );						
+					    msg.sendToTarget ( );
+					    
+					    btn_blank.setEnabled( false );
+					    alert_message = "blank measuring!";
+						alert_dlg.setMessage( alert_message );
+					    alert_dlg.show();
 					}
 					
 				});
@@ -395,7 +443,13 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 					public void onClick(View v) {
 						// TODO Auto-generated method stub
 					    msg = mWorker_thread_handler.obtainMessage( EXPERIMENT_MEASURE_SAMPLE );
-					    msg.sendToTarget ( );						
+					    msg.sendToTarget ( );
+
+					    btn_blank.setEnabled( false );
+					    btn_sample.setEnabled( false );
+					    alert_message = "sample measuring!";
+						alert_dlg.setMessage( alert_message );
+					    alert_dlg.show();
 					}
 					
 				});
@@ -418,11 +472,15 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 				blank_valid = false;
 				
 				btn_blank = ( ImageButton ) NanoActivity.this.findViewById ( R.id.imageButton1 );
+				btn_blank.setEnabled( true );
 				btn_sample = ( ImageButton ) NanoActivity.this.findViewById ( R.id.imageButton2 );
+				btn_sample.setEnabled( false );
 
 				table.gvUpdatePageBar("select count(*) from " + NanoSqlDatabase.PROTEIN_VALUE_TABLE_NAME, nano_database.get_database());
 			    table.gvReadyTable("select * from " + NanoSqlDatabase.PROTEIN_VALUE_TABLE_NAME, nano_database.get_database());
 				table.refresh_last_table();
+				
+				protein_data_list.clear();
 				
 				btn_blank.setOnClickListener (new OnClickListener() {
 
@@ -430,7 +488,12 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 					public void onClick(View v) {
 						// TODO Auto-generated method stub
 					    msg = mWorker_thread_handler.obtainMessage( EXPERIMENT_MEASURE_BLANK );
-					    msg.sendToTarget ( );						
+					    msg.sendToTarget ( );
+					    
+					    btn_blank.setEnabled( false );
+					    alert_message = "blank measuring!";
+						alert_dlg.setMessage( alert_message );
+					    alert_dlg.show();
 					}
 					
 				});
@@ -441,7 +504,13 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 					public void onClick(View v) {
 						// TODO Auto-generated method stub
 					    msg = mWorker_thread_handler.obtainMessage( EXPERIMENT_MEASURE_SAMPLE );
-					    msg.sendToTarget ( );						
+					    msg.sendToTarget ( );
+					    
+					    btn_blank.setEnabled( false );
+					    btn_sample.setEnabled( false );
+					    alert_message = "sample measuring!";
+						alert_dlg.setMessage( alert_message );
+					    alert_dlg.show();
 					}
 					
 				});
@@ -522,6 +591,7 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 			}
 			
 		});
+		//btn_analysis.setVisibility( View.INVISIBLE );
 		metrics = new DisplayMetrics();
     	if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
     		((WindowManager) getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getRealMetrics(metrics);
@@ -618,13 +688,17 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 	
 	public void switch_to_main_page ( View v ) {
 		/* detach table from dna measure page */
-		if ( measure_mode <= MEASURE_MODE_PROTEIN) {
+		if ( measure_mode <= MEASURE_MODE_PROTEIN ) {
 			if ( this.findViewById( R.id.measure_top_ui ) != null) {
 				gridlayout.removeView( table );
 				//mLayout_DNA_MeasurePage.removeView( gridlayout );
 			}
 			Toast.makeText( this, "save to file", Toast.LENGTH_SHORT).show();
-			save_measurement_to_file ();
+			if ( measure_mode > 0 && measure_mode <= MEASURE_MODE_RNA && dna_data_list.size() > 0 )
+				save_measurement_to_file ();
+			else
+				if ( measure_mode == MEASURE_MODE_PROTEIN && protein_data_list.size() > 0 )
+					save_measurement_to_file ();
 		}
 		
 		mLayout_Content.removeAllViews ( );
@@ -649,12 +723,44 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 			public void onCheckedChanged(CompoundButton buttonView,
 					boolean isChecked) {
 				// TODO Auto-generated method stub
+				Cur_A320_Involve = isChecked;
 				Log.d ( Tag, Boolean.toString( isChecked ) );
 				buttonView.setText( "" );
 			}
 			
 		});
 		sw.setChecked( true );
+		
+		Switch sw1= ( Switch ) NanoActivity.this.findViewById( R.id.Led_switch );
+		sw1.setOnCheckedChangeListener ( new OnCheckedChangeListener () {
+
+			@Override
+			public void onCheckedChanged(CompoundButton buttonView,
+					boolean isChecked) {
+				// TODO Auto-generated method stub
+				Cur_Led_Onoff_State = isChecked;
+				if ( isChecked )
+					mNano_dev.Set_Illumination_State ( 1 );
+				else
+					mNano_dev.Set_Illumination_State ( 0 );
+				
+			}
+			
+		});
+		sw1.setChecked( true );
+		
+		Switch sw2= ( Switch ) NanoActivity.this.findViewById( R.id.Auto_measure_switch );
+		sw2.setOnCheckedChangeListener ( new OnCheckedChangeListener () {
+
+			@Override
+			public void onCheckedChanged(CompoundButton buttonView,
+					boolean isChecked) {
+				// TODO Auto-generated method stub
+				Cur_Auto_Measure = isChecked;
+			}
+			
+		});
+		sw2.setChecked( true );
 		
     	gridlayout = (LinearLayout) findViewById(R.id.GridLayout);
     	if ( gridlayout != null ) {
@@ -1157,6 +1263,18 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
                 		  
                 		  if ( mNano_dev.Itracker_IOCTL ( CMD_T.HID_CMD_MN913A_RAW_DATA, 0, 16, composite_raw_data, 0) )
                 			  channel_blank.set_channel_raw_data ( composite_raw_data );
+                		  NanoActivity.this.runOnUiThread( new Runnable() {
+
+							@Override
+							public void run() {
+								// TODO Auto-generated method stub
+								NanoActivity.this.findViewById( R.id.imageButton1 ).setEnabled( true );
+								NanoActivity.this.findViewById( R.id.imageButton2 ).setEnabled( true );
+								if ( alert_dlg.isShowing( ) )
+									alert_dlg.dismiss ( );
+							}
+                			  
+                		  });
                 		  break;
                 		  
                 	  case EXPERIMENT_MEASURE_SAMPLE:
@@ -1182,6 +1300,18 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
                 			  channel_sample.set_channel_raw_data ( composite_raw_data );
                 			  OD_Calculate ();
                 		  }
+                		  NanoActivity.this.runOnUiThread( new Runnable() {
+
+							@Override
+							public void run() {
+								// TODO Auto-generated method stub
+								NanoActivity.this.findViewById( R.id.imageButton1 ).setEnabled( true );
+								NanoActivity.this.findViewById( R.id.imageButton2 ).setEnabled( true );
+								if ( alert_dlg.isShowing( ) )
+									alert_dlg.dismiss ( );
+							}
+                			  
+                		  });
                 		  break;
                 	}
                 }
@@ -1226,14 +1356,23 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
     		//channel_blank.ch3_xenon_mean - channel_blank.ch3_no_xenon_mean
     		//channel_blank.ch4_xenon_mean - channel_blank.ch4_no_xenon_mean
     		I_blank = Math.abs( channel_blank.ch2_xenon_mean - channel_blank.ch2_no_xenon_mean );
-    		I_sample = Math.abs ( channel_sample.ch2_xenon_mean - channel_sample.ch2_no_xenon_mean );    		
-    		dna_data.A260 = Math.log( I_blank / I_sample );
+    		I_sample = Math.abs ( channel_sample.ch2_xenon_mean - channel_sample.ch2_no_xenon_mean );
+    		if ( I_sample != 0)
+    			dna_data.A260 = Math.log( I_blank / I_sample );
+    		else
+    			dna_data.A260 = -1;
     		I_blank = channel_blank.ch1_xenon_mean - channel_blank.ch1_no_xenon_mean;
     		I_sample = channel_sample.ch1_xenon_mean - channel_sample.ch1_no_xenon_mean;
-    		dna_data.A280 = Math.log( I_blank / I_sample );
+    		if ( I_sample != 0)
+    			dna_data.A280 = Math.log( I_blank / I_sample );
+    		else
+    			dna_data.A280 = -1;
     		I_blank = channel_blank.ch3_xenon_mean - channel_blank.ch3_no_xenon_mean;
     		I_sample = channel_sample.ch3_xenon_mean - channel_sample.ch3_no_xenon_mean;
-    		dna_data.A230 = Math.log( I_blank / I_sample );
+    		if ( I_sample != 0)
+    			dna_data.A230 = Math.log( I_blank / I_sample );
+    		else
+    			dna_data.A230 = -1;
     		if ( measure_mode == MEASURE_MODE_dsDNA )
     			dna_data.Conc = dna_data.A260 * dsDNA_CONC_FACTOR;
     		else
@@ -1254,7 +1393,10 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
     	case MEASURE_MODE_PROTEIN:
     		I_blank = channel_blank.ch1_xenon_mean - channel_blank.ch1_no_xenon_mean;
     		I_sample = channel_sample.ch1_xenon_mean - channel_sample.ch1_no_xenon_mean;
-    		protein_data.A280 = Math.log( I_blank / I_sample );
+    		if ( I_sample != 0)
+    			protein_data.A280 = Math.log( I_blank / I_sample );
+    		else
+    			protein_data.A280 = 0;
     		protein_data.index = protein_data_list.size();
     		protein_data_list.add( protein_data );
     		nano_database.InsertPROTEINDataToDB( protein_data );

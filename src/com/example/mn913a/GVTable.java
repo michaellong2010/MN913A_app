@@ -34,6 +34,7 @@ public class GVTable extends LinearLayout {
 		
 		//----------------------------------------
 		gvPage=new GridView(context);
+		gvPage.setBackgroundColor( this.getResources().getColor( android.R.color.white ) );
 		gvPage.setColumnWidth(80);
 		gvPage.setNumColumns(GridView.AUTO_FIT);
 		addView(gvPage, new LinearLayout.LayoutParams(LayoutParams.FILL_PARENT,
@@ -56,6 +57,7 @@ public class GVTable extends LinearLayout {
 	    });
 		//----------------------------------------
 		gvTable=new GridView(context);
+		gvTable.setBackgroundColor( this.getResources().getColor( android.R.color.white ) );
 		addView(gvTable, new LinearLayout.LayoutParams(LayoutParams.FILL_PARENT,
                 LayoutParams.WRAP_CONTENT));
 		

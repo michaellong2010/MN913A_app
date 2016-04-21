@@ -66,32 +66,30 @@
                 android:id="@+id/textView2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="300dp"
+                android:layout_marginLeft="330dp"
                 android:layout_marginTop="180dp"
                 android:fontFamily="Calibri"
                 android:text="ng/ul"
                 android:textColor="@color/result_textcolor"
-                android:textSize="10pt" />
+                android:textSize="20pt" />
 
             <TextView
                 android:id="@+id/textView1"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentLeft="true"
-                android:layout_alignTop="@+id/imageButton1"
                 android:layout_marginLeft="118dp"
-                android:layout_marginTop="31dp"
+                android:layout_marginTop="90dp"
                 android:fontFamily="Calibri"
                 android:text="TextView"
                 android:textColor="@color/result_textcolor"
-                android:textSize="20pt" />
+                android:textSize="30pt" />
 
             <TextView
                 android:id="@+id/textView3"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="730dp"
-                android:layout_marginTop="70dp"
+                android:layout_marginLeft="735dp"
+                android:layout_marginTop="30dp"
                 android:text="TextView"
                 android:fontFamily="Calibri"
                 android:textColor="@color/result_textcolor"
@@ -101,8 +99,8 @@
                 android:id="@+id/textView4"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="730dp"
-                android:layout_marginTop="120dp"
+                android:layout_marginLeft="735dp"
+                android:layout_marginTop="90dp"
                 android:text="TextView"
                 android:fontFamily="Calibri"
                 android:textColor="@color/result_textcolor"
@@ -112,8 +110,8 @@
                 android:id="@+id/textView5"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="730dp"
-                android:layout_marginTop="185dp"
+                android:layout_marginLeft="735dp"
+                android:layout_marginTop="170dp"
                 android:text="TextView"
                 android:fontFamily="Calibri"
                 android:textColor="@color/result_textcolor"
@@ -144,12 +142,34 @@
                  android:id="@+id/GridLayout" 
                  android:orientation="vertical"
                  android:layout_width="975dp"
-                android:layout_height="280dp"
+                android:layout_height="305dp"
                 android:layout_marginLeft="0dp"
-                android:layout_marginTop="305dp" >
+                android:layout_marginTop="330dp" >
            	</LinearLayout>
-            
-            
+
+            <Switch
+                android:id="@+id/Led_switch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignLeft="@+id/imageButton1"
+                android:layout_alignParentTop="true"
+                android:layout_marginTop="30dp"
+                android:switchMinWidth="80dp"
+                android:text="LED"
+                android:textColor="@color/result_textcolor"
+                android:thumb="@drawable/my_switch_inner" />
+
+            <Switch
+                android:id="@+id/Auto_measure_switch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignLeft="@+id/imageButton2"
+                android:layout_alignTop="@+id/GridLayout"
+                android:layout_marginTop="26dp"
+                android:switchMinWidth="80dp"
+                android:text="Auto"
+                android:textColor="@color/result_textcolor"
+                android:thumb="@drawable/my_switch_inner" />
 
         </RelativeLayout>
     </LinearLayout>
@@ -169,7 +189,7 @@
             android:id="@+id/lbltime"
             android:textColor="@android:color/white"
             android:fontFamily="Calibri"
-            android:textSize="12pt" />
+            android:textSize="10pt" />
     </RelativeLayout>
 
 </LinearLayout>

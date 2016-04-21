@@ -15,6 +15,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import com.example.mn913a.MN_913A_Device.CMD_T;
 import com.example.mn913a.file.FileOperation;
 
 
@@ -22,12 +23,17 @@ import android.annotation.SuppressLint;
 import android.app.ActionBar;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.StateListDrawable;
+import android.hardware.usb.UsbDevice;
+import android.hardware.usb.UsbManager;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
@@ -95,6 +101,12 @@ public class LogFileChooserActivity extends FileChooserActivity {
 	String[] protein_from = new String[] { "No.", "A280" };
 	Boolean mIsFileDirty = false, mIsFileDirty1 = false;
 	int mSelected_items_count = 0;
+	
+	private static final String ACTION_USB_PERMISSION = "com.example.mn913a.USB_PERMISSION";
+	MN_913A_Device mNano_dev;
+	boolean mRequest_USB_permission, Is_MN913A_Online = false;
+	UsbManager mUsbManager;
+	PendingIntent mPermissionIntent;
 	
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -302,25 +314,80 @@ public class LogFileChooserActivity extends FileChooserActivity {
 					mIsFileDirty = true;
 					return true;
 				case R.id.item_print:
+					int byte_offset = 0, dna_type = 0;
 					byte [] byte_array = new byte [8192];
-					byte[] bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt(mSelected_items_count).array();
-					System.arraycopy ( bytes, 0, byte_array, 0, bytes.length);
+					byte[] bytes;
+					if ( mActiveFile.getName().contains( "dsDNA" ) ) {
+						dna_type = 0;
+					}
+					else
+						if ( mActiveFile.getName().contains( "ssDNA" ) ) {
+							dna_type = 1;
+						}
+						else
+							if ( mActiveFile.getName().contains( "RNA" ) ) {
+								dna_type = 2;
+							}
 					Log.d ( "Tag", Integer.toString( byte_array.length ) );
 					//double conc, A260, A260_A280, A260_A230;
 					if ( result_listview.getAdapter() instanceof dna_result_adapter ) {
-						for ( HashMap<String, String> map : fillMaps ) {
+						bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt( dna_type ).array();
+						System.arraycopy ( bytes, 0, byte_array, 0, bytes.length );
+						byte_offset = byte_offset + bytes.length;
+						bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt(mSelected_items_count).array();
+						System.arraycopy ( bytes, 0, byte_array, byte_offset, bytes.length );
+						byte_offset = byte_offset + bytes.length;
+						/*for ( HashMap<String, String> map : fillMaps ) {
 							if ( map.get( "isSelected" ) != null && map.get( "isSelected" ).equals( "true" ) ) {
-								
+								//String[] dna_from = new String[] { "No.", "Conc.", "A260", "A260_A280", "A260_A230" };
+								//Integer.toString(i)//map.get(  )
+								bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt( Integer.parseInt( dna_from [0] ) ).array();
+								System.arraycopy ( bytes, 0, byte_array, byte_offset, bytes.length );
+								byte_offset = byte_offset + bytes.length;
+								//Double.parseDouble( dna_from [0] );
+								bytes = ByteBuffer.allocate(8).order( ByteOrder.LITTLE_ENDIAN ).putDouble( Double.parseDouble( dna_from [1] ) ).array();
+								System.arraycopy ( bytes, 0, byte_array, byte_offset, bytes.length );
+								byte_offset = byte_offset + bytes.length;
+								//Double.parseDouble( dna_from [1] );
+								bytes = ByteBuffer.allocate(8).order( ByteOrder.LITTLE_ENDIAN ).putDouble( Double.parseDouble( dna_from [2] ) ).array();
+								System.arraycopy ( bytes, 0, byte_array, byte_offset, bytes.length );
+								byte_offset = byte_offset + bytes.length;
+								//Double.parseDouble( dna_from [2] );
+								bytes = ByteBuffer.allocate(8).order( ByteOrder.LITTLE_ENDIAN ).putDouble( Double.parseDouble( dna_from [3] ) ).array();
+								System.arraycopy ( bytes, 0, byte_array, byte_offset, bytes.length );
+								byte_offset = byte_offset + bytes.length;
+								//Double.parseDouble( dna_from [3] );
+								bytes = ByteBuffer.allocate(8).order( ByteOrder.LITTLE_ENDIAN ).putDouble( Double.parseDouble( dna_from [4] ) ).array();
+								System.arraycopy ( bytes, 0, byte_array, byte_offset, bytes.length );
+								byte_offset = byte_offset + bytes.length;
 							}
-						}
+						}*/
+						if ( ( byte_offset % 256 ) != 0)
+							mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_PRINT_DNA_RESULT, ( byte_offset / 256 ) + 1, 1, byte_array, 0);
+						else
+							mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_PRINT_DNA_RESULT, ( byte_offset / 256 ), 1, byte_array, 0);
 					}
 					else
 						if ( result_listview.getAdapter() instanceof protein_result_adapter ) {
-							for ( HashMap<String, String> map : fillMaps ) {
+							bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt(mSelected_items_count).array();
+							System.arraycopy ( bytes, 0, byte_array, byte_offset, bytes.length );
+							byte_offset = byte_offset + bytes.length;
+							/*for ( HashMap<String, String> map : fillMaps ) {
 								if ( map.get( "isSelected" ) != null && map.get( "isSelected" ).equals( "true" ) ) {
+									//String[] protein_from = new String[] { "No.", "A280" };
+									bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt( Integer.parseInt( protein_from [0] ) ).array();
+									System.arraycopy ( bytes, 0, byte_array, byte_offset, bytes.length );
+									byte_offset = byte_offset + bytes.length;
 									
+									bytes = ByteBuffer.allocate(8).order( ByteOrder.LITTLE_ENDIAN ).putDouble( Double.parseDouble( protein_from [1] ) ).array();
+									System.arraycopy ( bytes, 0, byte_array, byte_offset, bytes.length );
+									byte_offset = byte_offset + bytes.length;
 								}
-							}							
+							}*/
+							if ( ( byte_offset % 256 ) != 0)
+								mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_PRINT_PROTEIN_RESULT, ( byte_offset / 256 ) + 1, 1, byte_array, 0);
+							else
+								mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_PRINT_PROTEIN_RESULT, ( byte_offset / 256 ), 1, byte_array, 0);
 						}
 					break;
 				case R.id.item_selection_all:
@@ -359,6 +426,19 @@ public class LogFileChooserActivity extends FileChooserActivity {
 			}
     		
     	};
+    	
+    	mUsbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
+		mPermissionIntent = PendingIntent.getBroadcast(this, 0, new Intent(ACTION_USB_PERMISSION), 0);
+		
+		IntentFilter mIntentFilter;
+		mIntentFilter = new IntentFilter();
+		mIntentFilter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
+		mIntentFilter.addAction(ACTION_USB_PERMISSION);
+		registerReceiver(mReceiver, mIntentFilter);
+		
+    	mNano_dev = new MN_913A_Device ( this );
+    	mRequest_USB_permission = false;
+    	EnumerationDevice(getIntent());
     }
     
 	@Override
@@ -505,6 +585,7 @@ public class LogFileChooserActivity extends FileChooserActivity {
 			measure_root_layout = this.getMeasureResultLayout();
 			LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 			result_listview = ( ListView ) inflater.inflate ( R.layout.result_listview, measure_root_layout, false );
+			//result_listview.setBackgroundColor( this.getResources().getColor( android.R.color.background_dark ) );
 			SimpleAdapter adapter = null;// = new SimpleAdapter(this, fillMaps, R.layout.grid_item, from, to);
 			String[] sports = new String [] { "123", "111", "234" };
 			ArrayAdapter<String> adapter1 = new ArrayAdapter<String>(this, R.layout.simple_list_item_multiple_choice, sports );
@@ -519,7 +600,7 @@ public class LogFileChooserActivity extends FileChooserActivity {
 			if ( selected_file_items.get(0).getFile().getName().contains( "dsDNA" ) == true ||
 				 selected_file_items.get(0).getFile().getName().contains( "ssDNA" ) == true ||
 				 selected_file_items.get(0).getFile().getName().contains( "RNA" ) == true ) {
-				/*for ( int j = 0; j < 50; j++ ) {
+				for ( int j = 0; j < 50; j++ ) {
 				HashMap<String, String> map = new HashMap<String, String>();
 				map.put( "No.", Integer.toString( j ) );
 				map.put( "Conc.", "Conc." );
@@ -527,8 +608,8 @@ public class LogFileChooserActivity extends FileChooserActivity {
 				map.put( "A260_A230", "A260/A230" );
 				map.put( "A260_A280", "A260/A280" );
 				fillMaps.add( map );
-				}*/
-				try {
+				}
+				/*try {
 					read_file.open_read_file( mActiveFile.getName() );
 					while ( ( measure_result = read_file.read_file() ) != null ) {
 					  Log.d ( "Tag", measure_result);
@@ -546,7 +627,7 @@ public class LogFileChooserActivity extends FileChooserActivity {
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
-				}
+				}*/
 				adapter = new SimpleAdapter ( this, fillMaps, R.layout.dna_result_listview_item, from, to );
 				result_listview.setAdapter( adapter2 );
 				//result_listview.setChoiceMode( ListView.CHOICE_MODE_MULTIPLE );
@@ -658,13 +739,13 @@ public class LogFileChooserActivity extends FileChooserActivity {
         	}
 			else
 				if ( selected_file_items.get(0).getFile().getName().contains( "PROTEIN" ) == true ) {
-					/*for ( int j = 0; j < 50; j++ ) {
+					for ( int j = 0; j < 50; j++ ) {
 					HashMap<String, String> map = new HashMap<String, String>();
 					map.put( "No.", Integer.toString( j ) );
 					map.put( "A280", "OD" );
 					fillMaps.add( map );
-					}*/
-					try {
+					}
+					/*try {
 						read_file.open_read_file( mActiveFile.getName() );
 						while ( ( measure_result = read_file.read_file() ) != null ) {
 						  Log.d ( "Tag", measure_result);
@@ -682,7 +763,7 @@ public class LogFileChooserActivity extends FileChooserActivity {
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
-					}
+					}*/
 					result_listview.setAdapter( adapter3 );
 					result_listview.setOnItemClickListener( new OnItemClickListener () {
 						CheckBox checkbox1;
@@ -727,6 +808,7 @@ public class LogFileChooserActivity extends FileChooserActivity {
 				}
 			//adapter.notifyDataSetChanged();
 			measure_root_layout.addView( result_listview );
+			//result_listview.setBackgroundColor( this.getResources().getColor( android.R.color.background_dark ) );
 			return true;			
 		  case R.id.file_rename:
 			  file_item = selected_file_items.get( 0 );
@@ -893,4 +975,83 @@ public class LogFileChooserActivity extends FileChooserActivity {
 
 	    super.finish();
 	}
+	
+	public void EnumerationDevice(Intent intent) {
+		if (intent.getAction().equals(Intent.ACTION_MAIN)) {
+			if (mNano_dev.Enumeration()) {
+				//connection_status_v.setImageResource ( R.drawable.usb_connection );
+				Is_MN913A_Online = true;
+			}
+			else {
+				if (mNano_dev.isDeviceOnline()) {
+					mRequest_USB_permission = true;
+					mUsbManager.requestPermission(mNano_dev.getDevice(), mPermissionIntent);
+				}
+				else {
+					Is_MN913A_Online = false;
+				}
+			}
+		}
+    	else
+    		if (intent.getAction().equals(UsbManager.ACTION_USB_DEVICE_ATTACHED)) {
+    			UsbDevice device = (UsbDevice) intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
+    			if (mNano_dev.Enumeration(device)) {
+    				Is_MN913A_Online = true;
+    			}
+    			else {
+    				Is_MN913A_Online = false;
+    			}
+    		}
+	}
+	
+	//Create a broadcast receiver
+    private BroadcastReceiver mReceiver = new BroadcastReceiver() {
+
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			// TODO Auto-generated method stub
+			String action = intent.getAction();
+			UsbDevice device = (UsbDevice) intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
+			
+			if (action.equals(UsbManager.ACTION_USB_DEVICE_DETACHED)) {
+				if (mNano_dev != null && mNano_dev.getDevice() != null) {
+					if (device.getProductId() == mNano_dev.getDevice().getProductId() && device.getVendorId() == mNano_dev.getDevice().getVendorId()) {
+						mNano_dev.DeviceOffline();
+						Log.d( Tag, "MN913A DETACHED" );
+						mNano_dev.Reset_Device_Info();
+						Is_MN913A_Online = false;
+					}
+				}
+			}
+			else
+				if (action.equals(ACTION_USB_PERMISSION)) {
+					if (intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
+						if (device != null) {
+							Is_MN913A_Online = true;
+							Log.d(Tag, "permission allowed for device "+device);
+						}
+					}
+					else {
+						Is_MN913A_Online = false;
+						Log.d(Tag, "permission denied for device " + device);
+					}
+					
+					if (mRequest_USB_permission==true) {
+						//hide_system_bar();
+						mRequest_USB_permission = false;
+					}
+					
+					if (mRequest_USB_permission==true) {
+						mRequest_USB_permission = false;
+					}
+				}
+		}
+    	
+    };
+    
+    protected void onNewIntent(Intent intent) {
+    	mNano_dev.show_debug("New intent: "+intent.getAction()+"\n");
+    	if (intent.getAction().equals(UsbManager.ACTION_USB_DEVICE_ATTACHED))
+    		EnumerationDevice(intent);
+    }
 }
