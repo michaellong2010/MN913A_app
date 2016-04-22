@@ -295,6 +295,10 @@ public class MN_913A_Device {
     					MN913A_dev_data = message.mDataBuffer.asIntBuffer();
     					//Log.d ( Tag, "int buffer limit: " + Integer.toString( this.MN913A_dev_data.limit ( ) ));
     					is_dev_busy = MN913A_dev_data.get ( 0 );
+    					Max_Volt_Level = MN913A_dev_data.get ( 1 );
+    					Min_Volt_Level = MN913A_dev_data.get ( 2 );
+    					Max_Voltage_Intensity = MN913A_dev_data.get ( 3 );
+    					Min_Voltage_Intensity = MN913A_dev_data.get ( 4 );
     				}
     			if (result)
     				return true;
@@ -304,6 +308,11 @@ public class MN_913A_Device {
     		else
     			return false;
     	}
+	}
+	
+	public void Set_Start_Calibration ( int start )
+	{
+		start_calibration = start;
 	}
 	
 	public void Set_Xenon_Voltage_Level ( int level )
@@ -316,6 +325,25 @@ public class MN_913A_Device {
 		Illumination_State = On_Off;
 	}
 	
+	public int Get_Max_Volt_Level ( )
+	{
+		return Max_Volt_Level;
+	}
+	
+	public int Get_Min_Volt_Level ( )
+	{
+		return Min_Volt_Level;
+	}
+	
+	public double Get_Max_Voltage_Intensity ( )
+	{
+		return ( (double) Max_Voltage_Intensity );
+	}
+	
+	public double Get_Min_Voltage_Intensity ( )
+	{
+		return  ( (double) Min_Voltage_Intensity );
+	}
 	public static final int SZ_MN913A_setting_type = Integer.SIZE / Byte.SIZE;
 	public static final int SZ_MN913A_status_type = Integer.SIZE / Byte.SIZE;
 	public static final int SZ_MN913A_raw_data_type = 2 * 8 * 256;
@@ -324,7 +352,7 @@ public class MN_913A_Device {
 	// #define HID_CMD_SIGNATURE 0x43444948
 	public static final int HID_CMD_SIGNATURE = 0x43444948;
 	public static final int MAX_PAYLOAD = 4096;
-	public int Xenon_Voltage_Level = 0, Illumination_State = 0;
+	public int Xenon_Voltage_Level = 0, Illumination_State = 0, start_calibration = 0, Max_Volt_Level = 0, Min_Volt_Level = 0, Max_Voltage_Intensity = 0, Min_Voltage_Intensity = 0;
 	
 	public final class CMD_T {
 		public final String Tag = "Command";
@@ -446,6 +474,8 @@ public class MN_913A_Device {
 			switch(command) {
 			case HID_CMD_MN913A_SETTING:
 				mDataBuffer.putInt(Xenon_Voltage_Level);
+				mDataBuffer.putInt(Illumination_State);
+				mDataBuffer.putInt(start_calibration);				
 				if (result)
 					result = write_out(mDataBuffer, mDataBuffer.limit());
 		    	show_debug(Tag+"The line number is " + new Exception().getStackTrace()[0].getLineNumber()+"\n");

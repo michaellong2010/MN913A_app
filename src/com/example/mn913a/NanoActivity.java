@@ -895,7 +895,10 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 			//Measure_Btn.setEnabled( true );
 			Cur_Voltage_Level = 162;
 			mNano_dev.Set_Xenon_Voltage_Level ( Cur_Voltage_Level );
+			mNano_dev.Set_Start_Calibration ( 1 );
 			mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_SETTING, 0, 0, null, 1);
+			mNano_dev.Set_Start_Calibration ( 0 );
+			mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_STATUS, 0, 0, null, 0);
 		}
 		else {
 			/*connection_status_v.setImageResource ( R.drawable.usb_disconnection );
@@ -1080,7 +1083,8 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
     public static final int EXPERIMENT_MEASURE_BLANK = 0;
     public static final int EXPERIMENT_MEASURE_SAMPLE = 1;
     channel_raw_data channel_blank = new channel_raw_data ( 100 ); 
-    channel_raw_data channel_sample = new channel_raw_data ( 100 );
+    channel_raw_data channel_sample = new channel_raw_data ( 100 ); 
+    channel_raw_data channel_sample1 = new channel_raw_data ( 100 );
     byte [] composite_raw_data = new byte [ 4096 ];
     boolean blank_valid = false;
     class channel_raw_data {
@@ -1234,6 +1238,7 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
     };
     
     class LooperThread extends Thread {
+    	double Transmission_rate = 0, I_blank = 0.0, I_sample = 0.0;
 
         public void run() {
             Looper.prepare();
@@ -1298,6 +1303,39 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
                 		  
                 		  if ( mNano_dev.Itracker_IOCTL ( CMD_T.HID_CMD_MN913A_RAW_DATA, 0, 16, composite_raw_data, 0) ) {
                 			  channel_sample.set_channel_raw_data ( composite_raw_data );
+                	    	  I_blank = Math.abs( channel_blank.ch2_xenon_mean - channel_blank.ch2_no_xenon_mean );
+                	    	  I_sample = Math.abs ( channel_sample.ch2_xenon_mean - channel_sample.ch2_no_xenon_mean );
+                	    	  if ( I_blank != 0 )
+                	    			Transmission_rate = I_sample / I_blank;
+                	    	  if ( 0.944 < Transmission_rate ) {
+                				//conc less than 25, non-linear, search minima voltage level and measure then reset
+                				Cur_Voltage_Level = mNano_dev.Get_Min_Volt_Level();
+                				mNano_dev.Set_Start_Calibration ( 0 );
+                				mNano_dev.Set_Xenon_Voltage_Level ( Cur_Voltage_Level );
+                				mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_SETTING, 0, 0, null, 1);
+                				
+                    			mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_MEASURE, 0, 0, null, 0);
+                    			try {
+                    				sleep ( 2500 );
+    								while ( mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_STATUS, 0, 0, null, 0) ) {
+    									sleep ( 1000 );
+    									if ( mNano_dev.is_dev_busy == 0 ) {
+    										//Log.d ( Tag, "MN913A device not busy");
+    										break;
+    									}
+    								}
+    								Log.d ( Tag, "Getting MN913A status finish");
+    							} catch (InterruptedException e) {
+    								// TODO Auto-generated catch block
+    								e.printStackTrace();
+    							}
+                				
+                    			if ( mNano_dev.Itracker_IOCTL ( CMD_T.HID_CMD_MN913A_RAW_DATA, 0, 16, composite_raw_data, 0) ) {
+                    				channel_sample1.set_channel_raw_data ( composite_raw_data );
+                    				//I_sample1 = Math.abs ( channel_sample1.ch2_xenon_mean - channel_sample1.ch2_no_xenon_mean );
+                    				//I_blank1 = ( double ) mNano_dev.Get_Min_Voltage_Intensity(); 
+                    			}
+                			  }
                 			  OD_Calculate ();
                 		  }
                 		  NanoActivity.this.runOnUiThread( new Runnable() {
@@ -1342,10 +1380,11 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
     static final double ssDNA_CONC_FACTOR = 33;
     static final double RNA_CONC_FACTOR = 40;
     public void OD_Calculate () {
-    	double I_blank, I_sample;
+    	double I_blank, I_sample, I_blank1, I_sample1;
     	DNA_measure_data dna_data = new DNA_measure_data ();
     	Protein_measure_data protein_data = new Protein_measure_data ();
     	Message msg;
+    	double Transmission_rate = 0;
     	
     	switch ( measure_mode ) {
     	case MEASURE_MODE_dsDNA:
@@ -1357,30 +1396,60 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
     		//channel_blank.ch4_xenon_mean - channel_blank.ch4_no_xenon_mean
     		I_blank = Math.abs( channel_blank.ch2_xenon_mean - channel_blank.ch2_no_xenon_mean );
     		I_sample = Math.abs ( channel_sample.ch2_xenon_mean - channel_sample.ch2_no_xenon_mean );
+    		if ( I_blank != 0 )
+    			Transmission_rate = I_sample / I_blank;
     		if ( I_sample != 0)
-    			dna_data.A260 = Math.log( I_blank / I_sample );
+    			dna_data.A260 = Math.log( I_blank / I_sample ) / Math.log(10);
     		else
     			dna_data.A260 = -1;
+    		if ( 0.063 <= Transmission_rate && Transmission_rate <= 0.944 ) {
+    			//conc=25~1200, linear equation
+    			if ( measure_mode == MEASURE_MODE_dsDNA )
+    				dna_data.Conc = 1047.2 * dna_data.A260 - 11.606;
+        		else
+        			if ( measure_mode == MEASURE_MODE_ssDNA )
+        				dna_data.Conc = 1047.2 * ( 33 / 50 ) * dna_data.A260 - 11.606;
+        			else
+        				if ( measure_mode == MEASURE_MODE_RNA )
+        					dna_data.Conc = 1047.2 * ( 4 / 5 ) * dna_data.A260 - 11.606;
+    		}
+    		else 
+    			if ( 0.063 > Transmission_rate ) {
+					//conc more than 1200, non-linear
+    			}
+    			else
+    				if ( 0.944 < Transmission_rate ) {
+        				//conc less than 25, non-linear, search minima voltage level and measure then reset
+        				I_sample1 = Math.abs ( channel_sample1.ch2_xenon_mean - channel_sample1.ch2_no_xenon_mean );
+        				I_blank1 = ( double ) mNano_dev.Get_Min_Voltage_Intensity();
+        				if ( I_sample1 != 0) {
+        	    			dna_data.A260 = ( Math.abs( dna_data.A260 ) + Math.abs( Math.log( I_blank1 / I_sample1 ) / Math.log(10) ) ) / 2;
+        	    			dna_data.Conc = dna_data.A260; 
+        				}
+    				}
+    					
     		I_blank = channel_blank.ch1_xenon_mean - channel_blank.ch1_no_xenon_mean;
     		I_sample = channel_sample.ch1_xenon_mean - channel_sample.ch1_no_xenon_mean;
     		if ( I_sample != 0)
-    			dna_data.A280 = Math.log( I_blank / I_sample );
+    			dna_data.A280 = Math.log( I_blank / I_sample ) / Math.log(10);
     		else
     			dna_data.A280 = -1;
+    		dna_data.A280 = dna_data.A280 * ( 19 /23 );
     		I_blank = channel_blank.ch3_xenon_mean - channel_blank.ch3_no_xenon_mean;
     		I_sample = channel_sample.ch3_xenon_mean - channel_sample.ch3_no_xenon_mean;
     		if ( I_sample != 0)
-    			dna_data.A230 = Math.log( I_blank / I_sample );
+    			dna_data.A230 = Math.log( I_blank / I_sample )  / Math.log(10);
     		else
     			dna_data.A230 = -1;
-    		if ( measure_mode == MEASURE_MODE_dsDNA )
+    		dna_data.A230 = dna_data.A230 * ( 21 /16.7 );
+    		/*if ( measure_mode == MEASURE_MODE_dsDNA )
     			dna_data.Conc = dna_data.A260 * dsDNA_CONC_FACTOR;
     		else
     			if ( measure_mode == MEASURE_MODE_ssDNA )
     				dna_data.Conc = dna_data.A260 * ssDNA_CONC_FACTOR;
     			else
     				if ( measure_mode == MEASURE_MODE_RNA )
-    					dna_data.Conc = dna_data.A260 * RNA_CONC_FACTOR;
+    					dna_data.Conc = dna_data.A260 * RNA_CONC_FACTOR;*/
     		dna_data.index = dna_data_list.size();
     		dna_data_list.add( dna_data );
     		nano_database.InsertDNADataToDB( dna_data );
@@ -1394,7 +1463,7 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
     		I_blank = channel_blank.ch1_xenon_mean - channel_blank.ch1_no_xenon_mean;
     		I_sample = channel_sample.ch1_xenon_mean - channel_sample.ch1_no_xenon_mean;
     		if ( I_sample != 0)
-    			protein_data.A280 = Math.log( I_blank / I_sample );
+    			protein_data.A280 = Math.log( I_blank / I_sample )  / Math.log(10);
     		else
     			protein_data.A280 = 0;
     		protein_data.index = protein_data_list.size();
