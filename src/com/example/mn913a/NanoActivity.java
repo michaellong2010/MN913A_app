@@ -101,7 +101,7 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 	AlertDialog alert_dlg;
 	AlertDialog.Builder alert_dlg_builder;
 	String alert_message = "Are you sure that you want to delete the file \'$file_name\'?";
-	boolean Cur_A320_Involve = false, Cur_Led_Onoff_State = false, Cur_Auto_Measure = false;
+	boolean Cur_A320_Involve = true, Cur_Led_Onoff_State = false, Cur_Auto_Measure = false;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -281,12 +281,31 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 					    table.refresh_last_table();*/
 
 					    btn_blank.setEnabled( false );
-					    alert_message = "blank measuring!";
-						alert_dlg.setMessage( alert_message );
-					    alert_dlg.show();
+					    Switch sw= ( Switch ) NanoActivity.this.findViewById( R.id.mySwitch );
+					    sw.setEnabled( false );
+					    Switch sw1= ( Switch ) NanoActivity.this.findViewById( R.id.Led_switch );
+					    sw1.setEnabled( false );
+					    Switch sw2 = ( Switch ) NanoActivity.this.findViewById( R.id.Auto_measure_switch );
+					    sw2.setEnabled( false );
+					    mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_STATUS, 0, 0, null, 0);
+					    if ( mNano_dev.Has_Calibration == 0 ) {
+					    	alert_message = "calabration device & blank measuring!";
+							alert_dlg.setMessage( alert_message );
+						    alert_dlg.show();
 
-					    msg = mWorker_thread_handler.obtainMessage( EXPERIMENT_MEASURE_BLANK );
-					    msg.sendToTarget ( );
+						    msg = mWorker_thread_handler.obtainMessage( EXPERIMENT_CALIBRATION_DEVICE );
+						    msg.sendToTarget ( );
+						    msg = mWorker_thread_handler.obtainMessage( EXPERIMENT_MEASURE_BLANK );
+						    msg.sendToTarget ( );
+					    }
+					    else {
+					    	alert_message = "blank measuring!";
+							alert_dlg.setMessage( alert_message );
+						    alert_dlg.show();
+
+						    msg = mWorker_thread_handler.obtainMessage( EXPERIMENT_MEASURE_BLANK );
+						    msg.sendToTarget ( );
+					    }
 					}
 					
 				});
@@ -298,6 +317,12 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 						// TODO Auto-generated method stub
 					    btn_blank.setEnabled( false );
 					    btn_sample.setEnabled( false );
+					    Switch sw= ( Switch ) NanoActivity.this.findViewById( R.id.mySwitch );
+					    sw.setEnabled( false );
+					    Switch sw1= ( Switch ) NanoActivity.this.findViewById( R.id.Led_switch );
+					    sw1.setEnabled( false );
+					    Switch sw2 = ( Switch ) NanoActivity.this.findViewById( R.id.Auto_measure_switch );
+					    sw2.setEnabled( false );
 					    alert_message = "sample measuring!";
 						alert_dlg.setMessage( alert_message );
 					    alert_dlg.show();
@@ -729,7 +754,7 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 			}
 			
 		});
-		sw.setChecked( true );
+		sw.setChecked( Cur_A320_Involve );
 		
 		Switch sw1= ( Switch ) NanoActivity.this.findViewById( R.id.Led_switch );
 		sw1.setOnCheckedChangeListener ( new OnCheckedChangeListener () {
@@ -743,11 +768,11 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 					mNano_dev.Set_Illumination_State ( 1 );
 				else
 					mNano_dev.Set_Illumination_State ( 0 );
-				
+				mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_SETTING, 0, 0, null, 1);
 			}
 			
 		});
-		sw1.setChecked( true );
+		sw1.setChecked( Cur_Led_Onoff_State );
 		
 		Switch sw2= ( Switch ) NanoActivity.this.findViewById( R.id.Auto_measure_switch );
 		sw2.setOnCheckedChangeListener ( new OnCheckedChangeListener () {
@@ -757,10 +782,16 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 					boolean isChecked) {
 				// TODO Auto-generated method stub
 				Cur_Auto_Measure = isChecked;
+				if ( isChecked )
+					mNano_dev.Set_Auto_Measure( 1 );
+				else
+					mNano_dev.Set_Auto_Measure( 0 );
+				mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_SETTING, 0, 0, null, 1);
 			}
 			
 		});
-		sw2.setChecked( true );
+		sw2.setChecked( Cur_Auto_Measure );
+		sw2.setEnabled( false );
 		
     	gridlayout = (LinearLayout) findViewById(R.id.GridLayout);
     	if ( gridlayout != null ) {
@@ -895,7 +926,7 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 			//Measure_Btn.setEnabled( true );
 			Cur_Voltage_Level = 162;
 			mNano_dev.Set_Xenon_Voltage_Level ( Cur_Voltage_Level );
-			mNano_dev.Set_Start_Calibration ( 1 );
+			mNano_dev.Set_Start_Calibration ( 0 );
 			mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_SETTING, 0, 0, null, 1);
 			mNano_dev.Set_Start_Calibration ( 0 );
 			mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_STATUS, 0, 0, null, 0);
@@ -1082,6 +1113,7 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
     /*20160318 added by michael*/
     public static final int EXPERIMENT_MEASURE_BLANK = 0;
     public static final int EXPERIMENT_MEASURE_SAMPLE = 1;
+    public static final int EXPERIMENT_CALIBRATION_DEVICE = 2;
     channel_raw_data channel_blank = new channel_raw_data ( 100 ); 
     channel_raw_data channel_sample = new channel_raw_data ( 100 ); 
     channel_raw_data channel_sample1 = new channel_raw_data ( 100 );
@@ -1277,6 +1309,12 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 								NanoActivity.this.findViewById( R.id.imageButton2 ).setEnabled( true );
 								if ( alert_dlg.isShowing( ) )
 									alert_dlg.dismiss ( );
+							    Switch sw= ( Switch ) NanoActivity.this.findViewById( R.id.mySwitch );
+							    sw.setEnabled( true );
+							    Switch sw1= ( Switch ) NanoActivity.this.findViewById( R.id.Led_switch );
+							    sw1.setEnabled( true );
+							    Switch sw2 = ( Switch ) NanoActivity.this.findViewById( R.id.Auto_measure_switch );
+							    sw2.setEnabled( true );
 							}
                 			  
                 		  });
@@ -1347,6 +1385,12 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 								NanoActivity.this.findViewById( R.id.imageButton2 ).setEnabled( true );
 								if ( alert_dlg.isShowing( ) )
 									alert_dlg.dismiss ( );
+							    Switch sw= ( Switch ) NanoActivity.this.findViewById( R.id.mySwitch );
+							    sw.setEnabled( true );
+							    Switch sw1= ( Switch ) NanoActivity.this.findViewById( R.id.Led_switch );
+							    sw1.setEnabled( true );
+							    Switch sw2 = ( Switch ) NanoActivity.this.findViewById( R.id.Auto_measure_switch );
+							    sw2.setEnabled( true );
 							}
                 			  
                 		  });

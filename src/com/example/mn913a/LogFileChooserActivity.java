@@ -337,31 +337,35 @@ public class LogFileChooserActivity extends FileChooserActivity {
 						bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt(mSelected_items_count).array();
 						System.arraycopy ( bytes, 0, byte_array, byte_offset, bytes.length );
 						byte_offset = byte_offset + bytes.length;
-						/*for ( HashMap<String, String> map : fillMaps ) {
+						for ( HashMap<String, String> map : fillMaps ) {
 							if ( map.get( "isSelected" ) != null && map.get( "isSelected" ).equals( "true" ) ) {
 								//String[] dna_from = new String[] { "No.", "Conc.", "A260", "A260_A280", "A260_A230" };
 								//Integer.toString(i)//map.get(  )
-								bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt( Integer.parseInt( dna_from [0] ) ).array();
+								bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt( Integer.parseInt( map.get( dna_from [0] ) ) ).array();
+								System.arraycopy ( bytes, 0, byte_array, byte_offset, bytes.length );
+								byte_offset = byte_offset + bytes.length;
+								//Integer.toString(i)//map.get(  )
+								bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt( Integer.parseInt( map.get( dna_from [0] ) ) ).array();
 								System.arraycopy ( bytes, 0, byte_array, byte_offset, bytes.length );
 								byte_offset = byte_offset + bytes.length;
 								//Double.parseDouble( dna_from [0] );
-								bytes = ByteBuffer.allocate(8).order( ByteOrder.LITTLE_ENDIAN ).putDouble( Double.parseDouble( dna_from [1] ) ).array();
+								bytes = ByteBuffer.allocate(8).order( ByteOrder.LITTLE_ENDIAN ).putDouble( Double.parseDouble( map.get( dna_from [1] ) ) ).array();
 								System.arraycopy ( bytes, 0, byte_array, byte_offset, bytes.length );
 								byte_offset = byte_offset + bytes.length;
 								//Double.parseDouble( dna_from [1] );
-								bytes = ByteBuffer.allocate(8).order( ByteOrder.LITTLE_ENDIAN ).putDouble( Double.parseDouble( dna_from [2] ) ).array();
+								bytes = ByteBuffer.allocate(8).order( ByteOrder.LITTLE_ENDIAN ).putDouble( Double.parseDouble( map.get( dna_from [2] ) ) ).array();
 								System.arraycopy ( bytes, 0, byte_array, byte_offset, bytes.length );
 								byte_offset = byte_offset + bytes.length;
 								//Double.parseDouble( dna_from [2] );
-								bytes = ByteBuffer.allocate(8).order( ByteOrder.LITTLE_ENDIAN ).putDouble( Double.parseDouble( dna_from [3] ) ).array();
+								bytes = ByteBuffer.allocate(8).order( ByteOrder.LITTLE_ENDIAN ).putDouble( Double.parseDouble( map.get( dna_from [3] ) ) ).array();
 								System.arraycopy ( bytes, 0, byte_array, byte_offset, bytes.length );
 								byte_offset = byte_offset + bytes.length;
 								//Double.parseDouble( dna_from [3] );
-								bytes = ByteBuffer.allocate(8).order( ByteOrder.LITTLE_ENDIAN ).putDouble( Double.parseDouble( dna_from [4] ) ).array();
+								bytes = ByteBuffer.allocate(8).order( ByteOrder.LITTLE_ENDIAN ).putDouble( Double.parseDouble( map.get( dna_from [4] ) ) ).array();
 								System.arraycopy ( bytes, 0, byte_array, byte_offset, bytes.length );
 								byte_offset = byte_offset + bytes.length;
 							}
-						}*/
+						}
 						if ( ( byte_offset % 256 ) != 0)
 							mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_PRINT_DNA_RESULT, ( byte_offset / 256 ) + 1, 1, byte_array, 0);
 						else
@@ -372,18 +376,23 @@ public class LogFileChooserActivity extends FileChooserActivity {
 							bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt(mSelected_items_count).array();
 							System.arraycopy ( bytes, 0, byte_array, byte_offset, bytes.length );
 							byte_offset = byte_offset + bytes.length;
-							/*for ( HashMap<String, String> map : fillMaps ) {
+							bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt(mSelected_items_count).array();
+							System.arraycopy ( bytes, 0, byte_array, byte_offset, bytes.length );
+							byte_offset = byte_offset + bytes.length;
+							for ( HashMap<String, String> map : fillMaps ) {
 								if ( map.get( "isSelected" ) != null && map.get( "isSelected" ).equals( "true" ) ) {
 									//String[] protein_from = new String[] { "No.", "A280" };
-									bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt( Integer.parseInt( protein_from [0] ) ).array();
+									bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt( Integer.parseInt( map.get( protein_from [0] ) ) ).array();
 									System.arraycopy ( bytes, 0, byte_array, byte_offset, bytes.length );
 									byte_offset = byte_offset + bytes.length;
-									
-									bytes = ByteBuffer.allocate(8).order( ByteOrder.LITTLE_ENDIAN ).putDouble( Double.parseDouble( protein_from [1] ) ).array();
+									bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt( Integer.parseInt( map.get( protein_from [0] ) ) ).array();
+									System.arraycopy ( bytes, 0, byte_array, byte_offset, bytes.length );
+									byte_offset = byte_offset + bytes.length;									
+									bytes = ByteBuffer.allocate(8).order( ByteOrder.LITTLE_ENDIAN ).putDouble( Double.parseDouble( map.get( protein_from [1] ) ) ).array();
 									System.arraycopy ( bytes, 0, byte_array, byte_offset, bytes.length );
 									byte_offset = byte_offset + bytes.length;
 								}
-							}*/
+							}
 							if ( ( byte_offset % 256 ) != 0)
 								mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_PRINT_PROTEIN_RESULT, ( byte_offset / 256 ) + 1, 1, byte_array, 0);
 							else
@@ -603,10 +612,10 @@ public class LogFileChooserActivity extends FileChooserActivity {
 				for ( int j = 0; j < 50; j++ ) {
 				HashMap<String, String> map = new HashMap<String, String>();
 				map.put( "No.", Integer.toString( j ) );
-				map.put( "Conc.", "Conc." );
-				map.put( "A260", "A260" );
-				map.put( "A260_A230", "A260/A230" );
-				map.put( "A260_A280", "A260/A280" );
+				map.put( "Conc.", "50" );
+				map.put( "A260", "1" );
+				map.put( "A260_A230", "2.2" );
+				map.put( "A260_A280", "1.8" );
 				fillMaps.add( map );
 				}
 				/*try {
@@ -742,7 +751,7 @@ public class LogFileChooserActivity extends FileChooserActivity {
 					for ( int j = 0; j < 50; j++ ) {
 					HashMap<String, String> map = new HashMap<String, String>();
 					map.put( "No.", Integer.toString( j ) );
-					map.put( "A280", "OD" );
+					map.put( "A280", "0.5" );
 					fillMaps.add( map );
 					}
 					/*try {
