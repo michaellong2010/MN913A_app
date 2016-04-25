@@ -15,6 +15,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import com.example.mn913a.MN_913A_Device.CMD_T;
 import com.example.mn913a.file.FileOperateByteArray;
@@ -102,6 +105,9 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 	AlertDialog.Builder alert_dlg_builder;
 	String alert_message = "Are you sure that you want to delete the file \'$file_name\'?";
 	boolean Cur_A320_Involve = true, Cur_Led_Onoff_State = false, Cur_Auto_Measure = false;
+	Thread Monitor_Auto_Measure_thread = null;
+	ThreadPoolExecutor polling_data_executor = null;
+	Thread_sync Thread_Sync_By_Obj;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -193,7 +199,7 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 		alert_dlg.setMessage( alert_message );
 		alert_dlg.setTitle( "Message" );
 		
-		ImageButton imageButton1, imageButton2, imageButton3, imageButton4, btn_protein, btn_analysis;
+		ImageButton imageButton1, imageButton2, imageButton3, imageButton4, btn_protein, btn_analysis, btn_calibration;
 		View.OnClickListener click_listener;
 		click_listener = new OnClickListener() {
 
@@ -293,10 +299,11 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 							alert_dlg.setMessage( alert_message );
 						    alert_dlg.show();
 
+						    /*checkpoint*/
 						    msg = mWorker_thread_handler.obtainMessage( EXPERIMENT_CALIBRATION_DEVICE );
 						    msg.sendToTarget ( );
-						    msg = mWorker_thread_handler.obtainMessage( EXPERIMENT_MEASURE_BLANK );
-						    msg.sendToTarget ( );
+						    //msg = mWorker_thread_handler.obtainMessage( EXPERIMENT_MEASURE_BLANK );
+						    //msg.sendToTarget ( );
 					    }
 					    else {
 					    	alert_message = "blank measuring!";
@@ -542,7 +549,18 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 			}
 			
 		});
-		btn_analysis = ( ImageButton ) findViewById( R.id.imageButton6 );
+		btn_calibration = ( ImageButton ) findViewById( R.id.imageButton6 );
+		btn_calibration.setOnClickListener( new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+			    msg = mWorker_thread_handler.obtainMessage( EXPERIMENT_CALIBRATION_DEVICE );
+			    msg.sendToTarget ( );				
+			}
+			
+		});
+		/*btn_analysis = ( ImageButton ) findViewById( R.id.imageButton6 );
 		btn_analysis.setOnClickListener( new OnClickListener() {
 
 			@Override
@@ -615,7 +633,7 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 				
 			}
 			
-		});
+		});*/
 		//btn_analysis.setVisibility( View.INVISIBLE );
 		metrics = new DisplayMetrics();
     	if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
@@ -654,6 +672,8 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 		
 		NanoApplication app_data = ( ( NanoApplication ) this.getApplication() );
 		app_data.addActivity(this);
+		polling_data_executor = ( ThreadPoolExecutor ) Executors.newFixedThreadPool( Runtime.getRuntime().availableProcessors() );
+		Thread_Sync_By_Obj = new Thread_sync ();
 	}
 	
 	private void save_measurement_to_file () {
@@ -776,16 +796,31 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 		
 		Switch sw2= ( Switch ) NanoActivity.this.findViewById( R.id.Auto_measure_switch );
 		sw2.setOnCheckedChangeListener ( new OnCheckedChangeListener () {
+			ImageButton btn_blank, btn_sample;
 
 			@Override
 			public void onCheckedChanged(CompoundButton buttonView,
 					boolean isChecked) {
 				// TODO Auto-generated method stub
 				Cur_Auto_Measure = isChecked;
-				if ( isChecked )
+				btn_blank = ( ImageButton ) NanoActivity.this.findViewById ( R.id.imageButton1 );
+				btn_sample = ( ImageButton ) NanoActivity.this.findViewById ( R.id.imageButton2 );
+				if ( isChecked ) {
 					mNano_dev.Set_Auto_Measure( 1 );
-				else
+					/*checkpoint*/
+					/*starting polling thread to monitor auto-measure signal*/
+					Start_Monitor_AutoMeasure_Thread ( );
+					btn_blank.setEnabled( false );
+					btn_sample.setEnabled( false );
+				}
+				else {
 					mNano_dev.Set_Auto_Measure( 0 );
+					/*checkpoint*/
+					/*stopping auto-measure polling thread*/
+					Stop_Monitor_AutoMeasure_Thread ( );
+					btn_blank.setEnabled( true );
+					btn_sample.setEnabled( true );
+				}
 				mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_SETTING, 0, 0, null, 1);
 			}
 			
@@ -1114,6 +1149,7 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
     public static final int EXPERIMENT_MEASURE_BLANK = 0;
     public static final int EXPERIMENT_MEASURE_SAMPLE = 1;
     public static final int EXPERIMENT_CALIBRATION_DEVICE = 2;
+    public static final int EXPERIMENT_TEST = 10;
     channel_raw_data channel_blank = new channel_raw_data ( 100 ); 
     channel_raw_data channel_sample = new channel_raw_data ( 100 ); 
     channel_raw_data channel_sample1 = new channel_raw_data ( 100 );
@@ -1269,6 +1305,8 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
     	}
     };
     
+    /*checkpoing*/
+    
     class LooperThread extends Thread {
     	double Transmission_rate = 0, I_blank = 0.0, I_sample = 0.0;
 
@@ -1279,11 +1317,32 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
                 public void handleMessage ( Message msg ) {
                     // process incoming messages here
                 	switch ( msg.what ) {
+                	  case EXPERIMENT_TEST:
+                		  Thread_Sync_By_Obj.unlock();
+                		  break;
+                	  case EXPERIMENT_CALIBRATION_DEVICE:
+                		  /*checkpoint*/
+                		  mNano_dev.Set_Start_Calibration ( 1 );
+              			  mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_SETTING, 0, 0, null, 1);
+              			  mNano_dev.Set_Start_Calibration ( 0 );
+              			  while ( mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_STATUS, 0, 0, null, 0) ) {
+							  try {
+								sleep ( 5000 );
+							  } catch (InterruptedException e) {
+								// TODO Auto-generated catch block
+								  e.printStackTrace();
+							  }
+							  if ( mNano_dev.Has_Calibration == 1 ) {
+								//Log.d ( Tag, "MN913A device not busy");
+								  break;
+							  }
+						  }
+                		  break;
                 	  case EXPERIMENT_MEASURE_BLANK:
                 		  if ( Is_MN913A_Online == true ) {
                 			mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_MEASURE, 0, 0, null, 1);
                 			try {
-                				sleep ( 2500 );
+                				sleep ( 6000 );
 								while ( mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_STATUS, 0, 0, null, 0) ) {
 									sleep ( 1000 );
 									if ( mNano_dev.is_dev_busy == 0 ) {
@@ -1298,15 +1357,16 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 							}
                 		  }
                 		  
-                		  if ( mNano_dev.Itracker_IOCTL ( CMD_T.HID_CMD_MN913A_RAW_DATA, 0, 16, composite_raw_data, 0) )
+                		  if ( mNano_dev.Itracker_IOCTL ( CMD_T.HID_CMD_MN913A_RAW_DATA, 0, 16, composite_raw_data, 0) ) {
                 			  channel_blank.set_channel_raw_data ( composite_raw_data );
+                			  /*checkpoint*/
+                			  //if ( channel_blank.ch2_xenon_mean  mNano_dev.Max_Voltage_Intensity )
+                		  }
                 		  NanoActivity.this.runOnUiThread( new Runnable() {
 
 							@Override
 							public void run() {
 								// TODO Auto-generated method stub
-								NanoActivity.this.findViewById( R.id.imageButton1 ).setEnabled( true );
-								NanoActivity.this.findViewById( R.id.imageButton2 ).setEnabled( true );
 								if ( alert_dlg.isShowing( ) )
 									alert_dlg.dismiss ( );
 							    Switch sw= ( Switch ) NanoActivity.this.findViewById( R.id.mySwitch );
@@ -1315,9 +1375,19 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 							    sw1.setEnabled( true );
 							    Switch sw2 = ( Switch ) NanoActivity.this.findViewById( R.id.Auto_measure_switch );
 							    sw2.setEnabled( true );
+							    
+							    if ( sw2.isChecked() ) {
+									NanoActivity.this.findViewById( R.id.imageButton1 ).setEnabled( false );
+									NanoActivity.this.findViewById( R.id.imageButton2 ).setEnabled( false );							    	
+							    }
+							    else {
+									NanoActivity.this.findViewById( R.id.imageButton1 ).setEnabled( true );
+									NanoActivity.this.findViewById( R.id.imageButton2 ).setEnabled( true );
+							    }
 							}
                 			  
                 		  });
+                		  Thread_Sync_By_Obj.unlock();
                 		  break;
                 		  
                 	  case EXPERIMENT_MEASURE_SAMPLE:
@@ -1343,6 +1413,7 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
                 			  channel_sample.set_channel_raw_data ( composite_raw_data );
                 	    	  I_blank = Math.abs( channel_blank.ch2_xenon_mean - channel_blank.ch2_no_xenon_mean );
                 	    	  I_sample = Math.abs ( channel_sample.ch2_xenon_mean - channel_sample.ch2_no_xenon_mean );
+                	    	  /*checkpoint*/
                 	    	  if ( I_blank != 0 )
                 	    			Transmission_rate = I_sample / I_blank;
                 	    	  if ( 0.944 < Transmission_rate ) {
@@ -1373,7 +1444,13 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
                     				//I_sample1 = Math.abs ( channel_sample1.ch2_xenon_mean - channel_sample1.ch2_no_xenon_mean );
                     				//I_blank1 = ( double ) mNano_dev.Get_Min_Voltage_Intensity(); 
                     			}
+                    			
+                				Cur_Voltage_Level = mNano_dev.Get_Max_Volt_Level();
+                				mNano_dev.Set_Start_Calibration ( 0 );
+                				mNano_dev.Set_Xenon_Voltage_Level ( Cur_Voltage_Level );
+                				mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_SETTING, 0, 0, null, 1);
                 			  }
+                	    	  /*checkpoint*/
                 			  OD_Calculate ();
                 		  }
                 		  NanoActivity.this.runOnUiThread( new Runnable() {
@@ -1533,5 +1610,71 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
         }
         else
         	super.onActivityResult ( requestCode, resultCode, data );
+    }
+    
+    /*checkpoint*/
+    protected void Start_Monitor_AutoMeasure_Thread() {
+    	this.polling_data_executor.execute(this.Run_Auto_Measure);
+    }
+    
+    /*checkpoint*/
+    protected void Stop_Monitor_AutoMeasure_Thread() {
+		try {
+			this.polling_data_executor.awaitTermination(100, TimeUnit.MILLISECONDS);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    }
+    
+    /*checkpoint*/
+    Runnable Run_Auto_Measure = new Runnable() {
+
+		@Override
+		public void run() {
+			// TODO Auto-generated method stub
+			while ( Cur_Auto_Measure == true ) {
+				mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_STATUS, 0, 0, null, 0);
+				if ( mNano_dev.AutoMeasure_Detected == 1 ) {
+				  Log.d ( Tag, "Detect Auto Measure!" );
+				  msg = mWorker_thread_handler.obtainMessage( EXPERIMENT_MEASURE_BLANK );
+				  msg.sendToTarget ( );
+				  Thread_Sync_By_Obj.lock();
+				}
+
+				try {
+					Thread.sleep(650);
+				} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+					e.printStackTrace();
+				}			  
+			}
+			Log.d ( Tag, "Exit Auto Measure!" );
+		}
+    	
+    };
+    
+    public class Thread_sync {
+        // -1 表示目前沒有產品
+        private int product = -1; 
+     
+        // 這個方法由生產者呼叫
+        public synchronized void lock( ) {
+        	try {
+				wait();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+        } 
+        
+        // 這個方法由消費者呼叫
+        public synchronized void unlock() {
+        	notify ( );
+        } 
+    }
+    
+    public void Exit_App ( View v ) {
+    	finish ();
     }
 }

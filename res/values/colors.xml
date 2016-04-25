@@ -2,5 +2,6 @@
 <resources>
     <color name="result_textcolor">#FF666666</color>
     <color name="switch_on_color">#FFE50219</color>
-    <color name="switch_off_color">#FF202020</color>    
+    <color name="switch_off_color">#FF202020</color>
+    <color name="switch_disabled">#FFECE9D8</color>    
 </resources>

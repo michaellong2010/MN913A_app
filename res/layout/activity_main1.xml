@@ -22,6 +22,16 @@
             android:textColor="@android:color/white"
             android:fontFamily="Calibri"
             android:textSize="12pt" />
+        
+        <ImageButton
+            android:id="@+id/main_home"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:background="@drawable/btn_exit"
+            android:onClick="Exit_App"
+             />
 
     </RelativeLayout>
     <RelativeLayout
@@ -76,8 +86,10 @@
              android:layout_height="150dp"
              android:layout_marginLeft="588dp"
              android:layout_marginTop="437dp"
-             android:background="@drawable/btn_analysis"
-             android:visibility="invisible" />
+             android:background="@drawable/btn_calibration"
+              />
+         <!-- android:background="@drawable/btn_analysis"
+         android:visibility="invisible" -->
 
          <ImageButton
              android:id="@+id/imageButton7"
@@ -95,6 +107,7 @@
              android:layout_marginLeft="1104dp"
              android:layout_marginTop="437dp"
              android:background="@drawable/btn_setting"
+             android:visibility="invisible"
               />
          <!-- android:onClick="switch_to_setting_page" -->
 
