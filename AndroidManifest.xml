@@ -48,7 +48,7 @@
             </intent-filter>
         </receiver>
         
-        <activity android:name="com.example.mn913a.LogFileChooserActivity" android:theme="@style/AppTheme_title" android:screenOrientation="landscape"  android:launchMode="singleTask">
+        <activity android:name="com.example.mn913a.LogFileChooserActivity" android:theme="@style/AppTheme_title" android:screenOrientation="landscape">
 <!--              <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

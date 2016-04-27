@@ -19,6 +19,8 @@ public class NanoSqlDatabase {
 	private static final String A260 = "A260";
 	private static final String A260_A230 = "A260_A230_ratio";
 	private static final String A260_A280 = "A260_A280_ratio";
+	//private static final String A260_A230 = "A260" + '"/"' + "A230";
+	//private static final String A260_A280 = "A260" + '/' + "A280";
 	
 	public static final String PROTEIN_VALUE_TABLE_NAME = "protein";
 	private static final String A280 = "A280";
@@ -67,7 +69,7 @@ public class NanoSqlDatabase {
 	public void InsertDNADataToDB ( DNA_measure_data dna_data ) {
 		String index = Integer.toString( dna_data.index );
 		String concentration = Double.toString( truncateDecimal ( dna_data.Conc, 3 ).doubleValue() );
-		String[] dna_od_array = { Double.toString( truncateDecimal ( dna_data.A260, 3 ).doubleValue() ), Double.toString( truncateDecimal ( dna_data.A260 / dna_data.A230, 3 ).doubleValue() ), Double.toString( truncateDecimal ( dna_data.A260 / dna_data.A280, 3 ).doubleValue() ) };
+		String[] dna_od_array = { Double.toString( truncateDecimal ( dna_data.A260 * 25.56, 3 ).doubleValue() ), Double.toString( truncateDecimal ( ( dna_data.A260 * 210 ) / ( dna_data.A230 * 167 ), 3 ).doubleValue() ), Double.toString( truncateDecimal ( ( dna_data.A260 * 19 ) / ( dna_data.A280 * 23 ), 3 ).doubleValue() ) };
 
 		String sql_dna_value = "insert into " + DNA_VALUE_TABLE_NAME + " ("
 				+ INDEX + ", " + CONC + ", " + A260 + ", " + A260_A230 + ", " + A260_A280 + ") values('" + index + "', '" + concentration

@@ -97,7 +97,7 @@ public class LogFileChooserActivity extends FileChooserActivity {
 	File mActiveFile = null, mActiveFile1 = null;
 	String measure_type, measure_result;
 	String [] measure_result_array;
-	String[] dna_from = new String[] { "No.", "Conc.", "A260", "A260_A280", "A260_A230" };
+	String[] dna_from = new String[] { "No.", "Conc.", "A260", "A260_A230", "A260_A280" };
 	String[] protein_from = new String[] { "No.", "A280" };
 	Boolean mIsFileDirty = false, mIsFileDirty1 = false;
 	int mSelected_items_count = 0;
@@ -609,7 +609,7 @@ public class LogFileChooserActivity extends FileChooserActivity {
 			if ( selected_file_items.get(0).getFile().getName().contains( "dsDNA" ) == true ||
 				 selected_file_items.get(0).getFile().getName().contains( "ssDNA" ) == true ||
 				 selected_file_items.get(0).getFile().getName().contains( "RNA" ) == true ) {
-				for ( int j = 0; j < 50; j++ ) {
+				/*for ( int j = 0; j < 50; j++ ) {
 				HashMap<String, String> map = new HashMap<String, String>();
 				map.put( "No.", Integer.toString( j ) );
 				map.put( "Conc.", "50" );
@@ -617,8 +617,8 @@ public class LogFileChooserActivity extends FileChooserActivity {
 				map.put( "A260_A230", "2.2" );
 				map.put( "A260_A280", "1.8" );
 				fillMaps.add( map );
-				}
-				/*try {
+				}*/
+				try {
 					read_file.open_read_file( mActiveFile.getName() );
 					while ( ( measure_result = read_file.read_file() ) != null ) {
 					  Log.d ( "Tag", measure_result);
@@ -636,7 +636,7 @@ public class LogFileChooserActivity extends FileChooserActivity {
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
-				}*/
+				}
 				adapter = new SimpleAdapter ( this, fillMaps, R.layout.dna_result_listview_item, from, to );
 				result_listview.setAdapter( adapter2 );
 				//result_listview.setChoiceMode( ListView.CHOICE_MODE_MULTIPLE );
@@ -748,13 +748,13 @@ public class LogFileChooserActivity extends FileChooserActivity {
         	}
 			else
 				if ( selected_file_items.get(0).getFile().getName().contains( "PROTEIN" ) == true ) {
-					for ( int j = 0; j < 50; j++ ) {
+					/*for ( int j = 0; j < 50; j++ ) {
 					HashMap<String, String> map = new HashMap<String, String>();
 					map.put( "No.", Integer.toString( j ) );
 					map.put( "A280", "0.5" );
 					fillMaps.add( map );
-					}
-					/*try {
+					}*/
+					try {
 						read_file.open_read_file( mActiveFile.getName() );
 						while ( ( measure_result = read_file.read_file() ) != null ) {
 						  Log.d ( "Tag", measure_result);
@@ -772,7 +772,7 @@ public class LogFileChooserActivity extends FileChooserActivity {
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
-					}*/
+					}
 					result_listview.setAdapter( adapter3 );
 					result_listview.setOnItemClickListener( new OnItemClickListener () {
 						CheckBox checkbox1;

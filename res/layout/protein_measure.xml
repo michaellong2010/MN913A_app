@@ -92,7 +92,17 @@
                 android:layout_marginTop="330dp" >
            	</LinearLayout>
             
-            
+            <Switch
+                android:id="@+id/Auto_measure_switch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignLeft="@+id/imageButton2"
+                android:layout_alignTop="@+id/GridLayout"
+                android:layout_marginTop="26dp"
+                android:switchMinWidth="80dp"
+                android:text="Auto"
+                android:textColor="@color/result_textcolor"
+                android:thumb="@drawable/my_switch_inner" />
 
         </RelativeLayout>
     </LinearLayout>
