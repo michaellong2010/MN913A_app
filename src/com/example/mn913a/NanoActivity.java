@@ -116,6 +116,14 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD);
 		setContentView(R.layout.activity_main1);
+		View decorView = getWindow().getDecorView();
+		// Hide both the navigation bar and the status bar.
+		// SYSTEM_UI_FLAG_FULLSCREEN is only available on Android 4.1 and higher, but as
+		// a general rule, you should design your app to hide the status bar whenever you
+		// hide the navigation bar.
+		int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+		              | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+		decorView.setSystemUiVisibility(uiOptions);
 		Thread.currentThread().setName( "Thread_NanoActivity" );
 
 		mUsbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
@@ -360,6 +368,14 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 					}
 					
 				});
+				View decorView = getWindow().getDecorView();
+				// Hide both the navigation bar and the status bar.
+				// SYSTEM_UI_FLAG_FULLSCREEN is only available on Android 4.1 and higher, but as
+				// a general rule, you should design your app to hide the status bar whenever you
+				// hide the navigation bar.
+				int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+				              | View.SYSTEM_UI_FLAG_FULLSCREEN;
+				decorView.setSystemUiVisibility(uiOptions);
 			}
 			
 		});
@@ -470,6 +486,11 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 				intent.putExtra(LogFileChooserActivity.INPUT_REGEX_FILTER, ".*\\.csv");
 				//startActivity(intent);
 				intent.setAction( NanoActivity.this.getIntent().getAction() );
+				if ( NanoActivity.this.getIntent().getAction().equals( UsbManager.ACTION_USB_DEVICE_ATTACHED ) ) {
+					UsbDevice device = (UsbDevice) NanoActivity.this.getIntent().getParcelableExtra(UsbManager.EXTRA_DEVICE);
+					Log.d ( "NanoActivity debug device", device.toString() );
+					intent.putExtra( UsbManager.EXTRA_DEVICE, device);
+				}
 				NanoActivity.this.startActivityForResult ( intent, 1023 );
 			}
 			
@@ -1018,7 +1039,7 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 	}
 	
 	public void EnumerationDevice(Intent intent) {
-		if (intent.getAction().equals(Intent.ACTION_MAIN)) {
+		if ( intent != null && intent.getAction() != null && intent.getAction().equals(Intent.ACTION_MAIN)) {
 			if (mNano_dev.Enumeration()) {
 				//connection_status_v.setImageResource ( R.drawable.usb_connection );
 				Is_MN913A_Online = true;
@@ -1034,7 +1055,7 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 			}
 		}
     	else
-    		if (intent.getAction().equals(UsbManager.ACTION_USB_DEVICE_ATTACHED)) {
+    		if ( intent != null && intent.getAction() != null && intent.getAction().equals(UsbManager.ACTION_USB_DEVICE_ATTACHED)) {
     			UsbDevice device = (UsbDevice) intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
     			if (mNano_dev.Enumeration(device)) {
     				Is_MN913A_Online = true;
@@ -1146,18 +1167,18 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
     @Override
     protected void onStop() {
     	super.onStop();
-    	show_system_bar();
+    	/*show_system_bar();
     	mNano_dev.Set_Illumination_State ( 0 );
-		mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_SETTING, 0, 0, null, 1);
+		mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_SETTING, 0, 0, null, 1);*/
     }
     
     @Override
     protected void onStart() {
     	super.onStart();
 
-    	if (mRequest_USB_permission==false)
+    	/*if (mRequest_USB_permission==false)
     		hide_system_bar();
-    	EnumerationDevice(getIntent());
+    	EnumerationDevice(getIntent());*/
     	//adjust_ui_dimension ( ( ViewGroup ) this.findViewById( R.id.top_ui ) );
     }
     
@@ -1230,22 +1251,22 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 	}
 	
     public void hide_system_bar() {    	
-    	/*String result;
+    	String result;
     	result = exec_shell_command ( "service call activity 42 s16 com.android.systemui\n" );
     	if ( result.equals( Msg_Shell_Command_Error) == false )
     		Log.d ( Tag, "hide system bar successfully!" );
     	else
-    		Log.d ( Tag, "hide system bar fail!" );*/
+    		Log.d ( Tag, "hide system bar fail!" );
     	
     }
     
     public void show_system_bar() {
-    	/*String result;
+    	String result;
     	result = exec_shell_command ( "am startservice -n com.android.systemui/.SystemUIService\n" );
     	if ( result.equals( Msg_Shell_Command_Error) == false )
     		Log.d ( Tag, "show system bar successfully!" );
     	else
-    		Log.d ( Tag, "show system bar fail!" );*/
+    		Log.d ( Tag, "show system bar fail!" );
     }
     
     /*20160318 added by michael*/
@@ -1253,9 +1274,9 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
     public static final int EXPERIMENT_MEASURE_SAMPLE = 1;
     public static final int EXPERIMENT_CALIBRATION_DEVICE = 2;
     public static final int EXPERIMENT_TEST = 10;
-    channel_raw_data channel_blank = new channel_raw_data ( 100 ); 
-    channel_raw_data channel_sample = new channel_raw_data ( 100 ); 
-    channel_raw_data channel_sample1 = new channel_raw_data ( 100 );
+    channel_raw_data channel_blank = new channel_raw_data ( 50 ); 
+    channel_raw_data channel_sample = new channel_raw_data ( 50 ); 
+    channel_raw_data channel_sample1 = new channel_raw_data ( 50 );
     byte [] composite_raw_data = new byte [ 4096 ];
     boolean blank_valid = false;
     class channel_raw_data {
@@ -1300,7 +1321,9 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 				ch_ocuupy_pages = channel_elements * ( Integer.SIZE / Byte.SIZE ) / 256;
 			}
 			
-			byte [] one_ch_raw_data = new byte [ ch_ocuupy_pages * 256 ];			
+			//byte [] one_ch_raw_data = new byte [ ch_ocuupy_pages * 256 ];
+			ch_ocuupy_pages = 2;
+			byte [] one_ch_raw_data = new byte [ ch_ocuupy_pages * 256 ];
 		    for ( int i = 0; i < 8; i++ ) {
 		    	System.arraycopy( composite_data , i * ch_ocuupy_pages * 256 , one_ch_raw_data, 0, one_ch_raw_data.length );	
 		    	switch ( i ) {
@@ -1463,12 +1486,12 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
               				mNano_dev.Set_Start_Calibration ( 0 );
               				mNano_dev.Set_Xenon_Voltage_Level ( Cur_Voltage_Level );
                 			try {
-                  				mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_SETTING, 0, 0, null, 1);
-                  				sleep ( 500 );
-                    			mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_MEASURE, 0, 0, null, 1);
+                  				mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_SETTING, 0, 0, null, 0);
+                  				sleep ( 10 );
+                    			mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_MEASURE, 0, 0, null, 0);
                 				//sleep ( 3000 );
 								while ( mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_STATUS, 0, 0, null, 0) ) {
-									sleep ( 500 );
+									sleep ( 10 );
 									if ( mNano_dev.is_dev_busy == 0 ) {
 										//Log.d ( Tag, "MN913A device not busy");
 										break;
@@ -1520,9 +1543,9 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
                 		  if ( Is_MN913A_Online == true ) {
                 			mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_MEASURE, 0, 0, null, 0);
                 			try {
-                				sleep ( 3000 );
+                				sleep ( 10 );
 								while ( mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_STATUS, 0, 0, null, 0) ) {
-									sleep ( 500 );
+									sleep ( 10 );
 									if ( mNano_dev.is_dev_busy == 0 ) {
 										//Log.d ( Tag, "MN913A device not busy");
 										break;
@@ -1549,12 +1572,12 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
                 				mNano_dev.Set_Start_Calibration ( 0 );
                 				mNano_dev.Set_Xenon_Voltage_Level ( Cur_Voltage_Level );
                     			try {
-                    				mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_SETTING, 0, 0, null, 1);
-                    				sleep ( 1000 );
+                    				mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_SETTING, 0, 0, null, 0);
+                    				sleep ( 10 );
                         			mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_MEASURE, 0, 0, null, 0);
-                    				sleep ( 3000 );
+                    				sleep ( 10 );
     								while ( mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_STATUS, 0, 0, null, 0) ) {
-    									sleep ( 1000 );
+    									sleep ( 10 );
     									if ( mNano_dev.is_dev_busy == 0 ) {
     										//Log.d ( Tag, "MN913A device not busy");
     										break;

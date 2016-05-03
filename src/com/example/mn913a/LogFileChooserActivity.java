@@ -453,6 +453,7 @@ public class LogFileChooserActivity extends FileChooserActivity {
 	@Override
     protected void onDestroy() {
 		super.onDestroy();
+		unregisterReceiver(mReceiver);
 	}
 
 /*20141022 added by michael
@@ -1004,6 +1005,7 @@ public class LogFileChooserActivity extends FileChooserActivity {
     	else
     		if (intent.getAction().equals(UsbManager.ACTION_USB_DEVICE_ATTACHED)) {
     			UsbDevice device = (UsbDevice) intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
+    			Log.d ( "LogFileChooser debug device", device.toString() );
     			if (mNano_dev.Enumeration(device)) {
     				Is_MN913A_Online = true;
     			}

@@ -48,12 +48,13 @@
             </intent-filter>
         </receiver>
         
-        <activity android:name="com.example.mn913a.LogFileChooserActivity" android:theme="@style/AppTheme_title" android:screenOrientation="landscape">
+        <activity android:name="com.example.mn913a.LogFileChooserActivity" android:theme="@style/AppTheme_title" android:screenOrientation="landscape"  android:launchMode="singleTask">
 <!--              <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter> -->
+            <!-- <meta-data android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" android:resource="@xml/device_filter"/> -->
         </activity>
         <activity android:name="com.example.mn913a.LogFileDisplayActivity" android:theme="@style/AppTheme_title" android:screenOrientation="landscape" android:launchMode="singleTask"/>
         
@@ -64,6 +65,16 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter> -->
         </activity>
+        
+        <receiver android:name="com.example.mn913a.NanoAppWidgetProvider" android:label="@string/main_title">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/ad1_appwidget_info" />
+        </receiver>        
+        
     </application>
 
 </manifest>
