@@ -316,15 +316,16 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 					    table.refresh_last_table();*/
 
 					    btn_blank.setEnabled( false );
+					    btn_sample.setEnabled( false );
 					    Switch sw= ( Switch ) NanoActivity.this.findViewById( R.id.mySwitch );
 					    sw.setEnabled( false );
 					    Switch sw1= ( Switch ) NanoActivity.this.findViewById( R.id.Led_switch );
 					    sw1.setEnabled( false );
 					    Switch sw2 = ( Switch ) NanoActivity.this.findViewById( R.id.Auto_measure_switch );
 					    sw2.setEnabled( false );
-					    mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_STATUS, 0, 0, null, 0);
+					    mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_MN913A_STATUS, 0, 0, null, 0);
 					    if ( mNano_dev.Has_Calibration == 0 ) {
-					    	alert_message = "calibration device & blank measuring!";
+					    	alert_message = "Device Calibrating & Blank Measuring!";
 							alert_dlg.setMessage( alert_message );
 						    alert_dlg.show();
 
@@ -335,7 +336,7 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 						    msg.sendToTarget ( );
 					    }
 					    else {
-					    	alert_message = "blank measuring!";
+					    	alert_message = "Blank Measuring!";
 							alert_dlg.setMessage( alert_message );
 						    alert_dlg.show();
 
@@ -359,7 +360,7 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 					    sw1.setEnabled( false );
 					    Switch sw2 = ( Switch ) NanoActivity.this.findViewById( R.id.Auto_measure_switch );
 					    sw2.setEnabled( false );
-					    alert_message = "sample measuring!";
+					    alert_message = "Sample Measuring!";
 						alert_dlg.setMessage( alert_message );
 					    alert_dlg.show();
 					    
@@ -374,7 +375,7 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 				// a general rule, you should design your app to hide the status bar whenever you
 				// hide the navigation bar.
 				int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-				              | View.SYSTEM_UI_FLAG_FULLSCREEN;
+				              | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
 				decorView.setSystemUiVisibility(uiOptions);
 			}
 			
@@ -411,15 +412,16 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 					public void onClick(View v) {
 						// TODO Auto-generated method stub
 					    btn_blank.setEnabled( false );
+					    btn_sample.setEnabled( false );
 					    Switch sw= ( Switch ) NanoActivity.this.findViewById( R.id.mySwitch );
 					    sw.setEnabled( false );
 					    Switch sw1= ( Switch ) NanoActivity.this.findViewById( R.id.Led_switch );
 					    sw1.setEnabled( false );
 					    Switch sw2 = ( Switch ) NanoActivity.this.findViewById( R.id.Auto_measure_switch );
 					    sw2.setEnabled( false );
-					    mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_STATUS, 0, 0, null, 0);
+					    mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_MN913A_STATUS, 0, 0, null, 0);
 					    if ( mNano_dev.Has_Calibration == 0 ) {
-					    	alert_message = "calibration device & blank measuring!";
+					    	alert_message = "Device Calibrating & Blank Measuring!";
 							alert_dlg.setMessage( alert_message );
 						    alert_dlg.show();
 
@@ -430,7 +432,7 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 						    msg.sendToTarget ( );
 					    }
 					    else {
-					    	alert_message = "blank measuring!";
+					    	alert_message = "Blank Measuring!";
 							alert_dlg.setMessage( alert_message );
 						    alert_dlg.show();
 
@@ -454,7 +456,7 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 					    sw1.setEnabled( false );
 					    Switch sw2 = ( Switch ) NanoActivity.this.findViewById( R.id.Auto_measure_switch );
 					    sw2.setEnabled( false );
-					    alert_message = "sample measuring!";
+					    alert_message = "Sample Measuring!";
 						alert_dlg.setMessage( alert_message );
 					    alert_dlg.show();
 					    
@@ -464,6 +466,15 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 					}
 					
 				});
+				
+				View decorView = getWindow().getDecorView();
+				// Hide both the navigation bar and the status bar.
+				// SYSTEM_UI_FLAG_FULLSCREEN is only available on Android 4.1 and higher, but as
+				// a general rule, you should design your app to hide the status bar whenever you
+				// hide the navigation bar.
+				int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+				              | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+				decorView.setSystemUiVisibility(uiOptions);
 			}
 			
 		});
@@ -528,15 +539,16 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 					public void onClick(View v) {
 						// TODO Auto-generated method stub
 					    btn_blank.setEnabled( false );
+					    btn_sample.setEnabled( false );
 					    Switch sw= ( Switch ) NanoActivity.this.findViewById( R.id.mySwitch );
 					    sw.setEnabled( false );
 					    Switch sw1= ( Switch ) NanoActivity.this.findViewById( R.id.Led_switch );
 					    sw1.setEnabled( false );
 					    Switch sw2 = ( Switch ) NanoActivity.this.findViewById( R.id.Auto_measure_switch );
 					    sw2.setEnabled( false );
-					    mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_STATUS, 0, 0, null, 0);
+					    mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_MN913A_STATUS, 0, 0, null, 0);
 					    if ( mNano_dev.Has_Calibration == 0 ) {
-					    	alert_message = "calibration device & blank measuring!";
+					    	alert_message = "Device Calibrating & Blank Measuring!";
 							alert_dlg.setMessage( alert_message );
 						    alert_dlg.show();
 
@@ -547,7 +559,7 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 						    msg.sendToTarget ( );
 					    }
 					    else {
-					    	alert_message = "blank measuring!";
+					    	alert_message = "Blank Measuring!";
 							alert_dlg.setMessage( alert_message );
 						    alert_dlg.show();
 
@@ -571,7 +583,7 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 					    sw1.setEnabled( false );
 					    Switch sw2 = ( Switch ) NanoActivity.this.findViewById( R.id.Auto_measure_switch );
 					    sw2.setEnabled( false );
-					    alert_message = "sample measuring!";
+					    alert_message = "Sample Measuring!";
 						alert_dlg.setMessage( alert_message );
 					    alert_dlg.show();
 					    
@@ -580,6 +592,15 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 					}
 					
 				});
+				
+				View decorView = getWindow().getDecorView();
+				// Hide both the navigation bar and the status bar.
+				// SYSTEM_UI_FLAG_FULLSCREEN is only available on Android 4.1 and higher, but as
+				// a general rule, you should design your app to hide the status bar whenever you
+				// hide the navigation bar.
+				int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+				              | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+				decorView.setSystemUiVisibility(uiOptions);
 			}
 			
 		});
@@ -615,11 +636,12 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 					public void onClick(View v) {
 						// TODO Auto-generated method stub
 					    btn_blank.setEnabled( false );
+					    btn_sample.setEnabled( false );
 					    Switch sw2 = ( Switch ) NanoActivity.this.findViewById( R.id.Auto_measure_switch );
 					    sw2.setEnabled( false );
-					    mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_STATUS, 0, 0, null, 0);
+					    mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_MN913A_STATUS, 0, 0, null, 0);
 					    if ( mNano_dev.Has_Calibration == 0 ) {
-					    	alert_message = "calibration device & blank measuring!";
+					    	alert_message = "Device Calibrating & Blank Measuring!";
 							alert_dlg.setMessage( alert_message );
 						    alert_dlg.show();
 
@@ -630,7 +652,7 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 						    msg.sendToTarget ( );
 					    }
 					    else {
-					    	alert_message = "blank measuring!";
+					    	alert_message = "Blank Measuring!";
 							alert_dlg.setMessage( alert_message );
 						    alert_dlg.show();
 
@@ -650,7 +672,7 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 					    btn_sample.setEnabled( false );
 					    Switch sw2 = ( Switch ) NanoActivity.this.findViewById( R.id.Auto_measure_switch );
 					    sw2.setEnabled( false );
-					    alert_message = "sample measuring!";
+					    alert_message = "Sample Measuring!";
 						alert_dlg.setMessage( alert_message );
 					    alert_dlg.show();
 					    
@@ -659,6 +681,14 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 					}
 					
 				});
+				View decorView = getWindow().getDecorView();
+				// Hide both the navigation bar and the status bar.
+				// SYSTEM_UI_FLAG_FULLSCREEN is only available on Android 4.1 and higher, but as
+				// a general rule, you should design your app to hide the status bar whenever you
+				// hide the navigation bar.
+				int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+				              | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+				decorView.setSystemUiVisibility(uiOptions);
 			}
 			
 		});
@@ -668,13 +698,13 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 			@Override
 			public void onClick(View v) {
 				// TODO Auto-generated method stub
-		    	alert_message = "calibration device!";
+		    	alert_message = "Device Calibrating!";
 				alert_dlg.setMessage( alert_message );
 			    alert_dlg.show();
 
 			    /*checkpoint*/
 			    msg = mWorker_thread_handler.obtainMessage( EXPERIMENT_CALIBRATION_DEVICE );
-			    msg.sendToTarget ( );				
+			    msg.sendToTarget ( );
 			}
 			
 		});
@@ -792,6 +822,12 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 		app_data.addActivity(this);
 		polling_data_executor = ( ThreadPoolExecutor ) Executors.newFixedThreadPool( Runtime.getRuntime().availableProcessors() );
 		Thread_Sync_By_Obj = new Thread_sync ();
+		
+		mNano_dev.Set_Reset_MCU( 1 );
+		mNano_dev.MN913A_IOCTL ( CMD_T.HID_CMD_MN913A_SETTING, 0, 0, null, 1 );
+		mNano_dev.MN913A_IOCTL ( CMD_T.HID_CMD_MN913A_SETTING, 0, 0, null, 1 );
+		mNano_dev.Set_Reset_MCU( 0 );
+		Log.d ( Tag, "reset calibration" );
 	}
 	
 	private void save_measurement_to_file () {
@@ -910,7 +946,7 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 					mNano_dev.Set_Illumination_State ( 1 );
 				else
 					mNano_dev.Set_Illumination_State ( 0 );
-				mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_SETTING, 0, 0, null, 1);
+				mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_MN913A_SETTING, 0, 0, null, 1);
 			}
 			
 		});
@@ -943,7 +979,7 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 					btn_blank.setEnabled( true );
 					btn_sample.setEnabled( true );
 				}
-				mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_SETTING, 0, 0, null, 1);
+				mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_MN913A_SETTING, 0, 0, null, 1);
 			}
 			
 		});
@@ -975,6 +1011,40 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 			mLayout_Protein_MeasurePage = ( LinearLayout ) inflater.inflate( R.layout.protein_measure, null );
 		}
 		mLayout_Content.addView( mLayout_Protein_MeasurePage );
+	
+		Switch sw2= ( Switch ) NanoActivity.this.findViewById( R.id.Auto_measure_switch );
+		sw2.setOnCheckedChangeListener ( new OnCheckedChangeListener () {
+			ImageButton btn_blank, btn_sample;
+
+			@Override
+			public void onCheckedChanged(CompoundButton buttonView,
+					boolean isChecked) {
+				// TODO Auto-generated method stub
+				Cur_Auto_Measure = isChecked;
+				btn_blank = ( ImageButton ) NanoActivity.this.findViewById ( R.id.imageButton1 );
+				btn_sample = ( ImageButton ) NanoActivity.this.findViewById ( R.id.imageButton2 );
+				if ( isChecked ) {
+					mNano_dev.Set_Auto_Measure( 1 );
+					/*checkpoint*/
+					/*starting polling thread to monitor auto-measure signal*/
+					Start_Monitor_AutoMeasure_Thread ( );
+					btn_blank.setEnabled( false );
+					btn_sample.setEnabled( false );
+				}
+				else {
+					mNano_dev.Set_Auto_Measure( 0 );
+					/*checkpoint*/
+					/*stopping auto-measure polling thread*/
+					Stop_Monitor_AutoMeasure_Thread ( );
+					btn_blank.setEnabled( true );
+					btn_sample.setEnabled( true );
+				}
+				mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_MN913A_SETTING, 0, 0, null, 1);
+			}
+			
+		});
+		sw2.setChecked( Cur_Auto_Measure );
+		sw2.setEnabled( false );
 		
     	gridlayout = (LinearLayout) findViewById(R.id.GridLayout);
     	if ( gridlayout != null ) {
@@ -1084,9 +1154,9 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 			Cur_Voltage_Level = 162;
 			mNano_dev.Set_Xenon_Voltage_Level ( Cur_Voltage_Level );
 			mNano_dev.Set_Start_Calibration ( 0 );
-			mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_SETTING, 0, 0, null, 1);
+			mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_MN913A_SETTING, 0, 0, null, 1);
 			mNano_dev.Set_Start_Calibration ( 0 );
-			mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_STATUS, 0, 0, null, 0);
+			mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_MN913A_STATUS, 0, 0, null, 0);
 		}
 		else {
 			/*connection_status_v.setImageResource ( R.drawable.usb_disconnection );
@@ -1167,9 +1237,9 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
     @Override
     protected void onStop() {
     	super.onStop();
-    	/*show_system_bar();
+    	/*show_system_bar();*/
     	mNano_dev.Set_Illumination_State ( 0 );
-		mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_SETTING, 0, 0, null, 1);*/
+		mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_MN913A_SETTING, 0, 0, null, 1);
     }
     
     @Override
@@ -1177,9 +1247,17 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
     	super.onStart();
 
     	/*if (mRequest_USB_permission==false)
-    		hide_system_bar();
-    	EnumerationDevice(getIntent());*/
+    		hide_system_bar();*/
+    	EnumerationDevice(getIntent());
     	//adjust_ui_dimension ( ( ViewGroup ) this.findViewById( R.id.top_ui ) );
+		View decorView = getWindow().getDecorView();
+		// Hide both the navigation bar and the status bar.
+		// SYSTEM_UI_FLAG_FULLSCREEN is only available on Android 4.1 and higher, but as
+		// a general rule, you should design your app to hide the status bar whenever you
+		// hide the navigation bar.
+		int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+		              | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+		decorView.setSystemUiVisibility(uiOptions);
     }
     
 	@Override
@@ -1450,7 +1528,7 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
                 	  case EXPERIMENT_CALIBRATION_DEVICE:
                 		  /*checkpoint*/
                 		  mNano_dev.Set_Start_Calibration ( 1 );
-              			  mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_SETTING, 0, 0, null, 1);
+              			  mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_MN913A_SETTING, 0, 0, null, 1);
               			  mNano_dev.Set_Start_Calibration ( 0 );
               			  try {
 							sleep ( 3000 );
@@ -1458,7 +1536,7 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 							// TODO Auto-generated catch block
 							e1.printStackTrace();
 						}
-              			  while ( mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_STATUS, 0, 0, null, 0) ) {
+              			  while ( mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_MN913A_STATUS, 0, 0, null, 0) ) {
 							  try {
 								sleep ( 1000 );
 							  } catch (InterruptedException e) {
@@ -1475,8 +1553,16 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 							@Override
 							public void run() {
 								// TODO Auto-generated method stub
-								if ( alert_dlg.isShowing( ) && alert_message.equals( "calibration device!"  ) )
+								if ( alert_dlg.isShowing( ) && alert_message.equals( "Device Calibrating!"  ) )
 									alert_dlg.dismiss ( );
+								View decorView = getWindow().getDecorView();
+								// Hide both the navigation bar and the status bar.
+								// SYSTEM_UI_FLAG_FULLSCREEN is only available on Android 4.1 and higher, but as
+								// a general rule, you should design your app to hide the status bar whenever you
+								// hide the navigation bar.
+								int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+								              | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+								decorView.setSystemUiVisibility(uiOptions);
 							}
                 		  });
                 		  break;
@@ -1486,11 +1572,11 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
               				mNano_dev.Set_Start_Calibration ( 0 );
               				mNano_dev.Set_Xenon_Voltage_Level ( Cur_Voltage_Level );
                 			try {
-                  				mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_SETTING, 0, 0, null, 0);
+                  				mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_MN913A_SETTING, 0, 0, null, 0);
                   				sleep ( 10 );
-                    			mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_MEASURE, 0, 0, null, 0);
+                    			mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_MN913A_MEASURE, 0, 0, null, 0);
                 				//sleep ( 3000 );
-								while ( mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_STATUS, 0, 0, null, 0) ) {
+								while ( mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_MN913A_STATUS, 0, 0, null, 0) ) {
 									sleep ( 10 );
 									if ( mNano_dev.is_dev_busy == 0 ) {
 										//Log.d ( Tag, "MN913A device not busy");
@@ -1504,7 +1590,7 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 							}
                 		  }
                 		  
-                		  if ( mNano_dev.Itracker_IOCTL ( CMD_T.HID_CMD_MN913A_RAW_DATA, 0, 16, composite_raw_data, 0) ) {
+                		  if ( mNano_dev.MN913A_IOCTL ( CMD_T.HID_CMD_MN913A_RAW_DATA, 0, 16, composite_raw_data, 0) ) {
                 			  channel_blank.set_channel_raw_data ( composite_raw_data );
                 			  /*checkpoint*/
                 			  //if ( channel_blank.ch2_xenon_mean  mNano_dev.Max_Voltage_Intensity )
@@ -1533,6 +1619,15 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 									NanoActivity.this.findViewById( R.id.imageButton1 ).setEnabled( true );
 									NanoActivity.this.findViewById( R.id.imageButton2 ).setEnabled( true );
 							    }
+							    
+								View decorView = getWindow().getDecorView();
+								// Hide both the navigation bar and the status bar.
+								// SYSTEM_UI_FLAG_FULLSCREEN is only available on Android 4.1 and higher, but as
+								// a general rule, you should design your app to hide the status bar whenever you
+								// hide the navigation bar.
+								int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+								              | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+								decorView.setSystemUiVisibility(uiOptions);
 							}
                 			  
                 		  });
@@ -1541,10 +1636,10 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
                 		  
                 	  case EXPERIMENT_MEASURE_SAMPLE:
                 		  if ( Is_MN913A_Online == true ) {
-                			mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_MEASURE, 0, 0, null, 0);
+                			mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_MN913A_MEASURE, 0, 0, null, 0);
                 			try {
                 				sleep ( 10 );
-								while ( mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_STATUS, 0, 0, null, 0) ) {
+								while ( mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_MN913A_STATUS, 0, 0, null, 0) ) {
 									sleep ( 10 );
 									if ( mNano_dev.is_dev_busy == 0 ) {
 										//Log.d ( Tag, "MN913A device not busy");
@@ -1558,7 +1653,7 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 							}
                 		  }
                 		  
-                		  if ( mNano_dev.Itracker_IOCTL ( CMD_T.HID_CMD_MN913A_RAW_DATA, 0, 16, composite_raw_data, 0) ) {
+                		  if ( mNano_dev.MN913A_IOCTL ( CMD_T.HID_CMD_MN913A_RAW_DATA, 0, 16, composite_raw_data, 0) ) {
                 			  channel_sample.set_channel_raw_data ( composite_raw_data );
                 			  if ( measure_mode < MEASURE_MODE_PROTEIN ) {
                 	    	  I_blank = Math.abs( channel_blank.ch2_xenon_mean - channel_blank.ch2_no_xenon_mean );
@@ -1572,11 +1667,11 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
                 				mNano_dev.Set_Start_Calibration ( 0 );
                 				mNano_dev.Set_Xenon_Voltage_Level ( Cur_Voltage_Level );
                     			try {
-                    				mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_SETTING, 0, 0, null, 0);
+                    				mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_MN913A_SETTING, 0, 0, null, 0);
                     				sleep ( 10 );
-                        			mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_MEASURE, 0, 0, null, 0);
+                        			mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_MN913A_MEASURE, 0, 0, null, 0);
                     				sleep ( 10 );
-    								while ( mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_STATUS, 0, 0, null, 0) ) {
+    								while ( mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_MN913A_STATUS, 0, 0, null, 0) ) {
     									sleep ( 10 );
     									if ( mNano_dev.is_dev_busy == 0 ) {
     										//Log.d ( Tag, "MN913A device not busy");
@@ -1589,7 +1684,7 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
     								e.printStackTrace();
     							}
                 				
-                    			if ( mNano_dev.Itracker_IOCTL ( CMD_T.HID_CMD_MN913A_RAW_DATA, 0, 16, composite_raw_data, 0) ) {
+                    			if ( mNano_dev.MN913A_IOCTL ( CMD_T.HID_CMD_MN913A_RAW_DATA, 0, 16, composite_raw_data, 0) ) {
                     				channel_sample1.set_channel_raw_data ( composite_raw_data );
                     				//I_sample1 = Math.abs ( channel_sample1.ch2_xenon_mean - channel_sample1.ch2_no_xenon_mean );
                     				//I_blank1 = ( double ) mNano_dev.Get_Min_Voltage_Intensity(); 
@@ -1598,7 +1693,7 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
                 				Cur_Voltage_Level = mNano_dev.Get_Max_Volt_Level();
                 				mNano_dev.Set_Start_Calibration ( 0 );
                 				mNano_dev.Set_Xenon_Voltage_Level ( Cur_Voltage_Level );
-                				mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_SETTING, 0, 0, null, 1);
+                				mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_MN913A_SETTING, 0, 0, null, 1);
                 			  }
                 			  }
                 	    	  /*checkpoint*/
@@ -1609,8 +1704,6 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 							@Override
 							public void run() {
 								// TODO Auto-generated method stub
-								NanoActivity.this.findViewById( R.id.imageButton1 ).setEnabled( true );
-								NanoActivity.this.findViewById( R.id.imageButton2 ).setEnabled( true );
 								if ( alert_dlg.isShowing( ) )
 									alert_dlg.dismiss ( );
 								if ( measure_mode < MEASURE_MODE_PROTEIN ) {
@@ -1621,6 +1714,19 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 								}
 							    Switch sw2 = ( Switch ) NanoActivity.this.findViewById( R.id.Auto_measure_switch );
 							    sw2.setEnabled( true );
+							    if ( sw2.isChecked() == false ) {
+									NanoActivity.this.findViewById( R.id.imageButton1 ).setEnabled( true );
+									NanoActivity.this.findViewById( R.id.imageButton2 ).setEnabled( true );
+							    }
+							    
+								View decorView = getWindow().getDecorView();
+								// Hide both the navigation bar and the status bar.
+								// SYSTEM_UI_FLAG_FULLSCREEN is only available on Android 4.1 and higher, but as
+								// a general rule, you should design your app to hide the status bar whenever you
+								// hide the navigation bar.
+								int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+								              | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+								decorView.setSystemUiVisibility(uiOptions);
 							}
                 			  
                 		  });
@@ -1802,7 +1908,7 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 		public void run() {
 			// TODO Auto-generated method stub
 			while ( Cur_Auto_Measure == true ) {
-				mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_MN913A_STATUS, 0, 0, null, 0);
+				mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_MN913A_STATUS, 0, 0, null, 0);
 				if ( mNano_dev.AutoMeasure_Detected == 1 ) {
 				  Log.d ( Tag, "Detect Auto Measure!" );
 				  NanoActivity.this.runOnUiThread( new Runnable() {
@@ -1810,7 +1916,7 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
 					@Override
 					public void run() {
 						// TODO Auto-generated method stub
-						  alert_message = "sample measuring!";
+						  alert_message = "Sample Measuring!";
 						  alert_dlg.setMessage( alert_message );
 						  alert_dlg.show();						
 					}
@@ -1855,5 +1961,14 @@ import ar.com.daidalos.afiledialog.FileChooserActivity;
     
     public void Exit_App ( View v ) {
     	finish ();
+    }
+    
+    public void onBackPressed() {
+    	ImageButton btn_home;
+    	btn_home = ( ImageButton ) findViewById( R.id.main_home );
+    	
+    	btn_home.setPressed(true);
+    	btn_home.invalidate();
+    	btn_home.performClick();
     }
 }

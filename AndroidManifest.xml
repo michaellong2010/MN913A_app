@@ -39,16 +39,16 @@
             </intent-filter>
         </receiver> -->
         
-        <receiver
+<!--         <receiver
             android:name=".AutoStart"
             android:enabled="true"
             android:exported="true" >
             <intent-filter android:priority="500" >
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
-        </receiver>
+        </receiver> -->
         
-        <activity android:name="com.example.mn913a.LogFileChooserActivity" android:theme="@style/AppTheme_title" android:screenOrientation="landscape"  android:launchMode="singleTask">
+        <activity android:name="com.example.mn913a.LogFileChooserActivity" android:theme="@style/AppTheme_title" android:screenOrientation="landscape" >
 <!--              <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

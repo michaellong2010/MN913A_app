@@ -367,9 +367,9 @@ public class LogFileChooserActivity extends FileChooserActivity {
 							}
 						}
 						if ( ( byte_offset % 256 ) != 0)
-							mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_PRINT_DNA_RESULT, ( byte_offset / 256 ) + 1, 1, byte_array, 0);
+							mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_PRINT_DNA_RESULT, ( byte_offset / 256 ) + 1, 1, byte_array, 0);
 						else
-							mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_PRINT_DNA_RESULT, ( byte_offset / 256 ), 1, byte_array, 0);
+							mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_PRINT_DNA_RESULT, ( byte_offset / 256 ), 1, byte_array, 0);
 					}
 					else
 						if ( result_listview.getAdapter() instanceof protein_result_adapter ) {
@@ -394,9 +394,9 @@ public class LogFileChooserActivity extends FileChooserActivity {
 								}
 							}
 							if ( ( byte_offset % 256 ) != 0)
-								mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_PRINT_PROTEIN_RESULT, ( byte_offset / 256 ) + 1, 1, byte_array, 0);
+								mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_PRINT_PROTEIN_RESULT, ( byte_offset / 256 ) + 1, 1, byte_array, 0);
 							else
-								mNano_dev.Itracker_IOCTL(CMD_T.HID_CMD_PRINT_PROTEIN_RESULT, ( byte_offset / 256 ), 1, byte_array, 0);
+								mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_PRINT_PROTEIN_RESULT, ( byte_offset / 256 ), 1, byte_array, 0);
 						}
 					break;
 				case R.id.item_selection_all:
@@ -448,6 +448,15 @@ public class LogFileChooserActivity extends FileChooserActivity {
     	mNano_dev = new MN_913A_Device ( this );
     	mRequest_USB_permission = false;
     	EnumerationDevice(getIntent());
+    	
+		View decorView = getWindow().getDecorView();
+		// Hide both the navigation bar and the status bar.
+		// SYSTEM_UI_FLAG_FULLSCREEN is only available on Android 4.1 and higher, but as
+		// a general rule, you should design your app to hide the status bar whenever you
+		// hide the navigation bar.
+		int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+		              | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+		decorView.setSystemUiVisibility(uiOptions);
     }
     
 	@Override

@@ -13,9 +13,9 @@ public class AutoStart extends BroadcastReceiver {
 	public void onReceive(Context context, Intent intent) {
 		// TODO Auto-generated method stub
         if (intent.getAction().equals(Intent.ACTION_BOOT_COMPLETED)){
-            Intent i = new Intent( context, NanoActivity.class);
+            /*Intent i = new Intent( context, NanoActivity.class);
             i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            context.startActivity(i);
+            context.startActivity(i);*/
             
             Log.d ( "Tag", "MN913_Activity" );
         }
