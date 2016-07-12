@@ -82,6 +82,7 @@ public class LogFileChooserActivity extends FileChooserActivity {
 	public static final String INPUT_ACTIVITY_USE = "input_activity_use";
 	public static final String ACTIVITY_USE_FOR_MANAGEMENT = "management";
 	public static final String ACTIVITY_USE_FOR_ANALYSIS = "analysis";
+	public static final String INPUT_ACTIVITY_USE_NEW_UI = "input_activity_use_new_ui";
 	
 	/**20141123 added by michael*/
 	StateListDrawable orig_file_item_drawable = null, new_file_item_drawable;
@@ -119,6 +120,7 @@ public class LogFileChooserActivity extends FileChooserActivity {
 	String activity_use_for;
 	int selection_count = 0;
 	byte [] datetime_data = new byte [ 24 ];
+	boolean activity_use_new_ui;
 	
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -149,44 +151,57 @@ public class LogFileChooserActivity extends FileChooserActivity {
     		activity_use_for = extras.getString( INPUT_ACTIVITY_USE );
     	else
     		activity_use_for = "";
+    	if (extras.containsKey(this.INPUT_ACTIVITY_USE_NEW_UI))
+    		activity_use_new_ui = extras.getBoolean( INPUT_ACTIVITY_USE_NEW_UI );
+    	else
+    		activity_use_new_ui = false;
 
     	ActionBar abr;
     	abr = this.getActionBar();
     	//abr.setTitle("knight");
     	//Log.d(Tag, (String) abr.getTitle());
     	abr.setDisplayHomeAsUpEnabled( true );
-    	/*abr.setBackgroundDrawable( this.getResources().getDrawable( R.drawable.top_border ) );
-    	Window window = getWindow();
-        View v = window.getDecorView();
-        int actionBarId = getResources().getIdentifier("action_bar", "id", "android");
-        ViewGroup actionBarView = (ViewGroup) v.findViewById(actionBarId);
-        try {
-            Field f = actionBarView.getClass().getSuperclass().getDeclaredField("mContentHeight");
-            f.setAccessible(true);
-            f.set(actionBarView, 96);
-        } catch (NoSuchFieldException e) {
+    	if ( activity_use_new_ui == true ) {
+        	if ( activity_use_for.equals( ACTIVITY_USE_FOR_MANAGEMENT ) ) { 
+            	abr.setBackgroundDrawable( this.getResources().getDrawable( R.drawable.top_border ) );
+            	Window window = getWindow();
+                View v = window.getDecorView();
+                int actionBarId = getResources().getIdentifier("action_bar", "id", "android");
+                ViewGroup actionBarView = (ViewGroup) v.findViewById(actionBarId);
+                try {
+                    Field f = actionBarView.getClass().getSuperclass().getDeclaredField("mContentHeight");
+                    f.setAccessible(true);
+                    f.set(actionBarView, 96);
+                } catch (NoSuchFieldException e) {
 
-        } catch (IllegalAccessException e) {
+                } catch (IllegalAccessException e) {
 
-        }
-        abr.setDisplayShowTitleEnabled ( false );
-        abr.setDisplayUseLogoEnabled ( false );
-        abr.setDisplayShowHomeEnabled ( false );
-        abr.setDisplayShowCustomEnabled ( true );
-        abr.setHomeButtonEnabled( false );
-        LinearLayout customActionView = ( LinearLayout ) getLayoutInflater().inflate(R.layout.actionbar_custom_view, null);
-        abr.setCustomView(customActionView);*/
-    	
-        /*20160712 added by michael*/
-        /*LinearLayout file_browser_layout, measure_root_layout; 
-		file_browser_layout = this.getRootLayout();
-		LinearLayout file_browser_header =  ( LinearLayout ) file_browser_layout.findViewById( R.id.left_header );
-		LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-		inflater.inflate ( R.layout.management_left_textbar_layout, file_browser_header, true );
-		
-		measure_root_layout = this.getMeasureResultLayout();
-		LinearLayout result_view_header = ( LinearLayout ) measure_root_layout.findViewById( R.id.right_header );
-		inflater.inflate ( R.layout.dna_result_listview_header1, result_view_header, true );*/
+                }
+                abr.setDisplayHomeAsUpEnabled( false );
+                abr.setDisplayShowTitleEnabled ( false );
+                abr.setDisplayUseLogoEnabled ( false );
+                abr.setDisplayShowHomeEnabled ( false );
+                abr.setDisplayShowCustomEnabled ( true );
+                abr.setHomeButtonEnabled( false );
+                LinearLayout customActionView = ( LinearLayout ) getLayoutInflater().inflate(R.layout.actionbar_custom_view, null);
+                abr.setCustomView(customActionView);
+            	
+                /*20160712 added by michael*/
+                LinearLayout file_browser_layout, measure_root_layout; 
+        		file_browser_layout = this.getRootLayout();
+        		LinearLayout file_browser_header =  ( LinearLayout ) file_browser_layout.findViewById( R.id.left_header );
+        		LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        		inflater.inflate ( R.layout.management_left_textbar_layout, file_browser_header, true );
+        		
+        		measure_root_layout = this.getMeasureResultLayout();
+        		LinearLayout result_view_header = ( LinearLayout ) measure_root_layout.findViewById( R.id.right_header );
+        		inflater.inflate ( R.layout.dna_result_listview_header1, result_view_header, true );
+        	}
+        	else
+        		if ( activity_use_for.equals( this.ACTIVITY_USE_FOR_ANALYSIS ) ) {
+        			
+        		}
+    	}
 		
         /*20131214 added by michael
          * register file select listener */
@@ -1155,44 +1170,50 @@ public class LogFileChooserActivity extends FileChooserActivity {
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 	    MenuInflater inflater = getMenuInflater();
-	    /*inflater.inflate(R.menu.management_right_side_menu, menu);
-	    
-	    main_menu = menu;
-	    item_print_result = menu.findItem(R.id.item_print);
-	    item_print_result.setActionView( R.layout.actionview_item_print );*/
-	    //View v = item_print_result.getActionView();
-	    //ActionMenuView.LayoutParams lp = ( ActionMenuView.LayoutParams ) item_print_result.getActionView().getLayoutParams();
-	    /*item_delete_result = menu.findItem(R.id.item_delete);
-	    item_delete_result.setActionView( R.layout.actionview_item_delete );
-	    item_home = menu.findItem( R.id.home );
-	    item_home.setActionView( R.layout.actionview_item_home );*/
-	    inflater.inflate(R.menu.log_file_chooser_menu, menu);
-	    
-	    main_menu = menu;
-	    item_open_file = menu.findItem(R.id.file_open);
-	    item_open_file.setVisible(false);
-	    item_delete_file = menu.findItem(R.id.file_delete);
-	    item_delete_file.setVisible(false);
-	    item_rename_file = menu.findItem(R.id.file_rename);
-	    item_rename_file.setVisible(false);
+	    if ( activity_use_new_ui == true ) {
+		    if ( activity_use_for.equals( ACTIVITY_USE_FOR_MANAGEMENT ) ) {
+			    inflater.inflate(R.menu.management_right_side_menu, menu);
+			    
+			    main_menu = menu;
+			    item_print_result = menu.findItem(R.id.item_print);
+			    item_print_result.setActionView( R.layout.actionview_item_print );
+			    //View v = item_print_result.getActionView();
+			    //ActionMenuView.LayoutParams lp = ( ActionMenuView.LayoutParams ) item_print_result.getActionView().getLayoutParams();
+			    item_delete_result = menu.findItem(R.id.item_delete);
+			    item_delete_result.setActionView( R.layout.actionview_item_delete );
+			    item_home = menu.findItem( R.id.home );
+			    item_home.setActionView( R.layout.actionview_item_home );
+		    }
+	    }
+	    else {
+		    inflater.inflate(R.menu.log_file_chooser_menu, menu);
+		    
+		    main_menu = menu;
+		    item_open_file = menu.findItem(R.id.file_open);
+		    item_open_file.setVisible(false);
+		    item_delete_file = menu.findItem(R.id.file_delete);
+		    item_delete_file.setVisible(false);
+		    item_rename_file = menu.findItem(R.id.file_rename);
+		    item_rename_file.setVisible(false);
 
-		if ( activity_use_for.equals( ACTIVITY_USE_FOR_MANAGEMENT ) ) {    		    
-		    item_select_all_file = menu.findItem(R.id.file_selection_all);
-		    item_select_all_file.setVisible(true);
-		    item_unselect_all_file = menu.findItem(R.id.file_unselection_all);
-		    item_unselect_all_file.setVisible(true);
-
-			Log.d ( Tag, "management" );
-		}
-		else
-			if ( activity_use_for.equals( ACTIVITY_USE_FOR_ANALYSIS ) ) {
+			if ( activity_use_for.equals( ACTIVITY_USE_FOR_MANAGEMENT ) ) {    		    
 			    item_select_all_file = menu.findItem(R.id.file_selection_all);
-			    item_select_all_file.setVisible( false );
+			    item_select_all_file.setVisible(true);
 			    item_unselect_all_file = menu.findItem(R.id.file_unselection_all);
-			    item_unselect_all_file.setVisible( false );
+			    item_unselect_all_file.setVisible(true);
 
-				Log.d ( Tag, "analysis" );
+				Log.d ( Tag, "management" );
 			}
+			else
+				if ( activity_use_for.equals( ACTIVITY_USE_FOR_ANALYSIS ) ) {
+				    item_select_all_file = menu.findItem(R.id.file_selection_all);
+				    item_select_all_file.setVisible( false );
+				    item_unselect_all_file = menu.findItem(R.id.file_unselection_all);
+				    item_unselect_all_file.setVisible( false );
+
+					Log.d ( Tag, "analysis" );
+				}
+	    }
 		
 	    return true;
 	}
