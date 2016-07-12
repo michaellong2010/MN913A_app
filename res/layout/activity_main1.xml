@@ -80,16 +80,26 @@
              android:layout_marginTop="239dp"
              android:background="@drawable/btn_protein" />
 
-         <ImageButton
+         <!-- <ImageButton
              android:id="@+id/imageButton6"
              android:layout_width="365dp"
              android:layout_height="150dp"
              android:layout_marginLeft="588dp"
              android:layout_marginTop="437dp"
              android:background="@drawable/btn_calibration"
+             android:clickable="false"
               />
-         <!-- android:background="@drawable/btn_analysis"
+         android:background="@drawable/btn_analysis"
          android:visibility="invisible" -->
+         <ImageButton
+             android:id="@+id/imageButton6"
+             android:layout_width="365dp"
+             android:layout_height="150dp"
+             android:layout_marginLeft="588dp"
+             android:layout_marginTop="437dp"
+             android:background="@drawable/btn_analysis"
+             android:clickable="true"
+              />
 
          <ImageButton
              android:id="@+id/imageButton7"
@@ -98,7 +108,8 @@
              android:layout_marginLeft="1113dp"
              android:layout_marginTop="51dp"
              android:background="@drawable/btn_about"
-             android:visibility="invisible" />
+             android:visibility="visible"
+             android:onClick="switch_to_page_page" />
 
          <ImageButton
              android:id="@+id/imageButton8"
@@ -107,9 +118,9 @@
              android:layout_marginLeft="1104dp"
              android:layout_marginTop="437dp"
              android:background="@drawable/btn_setting"
-             android:visibility="invisible"
+             android:visibility="visible"
+             android:onClick="switch_to_setting_page"
               />
-         <!-- android:onClick="switch_to_setting_page" -->
 
     </RelativeLayout>
     

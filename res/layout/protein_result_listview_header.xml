@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:weightSum="1"
+    android:descendantFocusability="blocksDescendants" >
+    
+    <TextView
+        android:id="@+id/item1"
+        android:layout_width="wrap_content"
+        android:layout_height="fill_parent"
+        android:layout_weight=".22"
+        android:gravity="center"
+        android:text="No."
+        android:textAppearance="@android:attr/textAppearanceLarge"
+        android:clickable="true"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
+        android:textSize="10pt"
+        android:singleLine="false"
+        android:inputType="textMultiLine"
+        android:maxLines="2"
+        android:lines="2" />
+
+    <TextView
+        android:id="@+id/item2"
+        android:layout_width="wrap_content"
+        android:layout_height="fill_parent"
+        android:layout_weight=".22"
+        android:gravity="center"
+        android:text="A280"
+        android:textAppearance="@android:attr/textAppearanceLarge"
+        android:clickable="false"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
+        android:textSize="10pt"
+        android:singleLine="false"
+        android:inputType="textMultiLine"
+        android:maxLines="2"
+        android:lines="2" />
+         
+    <TextView
+        android:id="@+id/item3"
+        android:layout_width="wrap_content"
+        android:layout_height="fill_parent"
+        android:layout_weight=".22"
+        android:gravity="center"
+        android:text="   Coeff."
+        android:textAppearance="@android:attr/textAppearanceLarge"
+        android:clickable="false"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
+        android:textSize="10pt"
+        android:singleLine="false"
+        android:inputType="textMultiLine"
+        android:maxLines="2"
+        android:lines="2" />
+    
+    <TextView
+        android:id="@+id/item4"
+        android:layout_width="wrap_content"
+        android:layout_height="fill_parent"
+        android:layout_weight=".22"
+        android:gravity="center"
+        android:text="Conc.   "
+        android:textAppearance="@android:attr/textAppearanceLarge"
+        android:clickable="false"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
+        android:textSize="10pt"
+        android:singleLine="false"
+        android:inputType="textMultiLine"
+        android:maxLines="2"
+        android:lines="2" />
+        
+    <TextView
+        android:id="@+id/item5"
+        android:layout_width="wrap_content"
+        android:layout_height="fill_parent"
+        android:layout_weight=".12"
+        android:gravity="center"
+        android:text="      "
+        android:textAppearance="@android:attr/textAppearanceLarge"
+        android:clickable="false"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
+        android:textSize="10pt"
+        android:singleLine="false"
+        android:inputType="textMultiLine"
+        android:maxLines="2"
+        android:lines="2" />
+
+</LinearLayout>

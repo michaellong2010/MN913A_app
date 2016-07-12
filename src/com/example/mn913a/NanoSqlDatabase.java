@@ -17,6 +17,7 @@ public class NanoSqlDatabase {
 	private static final String INDEX = "NO";
 	private static final String CONC = "Conc";
 	private static final String A260 = "A260";
+	private static final String A230 = "A230";
 	private static final String A260_A230 = "A260_A230_ratio";
 	private static final String A260_A280 = "A260_A280_ratio";
 	//private static final String A260_A230 = "A260" + '"/"' + "A230";
@@ -24,6 +25,7 @@ public class NanoSqlDatabase {
 	
 	public static final String PROTEIN_VALUE_TABLE_NAME = "protein";
 	private static final String A280 = "A280";
+	private static final String Coeff = "Coeff";
 	private static final String PAD_EMPTY = "";
 	
 	public static final int MEASURE_MODE_DNA = 0x01;
@@ -46,7 +48,8 @@ public class NanoSqlDatabase {
 		
 		if ( measure_mode == MEASURE_MODE_DNA ) {
 		String sql_dna_value = "CREATE TABLE " + DNA_VALUE_TABLE_NAME + " (" + 
-		        INDEX	+ " text not null, " + CONC + " text not null," + A260 + " text not null," +
+		        INDEX	+ " text not null, " + CONC + " text not null," + A260 + " text not null," + A230 + " text not null," + A280 + " text not null," +
+		        //INDEX	+ " text not null, " + CONC + " text not null," + A260 + " text not null," +
 		        A260_A230	+ " text not null, " + A260_A280 + " text not null "+");";
 		try {
 			Nano_db.execSQL("DROP TABLE IF EXISTS " + DNA_VALUE_TABLE_NAME);
@@ -57,7 +60,8 @@ public class NanoSqlDatabase {
 			if ( measure_mode == MEASURE_MODE_PROTEIN ) {
 		
 		String sql_protein_value = "CREATE TABLE " + PROTEIN_VALUE_TABLE_NAME + " (" + 
-		        INDEX	+ " text not null, " +  A280 + " text not null "+");";
+		        INDEX	+ " text not null, " +  A280 + " text not null," + Coeff + " text not null," +
+		        CONC + " text not null "+");";
 		 //+  PAD_EMPTY + " text not null, " +  PAD_EMPTY + " text not null, " +  PAD_EMPTY + " text not null "
 		try {
 			Nano_db.execSQL( "DROP TABLE IF EXISTS " + PROTEIN_VALUE_TABLE_NAME );
@@ -69,11 +73,23 @@ public class NanoSqlDatabase {
 	public void InsertDNADataToDB ( DNA_measure_data dna_data ) {
 		String index = Integer.toString( dna_data.index );
 		String concentration = Double.toString( truncateDecimal ( dna_data.Conc, 3 ).doubleValue() );
-		String[] dna_od_array = { Double.toString( truncateDecimal ( dna_data.A260 * 25.56, 3 ).doubleValue() ), Double.toString( truncateDecimal ( ( dna_data.A260 * 210 ) / ( dna_data.A230 * 167 ), 3 ).doubleValue() ), Double.toString( truncateDecimal ( ( dna_data.A260 * 19 ) / ( dna_data.A280 * 23 ), 3 ).doubleValue() ) };
+		String[] dna_od_array = new String [ 3 ];
+		if ( dna_data.include_A320 == false ) {
+			dna_od_array [ 0 ] = Double.toString( truncateDecimal ( dna_data.A260 * 25.56, 3 ).doubleValue() ); 
+            dna_od_array [ 1 ] = Double.toString( truncateDecimal ( ( dna_data.A260 * 210 ) / ( dna_data.A230 * 167 ), 3 ).doubleValue() ); 
+            dna_od_array [ 2 ] = Double.toString( truncateDecimal ( ( dna_data.A260 * 19 ) / ( dna_data.A280 * 23 ), 3 ).doubleValue() );
+        }
+		else {
+			dna_od_array [ 0 ] = Double.toString( truncateDecimal ( dna_data.A260 * 25.56, 3 ).doubleValue() ); 
+            dna_od_array [ 1 ] = Double.toString( truncateDecimal ( ( dna_data.A260 * 210 - dna_data.A320 ) / ( dna_data.A230 * 167 - dna_data.A320 ), 3 ).doubleValue() ); 
+            dna_od_array [ 2 ] = Double.toString( truncateDecimal ( ( dna_data.A260 * 19 - dna_data.A320 ) / ( dna_data.A280 * 23 - dna_data.A320 ), 3 ).doubleValue() );
+		}
 
 		String sql_dna_value = "insert into " + DNA_VALUE_TABLE_NAME + " ("
-				+ INDEX + ", " + CONC + ", " + A260 + ", " + A260_A230 + ", " + A260_A280 + ") values('" + index + "', '" + concentration
-				+ "','" + dna_od_array[0] + "','" + dna_od_array[1] + "','" + dna_od_array[2] + "');";
+				+ INDEX + ", " + CONC + ", " + A260 + ", " + A230 + ", " + A280 + ", " + A260_A230 + ", " + A260_A280 + ") values('" + index + "', '" + concentration
+				+ "','" + dna_od_array[0] + "','" + dna_od_array[0] + "','" + dna_od_array[0] + "','" + dna_od_array[1] + "','" + dna_od_array[2] + "');";
+				//+ INDEX + ", " + CONC + ", " + A260 + ", " + A260_A230 + ", " + A260_A280 + ") values('" + index + "', '" + concentration
+				//+ "','" + dna_od_array[0]  + "','" + dna_od_array[1] + "','" + dna_od_array[2] + "');";
 
 		try {
 			Nano_db.execSQL( sql_dna_value );
@@ -88,9 +104,18 @@ public class NanoSqlDatabase {
 	public void InsertPROTEINDataToDB( Protein_measure_data protein_data ) {
 		String index = Integer.toString( protein_data.index );
 		String A280_value = Double.toString( truncateDecimal ( protein_data.A280, 3 ).doubleValue() );
+		String coefficient, concentration;
+		if ( protein_data.coefficient < 0 ) {
+			coefficient = "";
+			concentration = "";			
+		}
+		else {
+			coefficient = Double.toString( truncateDecimal ( protein_data.coefficient, 3 ).doubleValue() );
+			concentration = Double.toString( truncateDecimal ( protein_data.Conc, 3 ).doubleValue() );			
+		}
 		
 		String sql_protein_value = "insert into " + PROTEIN_VALUE_TABLE_NAME + " ("
-				+ INDEX + ", " + A280 + ") values('" + index + "', '" + A280_value + "');";
+				+ INDEX + ", " + A280 + ", " + Coeff + ", " + CONC + ") values('" + index + "', '" + A280_value + "','" + coefficient + "','" + concentration + "');";
 
 		try {
 			Nano_db.execSQL( sql_protein_value );

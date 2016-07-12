@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:weightSum="1"
+    android:descendantFocusability="blocksDescendants"
+    android:background="@drawable/managament_textbar_right_bg" >
+
+    <TextView
+        android:id="@+id/item1"
+        android:layout_width="wrap_content"
+        android:layout_height="54dp"
+        
+        android:gravity="center"
+        android:text=" No. "
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:clickable="true"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
+        android:fontFamily="Arial"
+        android:textColor="@android:color/white"
+        android:textSize="9pt" />
+    
+    <TextView
+        android:id="@+id/item2"
+        android:layout_width="wrap_content"
+        android:layout_height="54dp"
+        
+        android:gravity="center"
+        android:text=" Conc.  "
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:clickable="true"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
+        android:fontFamily="Arial"
+        android:textColor="@android:color/white"
+        android:textSize="9pt" />
+    
+    <TextView
+        android:id="@+id/item3"
+        android:layout_width="wrap_content"
+        android:layout_height="54dp"
+        
+        android:gravity="center"
+        android:text=" A260  "
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:clickable="true"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
+        android:fontFamily="Arial"
+        android:textColor="@android:color/white"
+        android:textSize="9pt" />
+
+    <TextView
+        android:id="@+id/item4"
+        android:layout_width="wrap_content"
+        android:layout_height="54dp"
+        
+        android:gravity="center"
+        android:text=" A260/A230"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:clickable="true"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
+        android:fontFamily="Arial"
+        android:textColor="@android:color/white"
+        android:textSize="9pt" />
+    
+    <TextView
+        android:id="@+id/item5"
+        android:layout_width="wrap_content"
+        android:layout_height="54dp"
+        
+        android:gravity="center"
+        android:text=" A260/A280"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:clickable="true"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
+        android:fontFamily="Arial"
+        android:textColor="@android:color/white"
+        android:textSize="9pt" />
+    
+    <TextView
+        android:id="@+id/item6"
+        android:layout_width="wrap_content"
+        android:layout_height="54dp"
+        
+        android:gravity="center"
+        android:text=" A230  "
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:clickable="true"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
+        android:fontFamily="Arial"
+        android:textColor="@android:color/white"
+        android:textSize="9pt" />
+    
+    <TextView
+        android:id="@+id/item7"
+        android:layout_width="wrap_content"
+        android:layout_height="54dp"
+        
+        android:gravity="center"
+        android:text=" A280  "
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:clickable="true"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
+        android:fontFamily="Arial"
+        android:textColor="@android:color/white"
+        android:textSize="9pt" />
+</LinearLayout>

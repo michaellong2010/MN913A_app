@@ -25,7 +25,10 @@ public class GVTable extends LinearLayout {
 	protected Cursor curTable;
 	protected OnTableClickListener clickListener;
 	protected OnPageSwitchListener switchListener;
-	protected static int ID = 0x18; 
+	protected static int ID = 0x18;
+	public static String [ ] dna_column_name = { "NO", "Conc.(ng/ul)", "A260", "A230", "A280", "A260/A230", "A260/A280" };
+	//public static String [ ] dna_column_name = { "NO", "Conc.(ng/ul)", "A260", "A260/A230", "A260/A280" };
+	public static String [ ] protein_column_name = { "NO", "A280", "Coeff.", "Conc.(mg/ml)" };
 	
 	public GVTable(Context context) {
 		super(context);
@@ -114,9 +117,19 @@ public class GVTable extends LinearLayout {
 	   
 	    int colCount = curTable.getColumnCount();
 		for (int i = 0; i < colCount; i++) {
-			HashMap<String, String> map = new HashMap<String, String>();
-			map.put("ItemText", curTable.getColumnName(i));
-			srcTable.add(map);
+			if ( rawSQL.contains( NanoSqlDatabase.DNA_VALUE_TABLE_NAME ) ) {
+				HashMap<String, String> map = new HashMap<String, String>();
+				//map.put("ItemText", curTable.getColumnName(i));
+				map.put( "ItemText", dna_column_name[ i ] );
+				srcTable.add(map);
+			}
+			else
+				if ( rawSQL.contains( NanoSqlDatabase.PROTEIN_VALUE_TABLE_NAME ) ) {
+					HashMap<String, String> map = new HashMap<String, String>();
+					//map.put("ItemText", curTable.getColumnName(i));
+					map.put( "ItemText", protein_column_name[ i ] );
+					srcTable.add(map);					
+				}
 		}
 		
 		int recCount=curTable.getCount();

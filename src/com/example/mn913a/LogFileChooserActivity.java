@@ -2,6 +2,8 @@ package com.example.mn913a;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
@@ -44,10 +46,14 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.AbsListView;
 import android.widget.AbsListView.MultiChoiceModeListener;
+import android.widget.AbsListView.OnScrollListener;
+import android.widget.ActionMenuView;
+import android.widget.ActionMenuView.LayoutParams;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemSelectedListener;
@@ -73,6 +79,9 @@ public class LogFileChooserActivity extends FileChooserActivity {
 	 * setting child activity orientation
 	 */
 	public static final String INPUT_ACTIVITY_ORIENTATION = "input_activity_orientation";
+	public static final String INPUT_ACTIVITY_USE = "input_activity_use";
+	public static final String ACTIVITY_USE_FOR_MANAGEMENT = "management";
+	public static final String ACTIVITY_USE_FOR_ANALYSIS = "analysis";
 	
 	/**20141123 added by michael*/
 	StateListDrawable orig_file_item_drawable = null, new_file_item_drawable;
@@ -97,8 +106,8 @@ public class LogFileChooserActivity extends FileChooserActivity {
 	File mActiveFile = null, mActiveFile1 = null;
 	String measure_type, measure_result;
 	String [] measure_result_array;
-	String[] dna_from = new String[] { "No.", "Conc.", "A260", "A260_A230", "A260_A280" };
-	String[] protein_from = new String[] { "No.", "A280" };
+	String[] dna_from = new String[] { "No.", "Conc.", "A260", "A260_A230", "A260_A280", "A230", "A280" };
+	String[] protein_from = new String[] { "No.", "A280", "Coeff.", "Conc." };
 	Boolean mIsFileDirty = false, mIsFileDirty1 = false;
 	int mSelected_items_count = 0;
 	
@@ -107,6 +116,9 @@ public class LogFileChooserActivity extends FileChooserActivity {
 	boolean mRequest_USB_permission, Is_MN913A_Online = false;
 	UsbManager mUsbManager;
 	PendingIntent mPermissionIntent;
+	String activity_use_for;
+	int selection_count = 0;
+	byte [] datetime_data = new byte [ 24 ];
 	
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -124,6 +136,7 @@ public class LogFileChooserActivity extends FileChooserActivity {
     	Log.d(Tag, Boolean.toString(getWindow().hasFeature((Window.FEATURE_NO_TITLE))));
     	super.onCreate(savedInstanceState);
     	getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+    	View v1 = ( View ) getWindow().getDecorView().getRootView();
     	
     	/*20140819 added by michael
     	 * set the activity orientation*/
@@ -132,13 +145,49 @@ public class LogFileChooserActivity extends FileChooserActivity {
     		if (getRequestedOrientation() != extras.getInt(INPUT_ACTIVITY_ORIENTATION))
     			setRequestedOrientation(extras.getInt(INPUT_ACTIVITY_ORIENTATION));
     	}
-    	
+    	if (extras.containsKey(INPUT_ACTIVITY_USE))
+    		activity_use_for = extras.getString( INPUT_ACTIVITY_USE );
+    	else
+    		activity_use_for = "";
+
     	ActionBar abr;
     	abr = this.getActionBar();
     	//abr.setTitle("knight");
     	//Log.d(Tag, (String) abr.getTitle());
-    	abr.setDisplayHomeAsUpEnabled(true);
+    	abr.setDisplayHomeAsUpEnabled( true );
+    	/*abr.setBackgroundDrawable( this.getResources().getDrawable( R.drawable.top_border ) );
+    	Window window = getWindow();
+        View v = window.getDecorView();
+        int actionBarId = getResources().getIdentifier("action_bar", "id", "android");
+        ViewGroup actionBarView = (ViewGroup) v.findViewById(actionBarId);
+        try {
+            Field f = actionBarView.getClass().getSuperclass().getDeclaredField("mContentHeight");
+            f.setAccessible(true);
+            f.set(actionBarView, 96);
+        } catch (NoSuchFieldException e) {
+
+        } catch (IllegalAccessException e) {
+
+        }
+        abr.setDisplayShowTitleEnabled ( false );
+        abr.setDisplayUseLogoEnabled ( false );
+        abr.setDisplayShowHomeEnabled ( false );
+        abr.setDisplayShowCustomEnabled ( true );
+        abr.setHomeButtonEnabled( false );
+        LinearLayout customActionView = ( LinearLayout ) getLayoutInflater().inflate(R.layout.actionbar_custom_view, null);
+        abr.setCustomView(customActionView);*/
     	
+        /*20160712 added by michael*/
+        /*LinearLayout file_browser_layout, measure_root_layout; 
+		file_browser_layout = this.getRootLayout();
+		LinearLayout file_browser_header =  ( LinearLayout ) file_browser_layout.findViewById( R.id.left_header );
+		LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+		inflater.inflate ( R.layout.management_left_textbar_layout, file_browser_header, true );
+		
+		measure_root_layout = this.getMeasureResultLayout();
+		LinearLayout result_view_header = ( LinearLayout ) measure_root_layout.findViewById( R.id.right_header );
+		inflater.inflate ( R.layout.dna_result_listview_header1, result_view_header, true );*/
+		
         /*20131214 added by michael
          * register file select listener */
     	
@@ -172,11 +221,67 @@ public class LogFileChooserActivity extends FileChooserActivity {
 						//source.setBackgroundDrawable( new_file_item_drawable );
 					//source.setSelected( true );
 				//}
-				if ( source.isSelected() ) {
-					selected_file_items.add( source );
+				FileItem file_item;
+				if ( activity_use_for.equals( ACTIVITY_USE_FOR_MANAGEMENT ) ) {
+					/*if( source.isSelectable () ) {
+						if ( source.isSelected() )
+							source.setSelected( false );
+						else
+							source.setSelected( true );
+					}
+					if ( source.isSelected() ) {
+						selected_file_items.add( source );
+					}
+					else
+						selected_file_items.removeAll ( Collections.singletonList( source ) );*/
+
+					if ( selected_file_items.size() > 1 ) {
+						if( source.isSelectable () ) {
+							if ( source.isSelected() )
+								source.setSelected( false );
+							else
+								source.setSelected( true );
+						}
+						if ( source.isSelected() ) {
+							selected_file_items.add( source );
+						}
+						else
+							selected_file_items.removeAll ( Collections.singletonList( source ) );
+						
+						if ( selected_file_items.size() == 1 ) {
+							onOptionsItemSelected( item_open_file );
+						}
+					}
+					else
+						if ( selected_file_items.size() <= 1 ) {
+							if ( selected_file_items.size() > 0 ) {
+								file_item = selected_file_items.get( 0 );
+								file_item.setSelected( false );
+								selected_file_items.removeAll ( Collections.singletonList( file_item ) );
+							}
+							else
+								file_item = null;
+							if( source.isSelectable () ) {
+								source.setSelected( true );
+							}
+							selected_file_items.add( source );
+							onOptionsItemSelected( item_open_file );
+						}
 				}
 				else
-					selected_file_items.removeAll ( Collections.singletonList( source ) );
+					if ( activity_use_for.equals( ACTIVITY_USE_FOR_ANALYSIS ) ) {
+						if ( selected_file_items.size() > 0 ) {
+							file_item = selected_file_items.get( 0 );
+							file_item.setSelected( false );
+							selected_file_items.removeAll ( Collections.singletonList( file_item ) );
+						}
+						else
+							file_item = null;
+						if( source.isSelectable () ) {
+							source.setSelected( true );
+						}
+						selected_file_items.add( source );
+					}
 				
 				update_actionbar_optiomenu();
 				if ( mMode != null )
@@ -269,13 +374,22 @@ public class LogFileChooserActivity extends FileChooserActivity {
 			@Override
 			public boolean onCreateActionMode(ActionMode mode, Menu menu) {
 				// TODO Auto-generated method stub
-				mode.setTitle( "1 Item Selected" );
+				//mode.setTitle( "1 Item Selected" );
+				mode.setTitle( Integer.toString ( selection_count ) + " Item Selected");
 				getMenuInflater().inflate(R.menu.dna_result_menu, menu);
-				
+
 				menu.findItem( R.id.item_selection_all );
 				menu.findItem( R.id.item_unselection_all );
-				menu.findItem( R.id.item_delete );
-				menu.findItem( R.id.item_print );
+				if ( activity_use_for.equals( ACTIVITY_USE_FOR_MANAGEMENT ) ) {
+					menu.findItem( R.id.item_normalization_analysis ).setVisible( false );
+				}
+				else
+				   if ( activity_use_for.equals( ACTIVITY_USE_FOR_ANALYSIS ) ) {
+					   menu.findItem( R.id.item_delete ).setVisible( false );
+					   menu.findItem( R.id.item_print ).setVisible( false );
+					   menu.findItem( R.id.item_normalization_analysis ).setVisible( true );
+				   }
+				
 				return true;
 			}
 
@@ -337,6 +451,9 @@ public class LogFileChooserActivity extends FileChooserActivity {
 						bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt(mSelected_items_count).array();
 						System.arraycopy ( bytes, 0, byte_array, byte_offset, bytes.length );
 						byte_offset = byte_offset + bytes.length;
+						
+						System.arraycopy ( datetime_data, 0, byte_array, byte_offset, datetime_data.length );
+						byte_offset = byte_offset + datetime_data.length;
 						for ( HashMap<String, String> map : fillMaps ) {
 							if ( map.get( "isSelected" ) != null && map.get( "isSelected" ).equals( "true" ) ) {
 								//String[] dna_from = new String[] { "No.", "Conc.", "A260", "A260_A280", "A260_A230" };
@@ -364,18 +481,46 @@ public class LogFileChooserActivity extends FileChooserActivity {
 								bytes = ByteBuffer.allocate(8).order( ByteOrder.LITTLE_ENDIAN ).putDouble( Double.parseDouble( map.get( dna_from [4] ) ) ).array();
 								System.arraycopy ( bytes, 0, byte_array, byte_offset, bytes.length );
 								byte_offset = byte_offset + bytes.length;
+								
+								if ( map.get( dna_from [5] ) != null ) {
+								bytes = ByteBuffer.allocate(8).order( ByteOrder.LITTLE_ENDIAN ).putDouble( Double.parseDouble( map.get( dna_from [5] ) ) ).array();
+								System.arraycopy ( bytes, 0, byte_array, byte_offset, bytes.length );
+								byte_offset = byte_offset + bytes.length;
+								}
+								else {
+									bytes = ByteBuffer.allocate(8).order( ByteOrder.LITTLE_ENDIAN ).putDouble( 2.3 ).array();
+									System.arraycopy ( bytes, 0, byte_array, byte_offset, bytes.length );
+									byte_offset = byte_offset + bytes.length;
+								}
+								if ( map.get( dna_from [6] ) != null ) {
+								bytes = ByteBuffer.allocate(8).order( ByteOrder.LITTLE_ENDIAN ).putDouble( Double.parseDouble( map.get( dna_from [6] ) ) ).array();
+								System.arraycopy ( bytes, 0, byte_array, byte_offset, bytes.length );
+								byte_offset = byte_offset + bytes.length;
+								}
+								else {
+									bytes = ByteBuffer.allocate(8).order( ByteOrder.LITTLE_ENDIAN ).putDouble( 1.8 ).array();
+									System.arraycopy ( bytes, 0, byte_array, byte_offset, bytes.length );
+									byte_offset = byte_offset + bytes.length;
+								}
 							}
 						}
 						if ( ( byte_offset % 256 ) != 0)
-							mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_PRINT_DNA_RESULT, ( byte_offset / 256 ) + 1, 1, byte_array, 0);
+							mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_PRINT_DNA_RESULT, 0, ( byte_offset / 256 ) + 1, byte_array, 0);
 						else
-							mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_PRINT_DNA_RESULT, ( byte_offset / 256 ), 1, byte_array, 0);
+							mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_PRINT_DNA_RESULT, 0, ( byte_offset / 256 ), byte_array, 0);
 					}
 					else
 						if ( result_listview.getAdapter() instanceof protein_result_adapter ) {
 							bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt(mSelected_items_count).array();
 							System.arraycopy ( bytes, 0, byte_array, byte_offset, bytes.length );
 							byte_offset = byte_offset + bytes.length;
+							/*bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt(mSelected_items_count).array();
+							System.arraycopy ( bytes, 0, byte_array, byte_offset, bytes.length );
+							byte_offset = byte_offset + bytes.length;*/
+							
+							System.arraycopy ( datetime_data, 0, byte_array, byte_offset, datetime_data.length );
+							byte_offset = byte_offset + datetime_data.length;
+							
 							bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt(mSelected_items_count).array();
 							System.arraycopy ( bytes, 0, byte_array, byte_offset, bytes.length );
 							byte_offset = byte_offset + bytes.length;
@@ -394,10 +539,20 @@ public class LogFileChooserActivity extends FileChooserActivity {
 								}
 							}
 							if ( ( byte_offset % 256 ) != 0)
-								mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_PRINT_PROTEIN_RESULT, ( byte_offset / 256 ) + 1, 1, byte_array, 0);
+								mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_PRINT_PROTEIN_RESULT, 0, ( byte_offset / 256 ) + 1, byte_array, 0);
 							else
-								mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_PRINT_PROTEIN_RESULT, ( byte_offset / 256 ), 1, byte_array, 0);
+								mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_PRINT_PROTEIN_RESULT, 0, ( byte_offset / 256 ), byte_array, 0);
 						}
+					break;
+				case R.id.item_normalization_analysis:
+					Intent intent = new Intent ( LogFileChooserActivity.this, NormalizationActivity.class );
+					intent.putExtra( "arraylist" , (Serializable) fillMaps );
+					//intent.getExtras().putSerializable("arraylist", (Serializable) fillMaps);
+					if ( LogFileChooserActivity.this.getIntent().getExtras().containsKey( "target conc." ) )
+						intent.putExtra( "target conc.", LogFileChooserActivity.this.getIntent().getExtras().getDouble( "target conc." ) );
+					if ( LogFileChooserActivity.this.getIntent().getExtras().containsKey( "target vol." ) )
+						intent.putExtra( "target vol.", LogFileChooserActivity.this.getIntent().getExtras().getDouble( "target vol." ) );
+					LogFileChooserActivity.this.startActivityForResult ( intent, 2005 );
 					break;
 				case R.id.item_selection_all:
 					for ( HashMap <String, String> map : fillMaps )
@@ -578,7 +733,7 @@ public class LogFileChooserActivity extends FileChooserActivity {
 							}
 							else {
 								for ( HashMap<String, String> map : fillMaps1 ) {
-									measure_result = map.get( "No." ) + ", " + map.get( "A280" );
+									measure_result = map.get( "No." ) + ", " + map.get( "A280" ) + ", " + map.get( protein_from [ 2 ] ) + ", " + map.get( protein_from [ 3 ] );
 									write_file.write_file ( measure_result, true );
 								}								
 							}
@@ -600,10 +755,13 @@ public class LogFileChooserActivity extends FileChooserActivity {
 				}
 				mActiveFile = selected_file_items.get(0).getFile();
 			}
-			LinearLayout measure_root_layout;
+			LinearLayout measure_root_layout, listview_header, file_browser_layout;
 			measure_root_layout = this.getMeasureResultLayout();
 			LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-			result_listview = ( ListView ) inflater.inflate ( R.layout.result_listview, measure_root_layout, false );
+			//result_listview = ( ListView ) inflater.inflate ( R.layout.result_listview, measure_root_layout, false );
+			LinearLayout listview_toplayout = ( LinearLayout ) inflater.inflate ( R.layout.result_listview, measure_root_layout, false ).findViewById( R.id.listview_toplayout );
+			result_listview = ( ListView ) listview_toplayout.findViewById( R.id.listview );
+			listview_header = ( LinearLayout ) listview_toplayout.findViewById( R.id.listview_header );
 			//result_listview.setBackgroundColor( this.getResources().getColor( android.R.color.background_dark ) );
 			SimpleAdapter adapter = null;// = new SimpleAdapter(this, fillMaps, R.layout.grid_item, from, to);
 			String[] sports = new String [] { "123", "111", "234" };
@@ -619,6 +777,7 @@ public class LogFileChooserActivity extends FileChooserActivity {
 			if ( selected_file_items.get(0).getFile().getName().contains( "dsDNA" ) == true ||
 				 selected_file_items.get(0).getFile().getName().contains( "ssDNA" ) == true ||
 				 selected_file_items.get(0).getFile().getName().contains( "RNA" ) == true ) {
+				inflater.inflate ( R.layout.dna_result_listview_header, listview_header, true );
 				/*for ( int j = 0; j < 50; j++ ) {
 				HashMap<String, String> map = new HashMap<String, String>();
 				map.put( "No.", Integer.toString( j ) );
@@ -630,10 +789,50 @@ public class LogFileChooserActivity extends FileChooserActivity {
 				}*/
 				try {
 					read_file.open_read_file( mActiveFile.getName() );
+					measure_result = read_file.read_file();
+					//measure_result = "";
+					if ( measure_result != null && measure_result != "") {
+						//"yyyy/MM/dd HH:mm:ss"
+						measure_result_array = measure_result.split( "\\/|\\ |\\:" );
+						//StringBuilder builder = new StringBuilder();
+						byte [] bytes;
+						int byte_offset = 0, count = 0;
+						for ( String s : measure_result_array ) {
+						    //builder.append(s);
+							
+							if ( count < 6 && isNumeric ( s ) ) {
+								bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt( Integer.parseInt( s ) ).array();
+								System.arraycopy ( bytes, 0, datetime_data, byte_offset, bytes.length );
+								byte_offset = byte_offset + bytes.length;
+								count++;
+							}
+							
+							/*bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt( Integer.parseInt( s ) ).array();
+							System.arraycopy ( bytes, 0, datetime_data, byte_offset, bytes.length );
+							byte_offset = byte_offset + bytes.length;
+							
+							bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt( Integer.parseInt( s ) ).array();
+							System.arraycopy ( bytes, 0, datetime_data, byte_offset, bytes.length );
+							byte_offset = byte_offset + bytes.length;
+							
+							bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt( Integer.parseInt( s ) ).array();
+							System.arraycopy ( bytes, 0, datetime_data, byte_offset, bytes.length );
+							byte_offset = byte_offset + bytes.length;
+							
+							bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt( Integer.parseInt( s ) ).array();
+							System.arraycopy ( bytes, 0, datetime_data, byte_offset, bytes.length );
+							byte_offset = byte_offset + bytes.length;
+							
+							bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt( Integer.parseInt( s ) ).array();
+							System.arraycopy ( bytes, 0, datetime_data, byte_offset, bytes.length );
+							byte_offset = byte_offset + bytes.length;*/
+						}
+						//return builder.toString();
+					}
 					while ( ( measure_result = read_file.read_file() ) != null ) {
 					  Log.d ( "Tag", measure_result);
 					  measure_result_array = measure_result.split( ", " );
-					  if ( measure_result_array.length == dna_from.length ) {
+					  if ( measure_result_array.length == dna_from.length || ( measure_result_array.length == ( dna_from.length - 2 ) ) ) {
 							HashMap<String, String> map = new HashMap<String, String>();
 							for (int j = 0; j < measure_result_array.length; j++) {
 								map.put(dna_from[j], measure_result_array[j]);
@@ -707,7 +906,7 @@ public class LogFileChooserActivity extends FileChooserActivity {
 				});
 				result_listview.setOnItemClickListener( new OnItemClickListener () {
 					CheckBox checkbox1;
-					int selection_count = 0;
+					//int selection_count = 0;
 
 					@Override
 					public void onItemClick(AdapterView<?> parent, View view,
@@ -755,9 +954,33 @@ public class LogFileChooserActivity extends FileChooserActivity {
 					}
 					
 				});
+				result_listview.setOnScrollListener( new OnScrollListener() {
+
+					@Override
+					public void onScrollStateChanged(AbsListView view,
+							int scrollState) {
+						// TODO Auto-generated method stub
+						if ( scrollState == OnScrollListener.SCROLL_STATE_IDLE ) {
+							view.smoothScrollToPosition( view.getFirstVisiblePosition() );
+			            }
+					}
+
+					@Override
+					public void onScroll(AbsListView view,
+							int firstVisibleItem, int visibleItemCount,
+							int totalItemCount) {
+						// TODO Auto-generated method stub
+						
+					} 
+					
+				} );
+				
+				//ViewGroup header = (ViewGroup) this.getLayoutInflater().inflate( R.layout.dna_result_listview_header, result_listview, false );
+				//result_listview.addHeaderView ( header );
         	}
 			else
 				if ( selected_file_items.get(0).getFile().getName().contains( "PROTEIN" ) == true ) {
+					inflater.inflate ( R.layout.protein_result_listview_header, listview_header, true );
 					/*for ( int j = 0; j < 50; j++ ) {
 					HashMap<String, String> map = new HashMap<String, String>();
 					map.put( "No.", Integer.toString( j ) );
@@ -786,7 +1009,7 @@ public class LogFileChooserActivity extends FileChooserActivity {
 					result_listview.setAdapter( adapter3 );
 					result_listview.setOnItemClickListener( new OnItemClickListener () {
 						CheckBox checkbox1;
-						int selection_count = 0;
+						//int selection_count = 0;
 						
 						@Override
 						public void onItemClick(AdapterView<?> parent,
@@ -826,7 +1049,8 @@ public class LogFileChooserActivity extends FileChooserActivity {
 					});
 				}
 			//adapter.notifyDataSetChanged();
-			measure_root_layout.addView( result_listview );
+			measure_root_layout.addView( listview_toplayout );
+			//measure_root_layout.addView( result_listview );
 			//result_listview.setBackgroundColor( this.getResources().getColor( android.R.color.background_dark ) );
 			return true;			
 		  case R.id.file_rename:
@@ -926,10 +1150,22 @@ public class LogFileChooserActivity extends FileChooserActivity {
 	}
 	
 	MenuItem item_open_file, item_delete_file, item_rename_file, item_select_all_file, item_unselect_all_file;
+	MenuItem item_print_result, item_delete_result, item_home;
 	Menu main_menu;
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 	    MenuInflater inflater = getMenuInflater();
+	    /*inflater.inflate(R.menu.management_right_side_menu, menu);
+	    
+	    main_menu = menu;
+	    item_print_result = menu.findItem(R.id.item_print);
+	    item_print_result.setActionView( R.layout.actionview_item_print );*/
+	    //View v = item_print_result.getActionView();
+	    //ActionMenuView.LayoutParams lp = ( ActionMenuView.LayoutParams ) item_print_result.getActionView().getLayoutParams();
+	    /*item_delete_result = menu.findItem(R.id.item_delete);
+	    item_delete_result.setActionView( R.layout.actionview_item_delete );
+	    item_home = menu.findItem( R.id.home );
+	    item_home.setActionView( R.layout.actionview_item_home );*/
 	    inflater.inflate(R.menu.log_file_chooser_menu, menu);
 	    
 	    main_menu = menu;
@@ -939,15 +1175,30 @@ public class LogFileChooserActivity extends FileChooserActivity {
 	    item_delete_file.setVisible(false);
 	    item_rename_file = menu.findItem(R.id.file_rename);
 	    item_rename_file.setVisible(false);
-	    item_select_all_file = menu.findItem(R.id.file_selection_all);
-	    item_select_all_file.setVisible(true);
-	    item_unselect_all_file = menu.findItem(R.id.file_unselection_all);
-	    item_unselect_all_file.setVisible(true);
-	    
+
+		if ( activity_use_for.equals( ACTIVITY_USE_FOR_MANAGEMENT ) ) {    		    
+		    item_select_all_file = menu.findItem(R.id.file_selection_all);
+		    item_select_all_file.setVisible(true);
+		    item_unselect_all_file = menu.findItem(R.id.file_unselection_all);
+		    item_unselect_all_file.setVisible(true);
+
+			Log.d ( Tag, "management" );
+		}
+		else
+			if ( activity_use_for.equals( ACTIVITY_USE_FOR_ANALYSIS ) ) {
+			    item_select_all_file = menu.findItem(R.id.file_selection_all);
+			    item_select_all_file.setVisible( false );
+			    item_unselect_all_file = menu.findItem(R.id.file_unselection_all);
+			    item_unselect_all_file.setVisible( false );
+
+				Log.d ( Tag, "analysis" );
+			}
+		
 	    return true;
 	}
 	
 	void update_actionbar_optiomenu() {
+		if ( activity_use_for.equals( ACTIVITY_USE_FOR_MANAGEMENT ) ) {
 		if ( selected_file_items.size() == 0 ) {
 			if ( item_open_file.isVisible() == true )
 				item_open_file.setVisible( false );
@@ -961,7 +1212,7 @@ public class LogFileChooserActivity extends FileChooserActivity {
 		else
 			if ( selected_file_items.size() == 1 ) {
 				if ( item_open_file.isVisible() == false )
-					item_open_file.setVisible( true );
+					item_open_file.setVisible( false );
 
 				if ( item_delete_file.isVisible() == false )
 					item_delete_file.setVisible( true );
@@ -980,6 +1231,22 @@ public class LogFileChooserActivity extends FileChooserActivity {
 					if ( item_rename_file.isVisible() == true )
 						item_rename_file.setVisible(false);
 				}
+		}
+		else
+			if ( activity_use_for.equals( ACTIVITY_USE_FOR_ANALYSIS ) ) {
+				if ( selected_file_items.size() == 0 ) {
+					
+				}
+				else
+					if ( selected_file_items.size() == 1 ) {
+						if ( item_open_file.isVisible() == false )
+							item_open_file.setVisible( true );
+					}
+					else
+						if ( selected_file_items.size() > 1 ) {
+							
+						}
+			}
 	}
 	
 	@Override
@@ -993,6 +1260,25 @@ public class LogFileChooserActivity extends FileChooserActivity {
 	    setResult(RESULT_OK, data); 
 
 	    super.finish();
+	}
+	
+	@Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		if (requestCode == 2005) {
+			Bundle extras = data.getExtras();
+	    	if ( extras != null && extras.containsKey ( "target conc." ) )
+	    		this.getIntent().putExtra( "target conc.", extras.getDouble( "target conc." ) );
+	    	else
+	    		if ( this.getIntent().getExtras().containsKey ( "target conc." ) )
+	    			this.getIntent().getExtras().remove( "target conc." );
+	    	
+	    	if ( extras != null && extras.containsKey ( "target vol." ) )
+	    		this.getIntent().putExtra( "target vol.", extras.getDouble( "target vol." ) );
+	    	else
+	    		if ( this.getIntent().getExtras().containsKey ( "target vol." ) )
+	    			this.getIntent().getExtras().remove( "target vol." );
+    		Log.d ( Tag, "onActivityResult: 2005" );
+		}
 	}
 	
 	public void EnumerationDevice(Intent intent) {
@@ -1073,5 +1359,18 @@ public class LogFileChooserActivity extends FileChooserActivity {
     	mNano_dev.show_debug("New intent: "+intent.getAction()+"\n");
     	if (intent.getAction().equals(UsbManager.ACTION_USB_DEVICE_ATTACHED))
     		EnumerationDevice(intent);
+    }
+    
+    public static boolean isNumeric(String str)  
+    {  
+      try  
+      {  
+        double d = Double.parseDouble(str);  
+      }  
+      catch(NumberFormatException nfe)  
+      {  
+        return false;  
+      }  
+      return true;  
     }
 }

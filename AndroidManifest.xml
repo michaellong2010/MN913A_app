@@ -4,6 +4,10 @@
     android:versionCode="1"
     android:versionName="1.0" >
 
+    <permission android:name="android.permission.SET_TIME"
+        android:label="@string/app_name"
+        android:protectionLevel="signature|system"
+      />
     <uses-sdk
         android:minSdkVersion="17"
         android:targetSdkVersion="21" />
@@ -11,6 +15,8 @@
     <uses-permission android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <!--<uses-permission android:name="android.permission.SET_TIME" />  -->
+    <uses-permission android:name="android.permission.SET_TIME_ZONE" />  
     
     <application
         android:allowBackup="true"
@@ -20,7 +26,7 @@
         android:name="com.example.mn913a.NanoApplication" >
         <activity
             android:name=".NanoActivity"
-            android:label="@string/app_name"  android:launchMode="singleTask" android:screenOrientation="landscape">
+            android:label="@string/app_name"  android:screenOrientation="landscape">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -48,7 +54,7 @@
             </intent-filter>
         </receiver> -->
         
-        <activity android:name="com.example.mn913a.LogFileChooserActivity" android:theme="@style/AppTheme_title" android:screenOrientation="landscape" >
+        <activity android:name="com.example.mn913a.LogFileChooserActivity" android:theme="@style/AppTheme_title" android:screenOrientation="landscape">
 <!--              <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -64,6 +70,15 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter> -->
+        </activity>
+        
+        <activity android:name="com.example.mn913a.AnalysisFileChooserActivity" android:theme="@style/MyMaterialTheme" android:screenOrientation="landscape" >
+        </activity>
+        
+        <activity android:name="com.example.mn913a.NormalizationActivity" android:theme="@style/AppTheme_title" android:screenOrientation="landscape" android:windowSoftInputMode="stateHidden">
+        </activity>
+        
+        <activity android:name="com.example.mn913a.testActivity" android:theme="@style/AppTheme_title" android:screenOrientation="landscape" android:launchMode="singleTask" >
         </activity>
         
         <receiver android:name="com.example.mn913a.NanoAppWidgetProvider" android:label="@string/main_title">

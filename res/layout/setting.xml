@@ -20,11 +20,11 @@
             android:textColor="@android:color/white"
             android:fontFamily="Calibri"
             android:textSize="10pt"
-            android:layout_marginLeft="80dp" />
+            android:layout_marginLeft="120dp" />
         
         <ImageButton
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
             android:layout_alignParentLeft="true"
             android:layout_centerVertical="true"
             android:layout_marginLeft="10dp"
@@ -46,6 +46,30 @@
         android:layout_height="wrap_content"
         android:background="@drawable/mn_913a_ui_bg"
         android:layout_weight="0.76" >
+        
+        <ImageButton
+            android:id="@+id/imageButton1"
+            android:layout_width="400dp"
+            android:layout_height="125dp"
+            android:layout_marginLeft="102dp"
+            android:layout_marginTop="116dp"
+            android:background="@drawable/btn_calibration2" />
+        
+        <ImageButton
+             android:id="@+id/imageButton2"
+             android:layout_width="400dp"
+             android:layout_height="125dp"
+             android:layout_marginLeft="102dp"
+             android:layout_marginTop="295dp"
+             android:background="@drawable/btn_lcd_brightness" />
+        
+        <ImageButton
+             android:id="@+id/imageButton3"
+             android:layout_width="400dp"
+             android:layout_height="125dp"
+             android:layout_marginLeft="625dp"
+             android:layout_marginTop="116dp"
+             android:background="@drawable/btn_time_date" />
     </RelativeLayout>
     
     <RelativeLayout
@@ -63,6 +87,6 @@
             android:id="@+id/lbltime"
             android:textColor="@android:color/white"
             android:fontFamily="Calibri"
-            android:textSize="12pt" />
+            android:textSize="10pt" />
     </RelativeLayout>
 </LinearLayout>

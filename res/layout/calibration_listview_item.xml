@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:weightSum="1" >
+
+    <TextView
+        android:id="@+id/ItemText1"
+        android:bufferType="normal"
+        android:singleLine="true"
+        android:background="#FFFF0000"
+        android:layout_width="45dp"
+        android:gravity="center"
+        android:layout_margin="1dip"
+        android:layout_gravity="center"
+        android:layout_height="wrap_content"
+        android:text="kkkkk"
+        android:textSize="15pt"
+        android:layout_weight="0.4" >
+    </TextView>
+
+
+    <TextView
+        android:id="@+id/ItemText2"
+        android:bufferType="normal"
+        android:singleLine="true"
+        android:background="#FFFF0000"
+        android:layout_width="25dp"
+        android:gravity="center"
+        android:layout_margin="1dip"
+        android:layout_gravity="center"
+        android:layout_height="wrap_content"
+        android:text="kkkkk"
+        android:textSize="15pt"
+        android:layout_weight="0.2" >
+    </TextView>
+    
+    <TextView
+        android:id="@+id/ItemText3"
+        android:bufferType="normal"
+        android:singleLine="true"
+        android:background="#FFFF0000"
+        android:layout_width="25dp"
+        android:gravity="center"
+        android:layout_margin="1dip"
+        android:layout_gravity="center"
+        android:layout_height="wrap_content"
+        android:text="kkkkk"
+        android:textSize="15pt"
+        android:layout_weight="0.2" >
+    </TextView>
+
+    <TextView
+        android:id="@+id/ItemText4"
+        android:bufferType="normal"
+        android:singleLine="true"
+        android:background="#FFFF0000"
+        android:layout_width="25dp"
+        android:gravity="center"
+        android:layout_margin="1dip"
+        android:layout_gravity="center"
+        android:layout_height="wrap_content"
+        android:text="kkkkk"
+        android:textSize="15pt"
+        android:layout_weight="0.2" >
+    </TextView>
+</LinearLayout>

@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:weightSum="1"
+    android:gravity="top"
+    android:background="@drawable/mn_913a_ui_bg" >
+    
+<LinearLayout
+    android:id="@+id/user_setting"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="top"
+    android:orientation="vertical"
+    android:layout_weight=".7"
+    android:background="@android:color/darker_gray" >
+    
+       <TextView
+            android:id="@+id/target_volume"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="100dp"
+            android:textSize="12pt"
+            android:text="total volume" />
+
+       <EditText
+            android:id="@+id/editText_volume"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:drawable/editbox_dropdown_light_frame"
+            android:ems="10"
+            android:enabled="true"
+            android:imeOptions="actionDone"
+            android:inputType="numberDecimal"
+            android:hint="target volume"
+            android:singleLine="true"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:textColor="#FF0000FF"
+            android:layout_marginTop="10dp" >
+            
+       </EditText>
+
+        <TextView
+            android:id="@+id/target_conc"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="30dp"
+            android:textSize="12pt"
+            android:text="target concentration" />
+
+       <EditText
+            android:id="@+id/editText_conc"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:drawable/editbox_dropdown_light_frame"
+            android:ems="10"
+            android:enabled="true"
+            android:imeOptions="actionDone"
+            android:inputType="numberDecimal"
+            android:hint="target concentration"
+            android:singleLine="true"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:textColor="#FF0000FF"
+            android:layout_marginTop="10dp" >
+            
+       </EditText>
+
+       <Button
+           android:id="@+id/button1"
+           android:layout_width="wrap_content"
+           android:layout_height="wrap_content"
+           android:layout_marginTop="20dp"
+           android:text="Calculate"
+           android:background="@android:drawable/btn_default"
+           android:onClick="Calculate"
+           android:enabled="false" />
+
+</LinearLayout>
+
+<LinearLayout
+    android:id="@+id/measure_result_Layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="top"
+    android:orientation="vertical"
+    android:layout_weight=".3" >
+
+</LinearLayout>
+
+</LinearLayout>

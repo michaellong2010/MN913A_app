@@ -45,7 +45,7 @@ public class protein_result_adapter extends BaseAdapter {
 		View v = convertView;
 		HashMap<String, String> map = getItem(position);
         LinearLayout protein_result_layout;
-        TextView tv;
+        TextView tv, tv1;
         
         if (v == null) {
             v = LayoutInflater.from(mContext).inflate(R.layout.protein_result_listview_item, parent, false);
@@ -57,6 +57,18 @@ public class protein_result_adapter extends BaseAdapter {
         tv.setText( map.get("No.") );
         tv =  ( TextView ) protein_result_layout.findViewById( R.id.item2 );
         tv.setText( map.get("A280") );
+        
+        tv =  ( TextView ) protein_result_layout.findViewById( R.id.item3 );
+        tv1 =  ( TextView ) protein_result_layout.findViewById( R.id.item4 );
+        if ( Double.parseDouble( map.get("Coeff.") ) == -1.0 ) {
+        	tv.setText( "           " );
+        	tv1.setText( "           " );
+        }
+        else {
+        	tv.setText( map.get( "Coeff." ) );
+        	tv1.setText( map.get( "Conc." ) );        	
+        }
+        
         CheckBox checkbox1 = ( CheckBox ) protein_result_layout.findViewById( R.id.checkbox2 );
         if ( map.get("isSelected") != null && map.get("isSelected").equals( "true" ) ) {
         	checkbox1.setChecked( true );

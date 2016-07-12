@@ -302,6 +302,10 @@ public class MN_913A_Device {
     					Has_Calibration = MN913A_dev_data.get ( 5 );
     					AutoMeasure_Detected = MN913A_dev_data.get ( 6 );
     				}
+    				else
+    					if ( itracker_cmd == CMD_T.HID_CMD_GET_TIME && result ) {
+    						System.arraycopy( message.mDataBuffer.array(), 0, dataBytes, 0, 256 );
+    					}
     			if (result)
     				return true;
     			else
@@ -336,7 +340,19 @@ public class MN_913A_Device {
 	{
 		return Min_Volt_Level;
 	}
+
+	public int Set_Max_Volt_Level ( int Max_Level )
+	{
+		Max_Volt_Level = Max_Level;
+		return Max_Volt_Level;
+	}
 	
+	public int Set_Min_Volt_Level ( int Min_Level )
+	{
+		Min_Volt_Level = Min_Level;
+		return Min_Volt_Level;
+	}
+
 	public double Get_Max_Voltage_Intensity ( )
 	{
 		return ( (double) Max_Voltage_Intensity );
@@ -344,6 +360,18 @@ public class MN_913A_Device {
 	
 	public double Get_Min_Voltage_Intensity ( )
 	{
+		return  ( (double) Min_Voltage_Intensity );
+	}
+	
+	public double Set_Max_Voltage_Intensity ( float Max_Intensity )
+	{
+		Max_Voltage_Intensity = ( int ) Max_Intensity;
+		return ( (double) Max_Voltage_Intensity );
+	}
+	
+	public double Set_Min_Voltage_Intensity ( float Min_Intensity )
+	{
+		Min_Voltage_Intensity = ( int ) Min_Intensity;
 		return  ( (double) Min_Voltage_Intensity );
 	}
 	
@@ -356,17 +384,21 @@ public class MN_913A_Device {
 	{
 		Reset_MCU = reset;
 	}
-	
+	/*public void Set_LCD_Brightness_Level ( int brightness )
+	{
+		LCD_Brightness_Level = brightness;
+	}*/
 	public static final int SZ_MN913A_setting_type = Integer.SIZE / Byte.SIZE;
 	public static final int SZ_MN913A_status_type = Integer.SIZE / Byte.SIZE;
 	public static final int SZ_MN913A_raw_data_type = 2 * 8 * 256;
+	public static final int SZ_MN913A_datetime_data_type = 24;
 	/* #define PAGE_SIZE 256 */
 	public static final int PAGE_SIZE = 256;
 	// #define HID_CMD_SIGNATURE 0x43444948
 	public static final int HID_CMD_SIGNATURE = 0x43444948;
 	public static final int MAX_PAYLOAD = 4096;
 	public int Xenon_Voltage_Level = 0, Illumination_State = 0, start_calibration = 0, Max_Volt_Level = 0, Min_Volt_Level = 0, Max_Voltage_Intensity = 0, Min_Voltage_Intensity = 0, Auto_Measure = 0;
-	public int Reset_MCU = 0;
+	public int Reset_MCU = 0, LCD_Brightness_Level = 0;
 	
 	public final class CMD_T {
 		public final String Tag = "Command";
@@ -395,6 +427,10 @@ public class MN_913A_Device {
 	    public static final int HID_CMD_MN913A_STATUS = 0x89;
 	    public static final int HID_CMD_PRINT_DNA_RESULT = 0x90;
 	    public static final int HID_CMD_PRINT_PROTEIN_RESULT = 0x91;
+	    public static final int HID_CMD_GET_TIME = 0x92;
+	    public static final int HID_CMD_SET_TIME = 0x93;
+	    public static final int HID_CMD_SET_LCD_BRIGHTNESS = 0x95;
+	    public static final int HID_CMD_PRINT_META_DATA = 0xC1;
 	    
 	    public CMD_T() {
 	        mMessageBuffer = ByteBuffer.allocate(SZ_CMD_T);
@@ -481,7 +517,8 @@ public class MN_913A_Device {
 	    	result = write_out(mMessageBuffer, mMessageBuffer.limit());
 			int command;
 			command = (int) cmd&0xff;
-			if ( command != CMD_T.HID_CMD_PRINT_DNA_RESULT && command != CMD_T.HID_CMD_PRINT_PROTEIN_RESULT ) {
+			if ( command != CMD_T.HID_CMD_PRINT_DNA_RESULT && command != CMD_T.HID_CMD_PRINT_PROTEIN_RESULT && command != CMD_T.HID_CMD_SET_TIME 
+					&& command != CMD_T.HID_CMD_SET_LCD_BRIGHTNESS && command != CMD_T.HID_CMD_PRINT_META_DATA ) {
 				mDataBuffer.clear();
 				mDataBuffer.limit((arg2-arg1)*PAGE_SIZE);
 			}
@@ -492,6 +529,11 @@ public class MN_913A_Device {
 				mDataBuffer.putInt(start_calibration);
 				mDataBuffer.putInt(Auto_Measure);
 				mDataBuffer.putInt( Reset_MCU );
+				mDataBuffer.putInt( Max_Volt_Level );
+				mDataBuffer.putInt( Min_Volt_Level );
+				mDataBuffer.putInt( Has_Calibration );
+				mDataBuffer.putInt( Max_Voltage_Intensity );
+				mDataBuffer.putInt( Min_Voltage_Intensity );
 				if (result)
 					result = write_out(mDataBuffer, mDataBuffer.limit());
 		    	show_debug(Tag+"The line number is " + new Exception().getStackTrace()[0].getLineNumber()+"\n");
@@ -506,6 +548,16 @@ public class MN_913A_Device {
 				if (result)
 					result = write_out(mDataBuffer, mDataBuffer.limit());
 				break;
+			case HID_CMD_SET_TIME:
+				if (result)
+					result = write_out(mDataBuffer, mDataBuffer.limit());
+				break;
+			case HID_CMD_SET_LCD_BRIGHTNESS:
+			case HID_CMD_PRINT_META_DATA:
+				//mDataBuffer.putInt( LCD_Brightness_Level );
+				if (result)
+					result = write_out(mDataBuffer, mDataBuffer.limit());
+				break;
 			}
 			
 			switch(command) {
@@ -517,6 +569,10 @@ public class MN_913A_Device {
 				if (result)
 					result = read_in(mDataBuffer, mDataBuffer.limit());
 				show_debug(Tag+"The line number is " + new Exception().getStackTrace()[0].getLineNumber()+"\n");
+				break;
+			case HID_CMD_GET_TIME:
+				if (result)
+					result = read_in(mDataBuffer, mDataBuffer.limit());
 				break;
 			}
 			return result;
@@ -556,12 +612,22 @@ public class MN_913A_Device {
 			case HID_CMD_MN913A_RAW_DATA:
 				if (debug != 0)
 					Log.d(Tag, ">>> Retrieve MN913A raw data\n");
-				arg1 = argu0;
+				arg1 = 0;
 				remainder = SZ_MN913A_raw_data_type % PAGE_SIZE;
 				if (remainder != 0)
 					arg2 = (SZ_MN913A_raw_data_type / PAGE_SIZE) + 1;
 				else
 					arg2 = (SZ_MN913A_raw_data_type / PAGE_SIZE);
+				break;
+			case HID_CMD_GET_TIME:
+				if (debug != 0)
+					Log.d(Tag, ">>> Retrieve MN913A RTC date & time\n");
+				arg1 = 0;
+				remainder = SZ_MN913A_datetime_data_type % PAGE_SIZE;
+				if (remainder != 0)
+					arg2 = (SZ_MN913A_datetime_data_type / PAGE_SIZE) + 1;
+				else
+					arg2 = (SZ_MN913A_datetime_data_type / PAGE_SIZE);
 				break;
 			
 			case HID_CMD_PRINT_DNA_RESULT:
@@ -572,6 +638,27 @@ public class MN_913A_Device {
 				mDataBuffer.put(data, 0, arg2*PAGE_SIZE);
 				break;
 			case HID_CMD_PRINT_PROTEIN_RESULT:
+				arg1 = argu0;
+				arg2 = argu1;
+				mDataBuffer.clear();
+				mDataBuffer.limit(arg2*PAGE_SIZE);
+				mDataBuffer.put(data, 0, arg2*PAGE_SIZE);
+				break;
+			case HID_CMD_SET_TIME:
+				arg1 = argu0;
+				arg2 = argu1;
+				mDataBuffer.clear();
+				mDataBuffer.limit(arg2*PAGE_SIZE);
+				mDataBuffer.put(data, 0, arg2*PAGE_SIZE);
+				break;
+			case HID_CMD_SET_LCD_BRIGHTNESS:
+				arg1 = argu0;
+				arg2 = argu1;
+				mDataBuffer.clear();
+				mDataBuffer.limit(arg2*PAGE_SIZE);
+				mDataBuffer.put(data, 0, arg2*PAGE_SIZE);
+				break;
+			case HID_CMD_PRINT_META_DATA:
 				arg1 = argu0;
 				arg2 = argu1;
 				mDataBuffer.clear();

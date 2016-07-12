@@ -11,6 +11,11 @@
           android:title="print"
           android:showAsAction="always|withText"/>
 
+<item android:id="@+id/item_normalization_analysis"
+          android:icon="@drawable/normalization"
+          android:title="normalization"
+          android:showAsAction="always|withText"/>
+
 <item android:id="@+id/item_selection_all"
           android:icon="@drawable/item_select_all"
           android:title="Select_All"

@@ -10,33 +10,62 @@
         android:id="@+id/item1"
         android:layout_width="wrap_content"
         android:layout_height="fill_parent"
-        android:layout_weight=".4"
+        android:layout_weight=".22"
         android:gravity="center"
         android:text="row_id"
         android:textAppearance="@android:attr/textAppearanceLarge"
         android:clickable="true"
         android:focusable="false"
-        android:focusableInTouchMode="false" />
+        android:focusableInTouchMode="false"
+        android:textSize="10pt" />
 
     <TextView
         android:id="@+id/item2"
         android:layout_width="wrap_content"
         android:layout_height="fill_parent"
-        android:layout_weight=".4"
+        android:layout_weight=".22"
         android:gravity="center"
         android:text="col_1"
         android:textAppearance="@android:attr/textAppearanceLarge"
         android:clickable="false"
         android:focusable="false"
-        android:focusableInTouchMode="false" />
-         
+        android:focusableInTouchMode="false"
+        android:textSize="10pt" />
+    
+    <TextView
+        android:id="@+id/item3"
+        android:layout_width="wrap_content"
+        android:layout_height="fill_parent"
+        android:layout_weight=".22"
+        android:gravity="center"
+        android:text="col_1"
+        android:textAppearance="@android:attr/textAppearanceLarge"
+        android:clickable="false"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
+        android:textSize="10pt" />
+    
+    <TextView
+        android:id="@+id/item4"
+        android:layout_width="wrap_content"
+        android:layout_height="fill_parent"
+        android:layout_weight=".22"
+        android:gravity="center"
+        android:text="col_1"
+        android:textAppearance="@android:attr/textAppearanceLarge"
+        android:clickable="false"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
+        android:textSize="10pt" />
+        
     <CheckBox android:id="@+id/checkbox2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text=""
-        android:layout_weight=".2"
+        android:layout_weight=".12"
         android:clickable="false"
         android:focusable="false"
-        android:focusableInTouchMode="false"/>
+        android:focusableInTouchMode="false"
+        android:textSize="10pt" />
 
 </LinearLayout>

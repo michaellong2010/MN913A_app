@@ -13,4 +13,13 @@
     <string name="ok_button_caption">OK</string>
     <string name="cancel_button_caption">Cancel</string>
 
+    
+    <string name="spinner_prompt">Select a quantity</string>
+     <string-array name="protein_quantity_array">
+        <item>UNKNOWN</item>
+        <item>BSA</item>
+        <item>IgG</item>
+        <item>Lysozyme</item>
+        <item>User define</item>
+    </string-array>
 </resources>

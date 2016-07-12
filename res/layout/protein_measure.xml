@@ -93,6 +93,18 @@
            	</LinearLayout>
             
             <Switch
+                android:id="@+id/Led_switch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignLeft="@+id/imageButton1"
+                android:layout_alignParentTop="true"
+                android:layout_marginTop="30dp"
+                android:switchMinWidth="80dp"
+                android:text="LED"
+                android:textColor="@color/result_textcolor"
+                android:thumb="@drawable/my_switch_inner" />
+            
+            <Switch
                 android:id="@+id/Auto_measure_switch"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -103,6 +115,34 @@
                 android:text="Auto"
                 android:textColor="@color/result_textcolor"
                 android:thumb="@drawable/my_switch_inner" />
+
+            <Spinner
+                android:id="@+id/spinner1"
+                android:layout_width="120dp"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true"
+                android:layout_marginLeft="530dp"
+                android:layout_marginTop="43dp"
+                android:prompt="@string/spinner_prompt"
+                android:spinnerMode="dialog" />
+            
+            <EditText
+                android:id="@+id/editText1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@android:drawable/editbox_dropdown_light_frame"
+                android:ems="10"
+                android:enabled="true"
+                android:imeOptions="actionDone"
+                android:inputType="numberDecimal"
+                android:singleLine="true"
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:textColor="#FF0000FF"
+                android:layout_toRightOf="@id/spinner1"
+                android:layout_alignTop="@id/spinner1" >
+
+                <requestFocus />
+            </EditText>
 
         </RelativeLayout>
     </LinearLayout>
