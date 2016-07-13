@@ -61,6 +61,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -121,9 +122,14 @@ public class LogFileChooserActivity extends FileChooserActivity {
 	int selection_count = 0;
 	byte [] datetime_data = new byte [ 24 ];
 	boolean activity_use_new_ui;
+	ImageButton btn_rename, btn_delete_files, btn_storage;
+	ImageButton btn_sort_by_alpha, btn_sort_by_most_updated, btn_select_all;
+	int action_id = 0;
+	Iterator<FileItem> selected_file_items_it;
+	LinearLayout result_view_header, result_content_view;
 	
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) { 
 		this.getIntent().putExtra(FileChooserActivity.INPUT_SHOW_FULL_PATH_IN_TITLE, true);
 		this.getIntent().putExtra(FileChooserActivity.INPUT_START_FOLDER, Environment.getExternalStorageDirectory().getPath() + "/MaestroNano/Measure/" );
 		/*20141022 added by michael
@@ -185,6 +191,32 @@ public class LogFileChooserActivity extends FileChooserActivity {
                 abr.setHomeButtonEnabled( false );
                 LinearLayout customActionView = ( LinearLayout ) getLayoutInflater().inflate(R.layout.actionbar_custom_view, null);
                 abr.setCustomView(customActionView);
+                btn_rename = ( ImageButton ) customActionView.findViewById( R.id.imageButton1 );
+                btn_delete_files = ( ImageButton ) customActionView.findViewById( R.id.imageButton2 );
+                btn_storage = ( ImageButton ) customActionView.findViewById( R.id.imageButton3 );
+                
+                btn_delete_files.setOnClickListener( new View.OnClickListener() {
+
+					@Override
+					public void onClick(View v) {
+						// TODO Auto-generated method stub
+						action_id = R.id.file_delete; 
+						LogFileChooserActivity.this.onOptionsItemSelected( Dummy_menu_item );
+					}
+                	
+                } );
+                
+                btn_rename.setOnClickListener( new View.OnClickListener() {
+
+					@Override
+					public void onClick(View v) {
+						// TODO Auto-generated method stub
+						action_id = R.id.file_rename; 
+						LogFileChooserActivity.this.onOptionsItemSelected( Dummy_menu_item );
+						v.setEnabled( false );
+					}
+                	
+                } );
             	
                 /*20160712 added by michael*/
                 LinearLayout file_browser_layout, measure_root_layout; 
@@ -192,10 +224,121 @@ public class LogFileChooserActivity extends FileChooserActivity {
         		LinearLayout file_browser_header =  ( LinearLayout ) file_browser_layout.findViewById( R.id.left_header );
         		LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         		inflater.inflate ( R.layout.management_left_textbar_layout, file_browser_header, true );
+        		btn_sort_by_alpha = ( ImageButton ) file_browser_header.findViewById( R.id.imageButton1 );
+        		btn_sort_by_most_updated = ( ImageButton ) file_browser_header.findViewById( R.id.imageButton2 );
+        		btn_select_all = ( ImageButton ) file_browser_header.findViewById( R.id.imageButton3 );
+        		
+        		btn_sort_by_alpha.setOnClickListener( new View.OnClickListener() {
+					
+					@Override
+					public void onClick(View v) {
+						// TODO Auto-generated method stub
+						ImageButton btn_img = null;
+						if ( v instanceof ImageButton ) {
+							btn_img = ( ImageButton ) v;
+						}
+
+						if ( btn_img != null && btn_img.isSelected() == false) {
+							Log.d ( "btn_sort_by_alpha", "toggle" );
+							btn_img.setSelected( true );
+							btn_img.setImageDrawable( LogFileChooserActivity.this.getResources().getDrawable( R.drawable.sort_by_alphabet_b ) );
+						}
+						else
+							if ( btn_img != null && btn_img.isSelected() == true) {
+								Log.d ( "btn_sort_by_alpha", "hold" );
+								btn_img.setSelected( false );
+								btn_img.setImageDrawable( LogFileChooserActivity.this.getResources().getDrawable( R.drawable.sort_by_alphabet_t ) );
+							}
+						action_id = R.id.filelist_sort_by_alphabet; 
+						LogFileChooserActivity.this.onOptionsItemSelected( Dummy_menu_item );
+					}
+				});
+        		
+        		btn_sort_by_most_updated.setOnClickListener( new View.OnClickListener() {
+					
+					@Override
+					public void onClick(View v) {
+						// TODO Auto-generated method stub
+						ImageButton btn_img = null;
+						if ( v instanceof ImageButton ) {
+							btn_img = ( ImageButton ) v;
+						}
+
+						if ( btn_img != null && btn_img.isSelected() == false) {
+							Log.d ( "btn_sort_by_most_updated", "toggle" );
+							btn_img.setSelected( true );
+							btn_img.setImageDrawable( LogFileChooserActivity.this.getResources().getDrawable( R.drawable.sort_by_most_update_b ) );
+						}
+						else
+							if ( btn_img != null && btn_img.isSelected() == true) {
+								Log.d ( "btn_sort_by_most_updated", "hold" );
+								btn_img.setSelected( false );
+								btn_img.setImageDrawable( LogFileChooserActivity.this.getResources().getDrawable( R.drawable.sort_by_most_update_t ) );
+							}
+						action_id = R.id.filelist_sort_by_timestamp; 
+						LogFileChooserActivity.this.onOptionsItemSelected( Dummy_menu_item );							
+					}
+				});
+
+        		btn_select_all.setOnClickListener( new View.OnClickListener() {
+        			LinearLayout root = LogFileChooserActivity.this.getRootLayout();
+        			final LinearLayout layout = (LinearLayout) root.findViewById(ar.com.daidalos.afiledialog.R.id.linearLayoutFiles);
+        			int i = 0;
+        			FileItem file_item;
+					
+					@Override
+					public void onClick(View v) {
+						// TODO Auto-generated method stub
+						ImageButton btn_img = null;
+						if ( v instanceof ImageButton ) {
+							btn_img = ( ImageButton ) v;
+						}
+
+						if ( btn_img != null && btn_img.isSelected() == false) {
+							Log.d ( "btn_select_all", "toggle" );
+							btn_img.setSelected( true );
+							btn_img.setImageDrawable( LogFileChooserActivity.this.getResources().getDrawable( R.drawable.files_select_all ) );
+							/*for ( i = 0; i < layout.getChildCount(); i++ ) {
+								file_item = ( FileItem ) layout.getChildAt(i);
+								//if ( selected_file_items.contains( file_item ) == false ) {
+								if ( file_item.isSelected() == false ) {
+									file_item.setSelected( true );
+									selected_file_items.add( file_item );
+								}
+							}*/
+							action_id = R.id.file_selection_all; 
+							LogFileChooserActivity.this.onOptionsItemSelected( Dummy_menu_item );
+							update_actionbar_optiomenu();
+						}
+						else
+							if ( btn_img != null && btn_img.isSelected() == true) {
+								Log.d ( "btn_select_all", "hold" );
+								btn_img.setSelected( false );
+								btn_img.setImageDrawable( LogFileChooserActivity.this.getResources().getDrawable( R.drawable.files_unselect_all ) );
+								/*for ( i = 0; i < layout.getChildCount(); i++ ) {
+									file_item = ( FileItem ) layout.getChildAt(i);
+									//if ( selected_file_items.contains( file_item ) == false ) {
+									if ( file_item.isSelected() == true ) {
+									  file_item.setSelected( false );
+									  selected_file_items.removeAll ( Collections.singletonList( file_item ) );
+									}
+								}*/
+								action_id = R.id.file_unselection_all; 
+								LogFileChooserActivity.this.onOptionsItemSelected( Dummy_menu_item );
+								update_actionbar_optiomenu();
+							}
+							
+					}
+				});
         		
         		measure_root_layout = this.getMeasureResultLayout();
-        		LinearLayout result_view_header = ( LinearLayout ) measure_root_layout.findViewById( R.id.right_header );
-        		inflater.inflate ( R.layout.dna_result_listview_header1, result_view_header, true );
+        		result_view_header = ( LinearLayout ) measure_root_layout.findViewById( R.id.right_header );
+        		result_content_view = ( LinearLayout ) measure_root_layout.findViewById( R.id.right_content_view );
+        		inflater.inflate ( R.layout.dna_result_listview_header1, result_view_header, false );
+        		LinearLayout.LayoutParams lp = ( LinearLayout.LayoutParams ) result_view_header.getLayoutParams();
+        		lp.width = LinearLayout.LayoutParams.MATCH_PARENT;
+        		result_view_header.setLayoutParams( lp );
+        		result_view_header.setBackground( this.getResources().getDrawable( R.drawable.managament_textbar_right_bg ) );
         	}
         	else
         		if ( activity_use_for.equals( this.ACTIVITY_USE_FOR_ANALYSIS ) ) {
@@ -264,7 +407,12 @@ public class LogFileChooserActivity extends FileChooserActivity {
 							selected_file_items.removeAll ( Collections.singletonList( source ) );
 						
 						if ( selected_file_items.size() == 1 ) {
-							onOptionsItemSelected( item_open_file );
+							if ( activity_use_new_ui == false )
+								onOptionsItemSelected( item_open_file );
+							else {
+								action_id = R.id.file_open; 
+								LogFileChooserActivity.this.onOptionsItemSelected( Dummy_menu_item );
+							}
 						}
 					}
 					else
@@ -280,7 +428,12 @@ public class LogFileChooserActivity extends FileChooserActivity {
 								source.setSelected( true );
 							}
 							selected_file_items.add( source );
-							onOptionsItemSelected( item_open_file );
+							if ( activity_use_new_ui == false )
+								onOptionsItemSelected( item_open_file );
+							else {
+								action_id = R.id.file_open; 
+								LogFileChooserActivity.this.onOptionsItemSelected( Dummy_menu_item );
+							}
 						}
 				}
 				else
@@ -351,6 +504,24 @@ public class LogFileChooserActivity extends FileChooserActivity {
 				}
     			
     		});
+    		
+    		file_rename_dialog.setOnDismissListener( new DialogInterface.OnDismissListener () {
+
+				@Override
+				public void onDismiss(DialogInterface dialog) {
+					// TODO Auto-generated method stub
+					Log.d ( "file_rename_dialog", "dismiss" );
+					if ( selected_file_items_it.hasNext() ) {
+						FileItem file_item = selected_file_items_it.next();
+						edit_new_filename.setText( file_item.getFile().getName() );
+						file_rename_dialog.show();
+					}
+					else
+						if ( LogFileChooserActivity.this.activity_use_new_ui == true )
+							btn_rename.setEnabled( true );
+				}
+    			
+    		} );
     		
     		edit_new_filename = (EditText) file_rename_dialog_layout.findViewById( R.id.edit_rename_file );
     	}
@@ -642,10 +813,16 @@ public class LogFileChooserActivity extends FileChooserActivity {
 		Intent intent;
 		LinearLayout root = this.getRootLayout();
 		final LinearLayout layout = (LinearLayout) root.findViewById(ar.com.daidalos.afiledialog.R.id.linearLayoutFiles);
-		int i = 0;
+		int i = 0, button_action_id = 0;
 		FileItem file_item;
 		
-		switch ( item.getItemId() ) {
+		if ( item.getItemId() == 0 ) {
+			button_action_id = this.action_id;
+		}
+		else {
+			button_action_id = item.getItemId();
+		}
+		switch ( button_action_id ) {
 		  case android.R.id.home:
 			  onBackPressed();
 			  return true;
@@ -770,7 +947,7 @@ public class LogFileChooserActivity extends FileChooserActivity {
 				}
 				mActiveFile = selected_file_items.get(0).getFile();
 			}
-			LinearLayout measure_root_layout, listview_header, file_browser_layout;
+			LinearLayout measure_root_layout, listview_header;
 			measure_root_layout = this.getMeasureResultLayout();
 			LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 			//result_listview = ( ListView ) inflater.inflate ( R.layout.result_listview, measure_root_layout, false );
@@ -781,10 +958,15 @@ public class LogFileChooserActivity extends FileChooserActivity {
 			SimpleAdapter adapter = null;// = new SimpleAdapter(this, fillMaps, R.layout.grid_item, from, to);
 			String[] sports = new String [] { "123", "111", "234" };
 			ArrayAdapter<String> adapter1 = new ArrayAdapter<String>(this, R.layout.simple_list_item_multiple_choice, sports );
-			dna_result_adapter adapter2 = new dna_result_adapter ( this, fillMaps );
+			dna_result_adapter adapter2 = null;
+			if ( this.activity_use_new_ui == true )
+				adapter2 = new dna_result_adapter ( this, fillMaps, true );
+			else
+				adapter2 = new dna_result_adapter ( this, fillMaps, false );
 			protein_result_adapter adapter3 = new protein_result_adapter ( this, fillMaps );
 			
-			measure_root_layout.removeAllViews();
+			if ( this.activity_use_new_ui == false )
+				measure_root_layout.removeAllViews();
 			FileOperation read_file = new FileOperation ( "Measure", mActiveFile.getName(), false );
 			fillMaps.clear();
 			result_listview.setDividerHeight( 3 );
@@ -792,7 +974,13 @@ public class LogFileChooserActivity extends FileChooserActivity {
 			if ( selected_file_items.get(0).getFile().getName().contains( "dsDNA" ) == true ||
 				 selected_file_items.get(0).getFile().getName().contains( "ssDNA" ) == true ||
 				 selected_file_items.get(0).getFile().getName().contains( "RNA" ) == true ) {
-				inflater.inflate ( R.layout.dna_result_listview_header, listview_header, true );
+				if ( this.activity_use_new_ui == false )
+					inflater.inflate ( R.layout.dna_result_listview_header, listview_header, true );
+				else {
+					if ( result_view_header.getChildCount() > 0 )
+						result_view_header.removeAllViews();
+	        		inflater.inflate ( R.layout.dna_result_listview_header1, result_view_header, true );
+				}
 				/*for ( int j = 0; j < 50; j++ ) {
 				HashMap<String, String> map = new HashMap<String, String>();
 				map.put( "No.", Integer.toString( j ) );
@@ -955,16 +1143,32 @@ public class LogFileChooserActivity extends FileChooserActivity {
 							}
 						}
 						
-						if ( selection_count > 0 ) {
-							if (mMode == null)
-								mMode = startActionMode(mCallback);
-							else {
-								mMode.setTitle( Integer.toString ( selection_count ) + " Item Selected");
+						if ( LogFileChooserActivity.this.activity_use_new_ui == false ) {
+							if ( selection_count > 0 ) {
+								if (mMode == null)
+									mMode = startActionMode(mCallback);
+								else {
+									mMode.setTitle( Integer.toString ( selection_count ) + " Item Selected");
+								}
+								mSelected_items_count = selection_count;
 							}
-							mSelected_items_count = selection_count;
+							else {
+								mMode.finish();
+							}
 						}
 						else {
-							mMode.finish();
+							if ( selection_count > 0 ) {
+								if ( item_print_result.isVisible() == false )
+									item_print_result.setVisible( true );
+								if ( item_delete_result.isVisible() == false )
+									item_delete_result.setVisible( true );
+							}
+							else {
+								if ( item_print_result.isVisible() == true )
+									item_print_result.setVisible( false );
+								if ( item_delete_result.isVisible() == true )
+									item_delete_result.setVisible( false );								
+							}
 						}
 					}
 					
@@ -1064,12 +1268,17 @@ public class LogFileChooserActivity extends FileChooserActivity {
 					});
 				}
 			//adapter.notifyDataSetChanged();
-			measure_root_layout.addView( listview_toplayout );
+			if ( this.activity_use_new_ui == false )
+				measure_root_layout.addView( listview_toplayout );
+			else
+				result_content_view.addView( listview_toplayout );
 			//measure_root_layout.addView( result_listview );
 			//result_listview.setBackgroundColor( this.getResources().getColor( android.R.color.background_dark ) );
 			return true;			
 		  case R.id.file_rename:
 			  file_item = selected_file_items.get( 0 );
+			  selected_file_items_it = selected_file_items.iterator();
+			  selected_file_items_it.next();
 			  if ( file_rename_dialog != null ) {
 				  edit_new_filename.setText( file_item.getFile().getName() );
 				  file_rename_dialog.show();
@@ -1083,8 +1292,8 @@ public class LogFileChooserActivity extends FileChooserActivity {
 					  file_item.setSelected( true );
 					  selected_file_items.add( file_item );
 				  }
-				  update_actionbar_optiomenu();
 			  }
+			  update_actionbar_optiomenu();
 			  return true;
 		  case R.id.file_unselection_all:
 			  for ( i = 0; i < layout.getChildCount(); i++ ) {
@@ -1094,8 +1303,8 @@ public class LogFileChooserActivity extends FileChooserActivity {
 					  file_item.setSelected( false );
 					  selected_file_items.removeAll ( Collections.singletonList( file_item ) );
 				  }
-				  update_actionbar_optiomenu();
 			  }
+			  update_actionbar_optiomenu();
 			  return true;
 		  case R.id.filelist_sort_by_alphabet:
 			  if ( Array_file_item == null )
@@ -1161,12 +1370,17 @@ public class LogFileChooserActivity extends FileChooserActivity {
 		    		layout.addView( Array_file_item[i] );
 		    	return true;
 		}
-		return super.onOptionsItemSelected(item);		
+		
+		if ( item.getItemId() != 0 )
+			return super.onOptionsItemSelected(item);
+		else
+			return true;
 	}
 	
 	MenuItem item_open_file, item_delete_file, item_rename_file, item_select_all_file, item_unselect_all_file;
-	MenuItem item_print_result, item_delete_result, item_home;
+	MenuItem item_print_result, item_delete_result, item_home, Dummy_menu_item;
 	Menu main_menu;
+	ImageButton btn_home, btn_delete_result, btn_print_result;
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 	    MenuInflater inflater = getMenuInflater();
@@ -1177,13 +1391,48 @@ public class LogFileChooserActivity extends FileChooserActivity {
 			    main_menu = menu;
 			    item_print_result = menu.findItem(R.id.item_print);
 			    item_print_result.setActionView( R.layout.actionview_item_print );
+			    btn_print_result = ( ImageButton ) item_print_result.getActionView();
+			    btn_print_result.setOnClickListener( new View.OnClickListener( ) {
+
+					@Override
+					public void onClick(View v) {
+						// TODO Auto-generated method stub
+						Log.d ( "btn_print_result", "click" );
+					}
+			    	
+			    } );
 			    //View v = item_print_result.getActionView();
 			    //ActionMenuView.LayoutParams lp = ( ActionMenuView.LayoutParams ) item_print_result.getActionView().getLayoutParams();
 			    item_delete_result = menu.findItem(R.id.item_delete);
 			    item_delete_result.setActionView( R.layout.actionview_item_delete );
+			    btn_delete_result = ( ImageButton ) item_delete_result.getActionView();
+			    btn_delete_result.setOnClickListener( new View.OnClickListener( ) {
+
+					@Override
+					public void onClick(View v) {
+						// TODO Auto-generated method stub
+						Log.d ( "btn_delete_result", "click" );
+					}
+			    	
+			    } );
 			    item_home = menu.findItem( R.id.home );
 			    item_home.setActionView( R.layout.actionview_item_home );
+			    btn_home = ( ImageButton ) item_home.getActionView();
+			    btn_home.setOnClickListener( new View.OnClickListener( ) {
+					@Override
+					public void onClick(View v) {
+						// TODO Auto-generated method stub
+						Log.d ( "btn_home", "click" );
+						action_id = android.R.id.home; 
+						LogFileChooserActivity.this.onOptionsItemSelected( Dummy_menu_item );
+					}
+				} );
+			    
+			    Dummy_menu_item = menu.add( Menu.NONE, Menu.NONE, Menu.NONE, "dummy");
+			    Dummy_menu_item.setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
+			    Dummy_menu_item.setVisible( false );
 		    }
+		    update_actionbar_optiomenu ();
 	    }
 	    else {
 		    inflater.inflate(R.menu.log_file_chooser_menu, menu);
@@ -1219,55 +1468,97 @@ public class LogFileChooserActivity extends FileChooserActivity {
 	}
 	
 	void update_actionbar_optiomenu() {
-		if ( activity_use_for.equals( ACTIVITY_USE_FOR_MANAGEMENT ) ) {
-		if ( selected_file_items.size() == 0 ) {
-			if ( item_open_file.isVisible() == true )
-				item_open_file.setVisible( false );
-
-			if ( item_delete_file.isVisible() == true )
-				item_delete_file.setVisible( false );
-			
-			if ( item_rename_file.isVisible() == true )
-				item_rename_file.setVisible(false);
-		}
-		else
-			if ( selected_file_items.size() == 1 ) {
-				if ( item_open_file.isVisible() == false )
-					item_open_file.setVisible( false );
-
-				if ( item_delete_file.isVisible() == false )
-					item_delete_file.setVisible( true );
-				
-				if ( item_rename_file.isVisible() == false )
-					item_rename_file.setVisible(true);
+		if ( this.activity_use_new_ui == true ) {
+			if ( activity_use_for.equals( ACTIVITY_USE_FOR_MANAGEMENT ) ) {
+				//btn_rename, btn_delete_files, btn_storage;
+				if ( selected_file_items.size() == 0 ) {
+					if ( btn_rename.getVisibility() == View.VISIBLE )
+						btn_rename.setVisibility( View.INVISIBLE );
+					if ( btn_delete_files.getVisibility() == View.VISIBLE )
+						btn_delete_files.setVisibility( View.INVISIBLE );
+					if ( btn_storage.getVisibility() == View.VISIBLE )
+						btn_storage.setVisibility( View.INVISIBLE );
+					
+					if ( item_print_result.isVisible() == true )
+						item_print_result.setVisible( false );
+					if ( item_delete_result.isVisible() == true )
+						item_delete_result.setVisible( false );
+				}
+				else
+					if ( selected_file_items.size() == 1 ) {
+						if ( btn_rename.getVisibility() == View.INVISIBLE )
+							btn_rename.setVisibility( View.VISIBLE );
+						if ( btn_delete_files.getVisibility() == View.INVISIBLE )
+							btn_delete_files.setVisibility( View.VISIBLE );
+						if ( btn_storage.getVisibility() == View.INVISIBLE )
+							btn_storage.setVisibility( View.VISIBLE );
+					}
+					else
+						if ( selected_file_items.size() > 1 ) {
+							if ( btn_rename.getVisibility() == View.INVISIBLE )
+								btn_rename.setVisibility( View.VISIBLE );
+							if ( btn_delete_files.getVisibility() == View.INVISIBLE )
+								btn_delete_files.setVisibility( View.VISIBLE );
+							if ( btn_storage.getVisibility() == View.INVISIBLE )
+								btn_storage.setVisibility( View.VISIBLE );							
+						}
 			}
 			else
-				if ( selected_file_items.size() > 1 ) {
+				if ( activity_use_for.equals( ACTIVITY_USE_FOR_ANALYSIS ) ) {
+					
+				}
+		}
+		else {
+			if ( activity_use_for.equals( ACTIVITY_USE_FOR_MANAGEMENT ) ) {
+				if ( selected_file_items.size() == 0 ) {
 					if ( item_open_file.isVisible() == true )
 						item_open_file.setVisible( false );
 
-					if ( item_delete_file.isVisible() == false )
-						item_delete_file.setVisible( true );
+					if ( item_delete_file.isVisible() == true )
+						item_delete_file.setVisible( false );
 					
 					if ( item_rename_file.isVisible() == true )
 						item_rename_file.setVisible(false);
 				}
-		}
-		else
-			if ( activity_use_for.equals( ACTIVITY_USE_FOR_ANALYSIS ) ) {
-				if ( selected_file_items.size() == 0 ) {
-					
-				}
 				else
 					if ( selected_file_items.size() == 1 ) {
 						if ( item_open_file.isVisible() == false )
-							item_open_file.setVisible( true );
+							item_open_file.setVisible( false );
+
+						if ( item_delete_file.isVisible() == false )
+							item_delete_file.setVisible( true );
+						
+						if ( item_rename_file.isVisible() == false )
+							item_rename_file.setVisible(true);
 					}
 					else
 						if ( selected_file_items.size() > 1 ) {
+							if ( item_open_file.isVisible() == true )
+								item_open_file.setVisible( false );
+
+							if ( item_delete_file.isVisible() == false )
+								item_delete_file.setVisible( true );
 							
+							if ( item_rename_file.isVisible() == true )
+								item_rename_file.setVisible(false);
 						}
 			}
+			else
+				if ( activity_use_for.equals( ACTIVITY_USE_FOR_ANALYSIS ) ) {
+					if ( selected_file_items.size() == 0 ) {
+						
+					}
+					else
+						if ( selected_file_items.size() == 1 ) {
+							if ( item_open_file.isVisible() == false )
+								item_open_file.setVisible( true );
+						}
+						else
+							if ( selected_file_items.size() > 1 ) {
+								
+							}
+				}
+		}
 	}
 	
 	@Override

@@ -17,11 +17,12 @@ public class dna_result_adapter extends BaseAdapter {
 
     //private List<Object> mItems;
 	private List<HashMap<String, String>> mItems;
+    boolean adapter_use_new_ui;
 
-
-    public dna_result_adapter(Context context, List<HashMap<String, String>> items) {
+    public dna_result_adapter(Context context, List<HashMap<String, String>> items, boolean use_new_ui) {
         mContext = context;
         mItems = items;
+        adapter_use_new_ui = use_new_ui;
     }
     
 	@Override
@@ -51,7 +52,10 @@ public class dna_result_adapter extends BaseAdapter {
         TextView tv;
         
         if (v == null) {
-            v = LayoutInflater.from(mContext).inflate(R.layout.dna_result_listview_item, parent, false);
+        	if ( adapter_use_new_ui == false )
+        		v = LayoutInflater.from(mContext).inflate(R.layout.dna_result_listview_item, parent, false);
+        	else
+        		v = LayoutInflater.from(mContext).inflate(R.layout.dna_result_listview_item1, parent, false);
         }
         dna_result_layout = ( LinearLayout ) v;
         
@@ -65,6 +69,19 @@ public class dna_result_adapter extends BaseAdapter {
         tv.setText( map.get("A260_A230") );
         tv =  ( TextView ) dna_result_layout.findViewById( R.id.item5 );
         tv.setText( map.get("A260_A280") );
+        if ( adapter_use_new_ui == true ) {
+        	tv =  ( TextView ) dna_result_layout.findViewById( R.id.item6 );
+        	if ( map.get("A230") != null)
+        		tv.setText( map.get("A230") );
+        	else
+        		tv.setText( "2.3" );
+        	tv =  ( TextView ) dna_result_layout.findViewById( R.id.item7 );
+        	
+        	if ( map.get("A280") != null)
+        		tv.setText( map.get("A280") );
+        	else
+        		tv.setText( "1.8" );
+        }
         CheckBox checkbox1 = ( CheckBox ) dna_result_layout.findViewById( R.id.checkbox2 );
         if ( map.get("isSelected") != null && map.get("isSelected").equals( "true" ) ) {
         	checkbox1.setChecked( true );
@@ -72,6 +89,7 @@ public class dna_result_adapter extends BaseAdapter {
         else {
         	checkbox1.setChecked( false );
         }
+
 		return v;
 	}
 	

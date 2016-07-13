@@ -17,10 +17,10 @@ android:id="@+id/listview_toplayout"
     android:background="@android:color/holo_purple" >
 
 </LinearLayout>
-    <View
+    <!-- <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="?android:attr/listDividerAlertDialog" />
+        android:background="?android:attr/listDividerAlertDialog" /> -->
 <ListView
     android:layout_width="match_parent"
     android:layout_height="match_parent"
