@@ -1112,6 +1112,7 @@ public class NanoActivity extends Activity {
 				intent.putExtra(LogFileChooserActivity.INPUT_ACTIVITY_ORIENTATION, getRequestedOrientation());
 				intent.putExtra(LogFileChooserActivity.INPUT_REGEX_FILTER, ".*\\.csv");
 				intent.putExtra(LogFileChooserActivity.INPUT_ACTIVITY_USE, LogFileChooserActivity.ACTIVITY_USE_FOR_ANALYSIS);
+				intent.putExtra(LogFileChooserActivity.INPUT_ACTIVITY_USE_NEW_UI, true);
 				//startActivity(intent);
 				intent.setAction( NanoActivity.this.getIntent().getAction() );
 				if ( NanoActivity.this.getIntent().getAction().equals( UsbManager.ACTION_USB_DEVICE_ATTACHED ) ) {
