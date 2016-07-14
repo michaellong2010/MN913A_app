@@ -127,6 +127,7 @@ public class LogFileChooserActivity extends FileChooserActivity {
 	int action_id = 0;
 	Iterator<FileItem> selected_file_items_it;
 	LinearLayout result_view_header, result_content_view;
+	String first_line;
 	
     @Override
     public void onCreate(Bundle savedInstanceState) { 
@@ -915,7 +916,8 @@ public class LogFileChooserActivity extends FileChooserActivity {
 										if ( mActiveFile1.getName().contains( "PROTEIN" ) )
 											measure_type = "PROTEIN";
 									
-							write_file.write_file ( measure_type, true );
+							//write_file.write_file ( measure_type, true );
+							write_file.write_file ( first_line, true );
 							
 							if ( measure_type == "dsDNA" || measure_type == "ssDNA" || measure_type == "RNA" ) {
 							for ( HashMap<String, String> map : fillMaps1 ) {
@@ -959,11 +961,15 @@ public class LogFileChooserActivity extends FileChooserActivity {
 			String[] sports = new String [] { "123", "111", "234" };
 			ArrayAdapter<String> adapter1 = new ArrayAdapter<String>(this, R.layout.simple_list_item_multiple_choice, sports );
 			dna_result_adapter adapter2 = null;
-			if ( this.activity_use_new_ui == true )
+			protein_result_adapter adapter3 = null;
+			if ( this.activity_use_new_ui == true ) {
 				adapter2 = new dna_result_adapter ( this, fillMaps, true );
-			else
+				adapter3 = new protein_result_adapter ( this, fillMaps, true );
+			}
+			else {
 				adapter2 = new dna_result_adapter ( this, fillMaps, false );
-			protein_result_adapter adapter3 = new protein_result_adapter ( this, fillMaps );
+				adapter3 = new protein_result_adapter ( this, fillMaps, false );
+			}
 			
 			if ( this.activity_use_new_ui == false )
 				measure_root_layout.removeAllViews();
@@ -979,6 +985,8 @@ public class LogFileChooserActivity extends FileChooserActivity {
 				else {
 					if ( result_view_header.getChildCount() > 0 )
 						result_view_header.removeAllViews();
+					if ( this.result_content_view.getChildCount() > 0 )
+						result_content_view.removeAllViews();
 	        		inflater.inflate ( R.layout.dna_result_listview_header1, result_view_header, true );
 				}
 				/*for ( int j = 0; j < 50; j++ ) {
@@ -992,7 +1000,7 @@ public class LogFileChooserActivity extends FileChooserActivity {
 				}*/
 				try {
 					read_file.open_read_file( mActiveFile.getName() );
-					measure_result = read_file.read_file();
+					first_line = measure_result = read_file.read_file();
 					//measure_result = "";
 					if ( measure_result != null && measure_result != "") {
 						//"yyyy/MM/dd HH:mm:ss"
@@ -1051,7 +1059,7 @@ public class LogFileChooserActivity extends FileChooserActivity {
 				}
 				adapter = new SimpleAdapter ( this, fillMaps, R.layout.dna_result_listview_item, from, to );
 				result_listview.setAdapter( adapter2 );
-				//result_listview.setChoiceMode( ListView.CHOICE_MODE_MULTIPLE );
+				result_listview.setChoiceMode( ListView.CHOICE_MODE_MULTIPLE );
 				result_listview.setMultiChoiceModeListener( new MultiChoiceModeListener () {
 
 					@Override
@@ -1118,22 +1126,24 @@ public class LogFileChooserActivity extends FileChooserActivity {
 						selection_count = 0;
 						checkbox1 = ( CheckBox ) view.findViewById( R.id.checkbox2 );
 						Log.d ( "tag", "click");
-						if ( view.isSelected() ) {
+						/*if ( view.isSelected() ) {
 							view.setSelected( false );
 							Log.d ( "Tag: ", Boolean.toString( view.isSelected() ) );
 						}
 						else {
 							view.setSelected( true );
 							Log.d ( "Tag: ", Integer.toString( parent.getChildCount() ) );							
-						}
+						}*/
 						
 						//parent.getAdapter().
 						checkbox1.toggle();
 						if ( checkbox1.isChecked() ) {
 							fillMaps.get( position ).put( "isSelected", "true" );
+							( ( ListView ) parent ).setItemChecked( position, true );
 						}
 						else {
 							fillMaps.get( position ).put( "isSelected", "false" );
+							( ( ListView ) parent ).setItemChecked( position, false );
 						}
 						
 						for ( HashMap <String, String> map : fillMaps ) {
@@ -1167,7 +1177,7 @@ public class LogFileChooserActivity extends FileChooserActivity {
 								if ( item_print_result.isVisible() == true )
 									item_print_result.setVisible( false );
 								if ( item_delete_result.isVisible() == true )
-									item_delete_result.setVisible( false );								
+									item_delete_result.setVisible( false );
 							}
 						}
 					}
@@ -1199,7 +1209,15 @@ public class LogFileChooserActivity extends FileChooserActivity {
         	}
 			else
 				if ( selected_file_items.get(0).getFile().getName().contains( "PROTEIN" ) == true ) {
-					inflater.inflate ( R.layout.protein_result_listview_header, listview_header, true );
+					if ( this.activity_use_new_ui == false )
+						inflater.inflate ( R.layout.protein_result_listview_header, listview_header, true );
+					else {
+						if ( result_view_header.getChildCount() > 0 )
+							result_view_header.removeAllViews();
+						if ( this.result_content_view.getChildCount() > 0 )
+							result_content_view.removeAllViews();
+		        		inflater.inflate ( R.layout.protein_result_listview_header1, result_view_header, true );
+					}
 					/*for ( int j = 0; j < 50; j++ ) {
 					HashMap<String, String> map = new HashMap<String, String>();
 					map.put( "No.", Integer.toString( j ) );
@@ -1208,6 +1226,29 @@ public class LogFileChooserActivity extends FileChooserActivity {
 					}*/
 					try {
 						read_file.open_read_file( mActiveFile.getName() );
+						
+						first_line = measure_result = read_file.read_file();
+						//measure_result = "";
+						if ( measure_result != null && measure_result != "") {
+							//"yyyy/MM/dd HH:mm:ss"
+							measure_result_array = measure_result.split( "\\/|\\ |\\:" );
+							//StringBuilder builder = new StringBuilder();
+							byte [] bytes;
+							int byte_offset = 0, count = 0;
+							for ( String s : measure_result_array ) {
+							    //builder.append(s);
+								
+								if ( count < 6 && isNumeric ( s ) ) {
+									bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt( Integer.parseInt( s ) ).array();
+									System.arraycopy ( bytes, 0, datetime_data, byte_offset, bytes.length );
+									byte_offset = byte_offset + bytes.length;
+									count++;
+								}
+								
+														}
+							//return builder.toString();
+						}
+						
 						while ( ( measure_result = read_file.read_file() ) != null ) {
 						  Log.d ( "Tag", measure_result);
 						  measure_result_array = measure_result.split( ", " );
@@ -1240,9 +1281,11 @@ public class LogFileChooserActivity extends FileChooserActivity {
 							checkbox1.toggle();
 							if ( checkbox1.isChecked() ) {
 								fillMaps.get( position ).put( "isSelected", "true" );
+								( ( ListView ) parent ).setItemChecked( position, true );
 							}
 							else {
 								fillMaps.get( position ).put( "isSelected", "false" );
+								( ( ListView ) parent ).setItemChecked( position, false );
 							}
 							
 							for ( HashMap <String, String> map : fillMaps ) {
@@ -1252,16 +1295,32 @@ public class LogFileChooserActivity extends FileChooserActivity {
 								}
 							}
 							
-							if ( selection_count > 0 ) {
-								if (mMode == null)
-									mMode = startActionMode(mCallback);
-								else {
-									mMode.setTitle( Integer.toString ( selection_count ) + " Item Selected");
+							if ( LogFileChooserActivity.this.activity_use_new_ui == false ) {
+								if ( selection_count > 0 ) {
+									if (mMode == null)
+										mMode = startActionMode(mCallback);
+									else {
+										mMode.setTitle( Integer.toString ( selection_count ) + " Item Selected");
+									}
+									mSelected_items_count = selection_count;
 								}
-								mSelected_items_count = selection_count;
+								else {
+									mMode.finish();
+								}
 							}
 							else {
-								mMode.finish();
+								if ( selection_count > 0 ) {
+									if ( item_print_result.isVisible() == false )
+										item_print_result.setVisible( true );
+									if ( item_delete_result.isVisible() == false )
+										item_delete_result.setVisible( true );
+								}
+								else {
+									if ( item_print_result.isVisible() == true )
+										item_print_result.setVisible( false );
+									if ( item_delete_result.isVisible() == true )
+										item_delete_result.setVisible( false );
+								}
 							}
 						}
 						
@@ -1398,6 +1457,121 @@ public class LogFileChooserActivity extends FileChooserActivity {
 					public void onClick(View v) {
 						// TODO Auto-generated method stub
 						Log.d ( "btn_print_result", "click" );
+						int byte_offset = 0, dna_type = 0;
+						byte [] byte_array = new byte [8192];
+						byte[] bytes;
+						if ( mActiveFile.getName().contains( "dsDNA" ) ) {
+							dna_type = 0;
+						}
+						else
+							if ( mActiveFile.getName().contains( "ssDNA" ) ) {
+								dna_type = 1;
+							}
+							else
+								if ( mActiveFile.getName().contains( "RNA" ) ) {
+									dna_type = 2;
+								}
+						Log.d ( "Tag", Integer.toString( byte_array.length ) );
+						//double conc, A260, A260_A280, A260_A230;
+						if ( result_listview.getAdapter() instanceof dna_result_adapter ) {
+							bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt( dna_type ).array();
+							System.arraycopy ( bytes, 0, byte_array, 0, bytes.length );
+							byte_offset = byte_offset + bytes.length;
+							bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt(mSelected_items_count).array();
+							System.arraycopy ( bytes, 0, byte_array, byte_offset, bytes.length );
+							byte_offset = byte_offset + bytes.length;
+							
+							System.arraycopy ( datetime_data, 0, byte_array, byte_offset, datetime_data.length );
+							byte_offset = byte_offset + datetime_data.length;
+							for ( HashMap<String, String> map : fillMaps ) {
+								if ( map.get( "isSelected" ) != null && map.get( "isSelected" ).equals( "true" ) ) {
+									//String[] dna_from = new String[] { "No.", "Conc.", "A260", "A260_A280", "A260_A230" };
+									//Integer.toString(i)//map.get(  )
+									bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt( Integer.parseInt( map.get( dna_from [0] ) ) ).array();
+									System.arraycopy ( bytes, 0, byte_array, byte_offset, bytes.length );
+									byte_offset = byte_offset + bytes.length;
+									//Integer.toString(i)//map.get(  )
+									bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt( Integer.parseInt( map.get( dna_from [0] ) ) ).array();
+									System.arraycopy ( bytes, 0, byte_array, byte_offset, bytes.length );
+									byte_offset = byte_offset + bytes.length;
+									//Double.parseDouble( dna_from [0] );
+									bytes = ByteBuffer.allocate(8).order( ByteOrder.LITTLE_ENDIAN ).putDouble( Double.parseDouble( map.get( dna_from [1] ) ) ).array();
+									System.arraycopy ( bytes, 0, byte_array, byte_offset, bytes.length );
+									byte_offset = byte_offset + bytes.length;
+									//Double.parseDouble( dna_from [1] );
+									bytes = ByteBuffer.allocate(8).order( ByteOrder.LITTLE_ENDIAN ).putDouble( Double.parseDouble( map.get( dna_from [2] ) ) ).array();
+									System.arraycopy ( bytes, 0, byte_array, byte_offset, bytes.length );
+									byte_offset = byte_offset + bytes.length;
+									//Double.parseDouble( dna_from [2] );
+									bytes = ByteBuffer.allocate(8).order( ByteOrder.LITTLE_ENDIAN ).putDouble( Double.parseDouble( map.get( dna_from [3] ) ) ).array();
+									System.arraycopy ( bytes, 0, byte_array, byte_offset, bytes.length );
+									byte_offset = byte_offset + bytes.length;
+									//Double.parseDouble( dna_from [3] );
+									bytes = ByteBuffer.allocate(8).order( ByteOrder.LITTLE_ENDIAN ).putDouble( Double.parseDouble( map.get( dna_from [4] ) ) ).array();
+									System.arraycopy ( bytes, 0, byte_array, byte_offset, bytes.length );
+									byte_offset = byte_offset + bytes.length;
+									
+									if ( map.get( dna_from [5] ) != null ) {
+									bytes = ByteBuffer.allocate(8).order( ByteOrder.LITTLE_ENDIAN ).putDouble( Double.parseDouble( map.get( dna_from [5] ) ) ).array();
+									System.arraycopy ( bytes, 0, byte_array, byte_offset, bytes.length );
+									byte_offset = byte_offset + bytes.length;
+									}
+									else {
+										bytes = ByteBuffer.allocate(8).order( ByteOrder.LITTLE_ENDIAN ).putDouble( 2.3 ).array();
+										System.arraycopy ( bytes, 0, byte_array, byte_offset, bytes.length );
+										byte_offset = byte_offset + bytes.length;
+									}
+									if ( map.get( dna_from [6] ) != null ) {
+									bytes = ByteBuffer.allocate(8).order( ByteOrder.LITTLE_ENDIAN ).putDouble( Double.parseDouble( map.get( dna_from [6] ) ) ).array();
+									System.arraycopy ( bytes, 0, byte_array, byte_offset, bytes.length );
+									byte_offset = byte_offset + bytes.length;
+									}
+									else {
+										bytes = ByteBuffer.allocate(8).order( ByteOrder.LITTLE_ENDIAN ).putDouble( 1.8 ).array();
+										System.arraycopy ( bytes, 0, byte_array, byte_offset, bytes.length );
+										byte_offset = byte_offset + bytes.length;
+									}
+								}
+							}
+							if ( ( byte_offset % 256 ) != 0)
+								mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_PRINT_DNA_RESULT, 0, ( byte_offset / 256 ) + 1, byte_array, 0);
+							else
+								mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_PRINT_DNA_RESULT, 0, ( byte_offset / 256 ), byte_array, 0);
+						}
+						else
+							if ( result_listview.getAdapter() instanceof protein_result_adapter ) {
+								bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt(mSelected_items_count).array();
+								System.arraycopy ( bytes, 0, byte_array, byte_offset, bytes.length );
+								byte_offset = byte_offset + bytes.length;
+								/*bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt(mSelected_items_count).array();
+								System.arraycopy ( bytes, 0, byte_array, byte_offset, bytes.length );
+								byte_offset = byte_offset + bytes.length;*/
+								
+								System.arraycopy ( datetime_data, 0, byte_array, byte_offset, datetime_data.length );
+								byte_offset = byte_offset + datetime_data.length;
+								
+								bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt(mSelected_items_count).array();
+								System.arraycopy ( bytes, 0, byte_array, byte_offset, bytes.length );
+								byte_offset = byte_offset + bytes.length;
+								for ( HashMap<String, String> map : fillMaps ) {
+									if ( map.get( "isSelected" ) != null && map.get( "isSelected" ).equals( "true" ) ) {
+										//String[] protein_from = new String[] { "No.", "A280" };
+										bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt( Integer.parseInt( map.get( protein_from [0] ) ) ).array();
+										System.arraycopy ( bytes, 0, byte_array, byte_offset, bytes.length );
+										byte_offset = byte_offset + bytes.length;
+										bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt( Integer.parseInt( map.get( protein_from [0] ) ) ).array();
+										System.arraycopy ( bytes, 0, byte_array, byte_offset, bytes.length );
+										byte_offset = byte_offset + bytes.length;									
+										bytes = ByteBuffer.allocate(8).order( ByteOrder.LITTLE_ENDIAN ).putDouble( Double.parseDouble( map.get( protein_from [1] ) ) ).array();
+										System.arraycopy ( bytes, 0, byte_array, byte_offset, bytes.length );
+										byte_offset = byte_offset + bytes.length;
+									}
+								}
+								if ( ( byte_offset % 256 ) != 0)
+									mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_PRINT_PROTEIN_RESULT, 0, ( byte_offset / 256 ) + 1, byte_array, 0);
+								else
+									mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_PRINT_PROTEIN_RESULT, 0, ( byte_offset / 256 ), byte_array, 0);
+							}
 					}
 			    	
 			    } );
@@ -1412,6 +1586,28 @@ public class LogFileChooserActivity extends FileChooserActivity {
 					public void onClick(View v) {
 						// TODO Auto-generated method stub
 						Log.d ( "btn_delete_result", "click" );
+						Iterator<HashMap<String, String>> it;
+						HashMap <String, String> map1;
+						it = fillMaps.iterator();
+						while ( it.hasNext() ) {
+							map1 = it.next();
+							if ( map1.get( "isSelected" ) != null && map1.get( "isSelected" ).equals( "true" ) ) {
+								it.remove();
+								//fillMaps.remove( map1 );
+							}
+						}
+
+						if ( result_listview.getAdapter() instanceof dna_result_adapter )
+							( ( dna_result_adapter ) result_listview.getAdapter() ).notifyDataSetChanged();
+						else
+							if ( result_listview.getAdapter() instanceof protein_result_adapter )
+								( ( protein_result_adapter ) result_listview.getAdapter() ).notifyDataSetChanged();
+						mIsFileDirty = true;
+						
+						//if ( item_print_result.isVisible() == true )
+							item_print_result.setVisible( false );
+						//if ( item_delete_result.isVisible() == true )
+							item_delete_result.setVisible( false );
 					}
 			    	
 			    } );

@@ -1,134 +1,90 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="horizontal"
+    android:layout_height="wrap_content"
+    android:background="@drawable/managament_textbar_right_bg"
     android:descendantFocusability="blocksDescendants"
-    android:weightSum="1"
     android:gravity="center_vertical"
-    >
-    <!--  -->
-    <TextView
-        android:id="@+id/item1"
-        android:layout_width="wrap_content"
-        android:layout_height="54dp"
-        
-        android:gravity="center"
-        android:text=" No. "
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:clickable="false"
-        android:focusable="false"
-        android:focusableInTouchMode="false"
-        android:fontFamily="Arial"
-        
-        android:textSize="9pt"
-        android:layout_weight="0.089" />
+    android:orientation="horizontal" >
     
     <TextView
-        android:id="@+id/item2"
-        android:layout_width="wrap_content"
+        android:id="@+id/item1"
+        android:layout_width="0dp"
         android:layout_height="54dp"
         
         android:gravity="center"
-        android:text=" Conc.  "
+        android:text="No."
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:clickable="false"
         android:focusable="false"
         android:focusableInTouchMode="false"
         android:fontFamily="Arial"
-        
+        android:textColor="@android:color/white"
         android:textSize="9pt"
-        android:layout_weight="0.142" />
+        android:layout_weight="1" />
+    
+
+    <TextView
+        android:id="@+id/item2"
+        android:layout_width="0dp"
+        android:layout_height="54dp"
+        
+        android:gravity="center"
+        android:text="A280"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:clickable="false"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
+        android:fontFamily="Arial"
+        android:textColor="@android:color/white"
+        android:textSize="9pt"
+        android:layout_weight="1" />
     
     <TextView
         android:id="@+id/item3"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="54dp"
         
         android:gravity="center"
-        android:text=" A260  "
+        android:text="Coeff."
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:clickable="false"
         android:focusable="false"
         android:focusableInTouchMode="false"
         android:fontFamily="Arial"
-        
+        android:textColor="@android:color/white"
         android:textSize="9pt"
-        android:layout_weight="0.125" />
-
+        android:layout_weight="1" />
+    
     <TextView
         android:id="@+id/item4"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="54dp"
         
         android:gravity="center"
-        android:text=" A260/A230"
+        android:text="Conc."
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:clickable="false"
         android:focusable="false"
         android:focusableInTouchMode="false"
         android:fontFamily="Arial"
-        
+        android:textColor="@android:color/white"
         android:textSize="9pt"
-        android:layout_weight="0.178" />
+        android:layout_weight="1" />
     
     <TextView
         android:id="@+id/item5"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="54dp"
         
         android:gravity="center"
-        android:text=" A260/A280"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:clickable="false"
-        android:focusable="false"
-        android:focusableInTouchMode="false"
-        android:fontFamily="Arial"
-        
-        android:textSize="9pt"
-        android:layout_weight="0.178" />
-    
-    <TextView
-        android:id="@+id/item6"
-        android:layout_width="wrap_content"
-        android:layout_height="54dp"
-        
-        android:gravity="center"
-        android:text=" A230  "
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:clickable="false"
-        android:focusable="false"
-        android:focusableInTouchMode="false"
-        android:fontFamily="Arial"
-        
-        android:textSize="9pt"
-        android:layout_weight="0.125" />
-    
-    <TextView
-        android:id="@+id/item7"
-        android:layout_width="wrap_content"
-        android:layout_height="54dp"
-        
-        android:gravity="center"
-        android:text=" A280  "
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:clickable="false"
-        android:focusable="false"
-        android:focusableInTouchMode="false"
-        android:fontFamily="Arial"
-        
-        android:textSize="9pt"
-        android:layout_weight="0.125" />
-    
-    <CheckBox android:id="@+id/checkbox2"
-        android:layout_width="wrap_content"
-        android:layout_height="54dp"
         android:text=""
-        
+        android:textAppearance="?android:attr/textAppearanceLarge"
         android:clickable="false"
         android:focusable="false"
         android:focusableInTouchMode="false"
+        android:fontFamily="Arial"
+        android:textColor="@android:color/white"
         android:textSize="9pt"
-        android:gravity="center" />
-    
+        android:layout_weight=".5" />
 </LinearLayout>

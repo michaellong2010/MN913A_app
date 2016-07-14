@@ -25,7 +25,8 @@ android:id="@+id/listview_toplayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:id="@+id/listview"
-    android:layout_weight="0.934" >
+    android:layout_weight="0.934"
+    android:listSelector="@drawable/list_selector_background1" >
 </ListView>
 
 </LinearLayout>

@@ -14,12 +14,14 @@ import android.widget.TextView;
 
 public class protein_result_adapter extends BaseAdapter {
 	private Context mContext;
+	boolean adapter_use_new_ui;
 
     //private List<Object> mItems;
 	private List<HashMap<String, String>> mItems;
-    public protein_result_adapter(Context context, List<HashMap<String, String>> items) {
+    public protein_result_adapter(Context context, List<HashMap<String, String>> items, boolean use_new_ui) {
         mContext = context;
         mItems = items;
+        adapter_use_new_ui = use_new_ui;
     }
 	@Override
 	public int getCount() {
@@ -60,9 +62,15 @@ public class protein_result_adapter extends BaseAdapter {
         
         tv =  ( TextView ) protein_result_layout.findViewById( R.id.item3 );
         tv1 =  ( TextView ) protein_result_layout.findViewById( R.id.item4 );
-        if ( Double.parseDouble( map.get("Coeff.") ) == -1.0 ) {
-        	tv.setText( "           " );
-        	tv1.setText( "           " );
+        if ( ( map.get("Coeff.") != null && Double.parseDouble( map.get("Coeff.") ) == -1.0 ) || map.get("Coeff.") == null ) {
+        	if ( adapter_use_new_ui == true ) {
+            	tv.setText( "           " );
+            	tv1.setText( "           " );
+        	}
+        	else {
+            	tv.setText( "" );
+            	tv1.setText( "" );	
+        	}
         }
         else {
         	tv.setText( map.get( "Coeff." ) );
@@ -72,9 +80,11 @@ public class protein_result_adapter extends BaseAdapter {
         CheckBox checkbox1 = ( CheckBox ) protein_result_layout.findViewById( R.id.checkbox2 );
         if ( map.get("isSelected") != null && map.get("isSelected").equals( "true" ) ) {
         	checkbox1.setChecked( true );
+        	protein_result_layout.setSelected( true );
         }
         else {
         	checkbox1.setChecked( false );
+        	protein_result_layout.setSelected( false );
         }
 		return v;
 	}

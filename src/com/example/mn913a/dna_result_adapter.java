@@ -7,6 +7,7 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.BaseAdapter;
 import android.widget.CheckBox;
 import android.widget.LinearLayout;
@@ -50,6 +51,7 @@ public class dna_result_adapter extends BaseAdapter {
 		HashMap<String, String> map = getItem(position);
         LinearLayout dna_result_layout;
         TextView tv;
+        AbsListView abs_listview;
         
         if (v == null) {
         	if ( adapter_use_new_ui == false )
@@ -57,6 +59,11 @@ public class dna_result_adapter extends BaseAdapter {
         	else
         		v = LayoutInflater.from(mContext).inflate(R.layout.dna_result_listview_item1, parent, false);
         }
+        abs_listview = ( AbsListView ) parent;
+        if ( abs_listview.isItemChecked( position ) )
+        	v.setSelected( true );
+        else
+        	v.setSelected( false );
         dna_result_layout = ( LinearLayout ) v;
         
         tv =  ( TextView ) dna_result_layout.findViewById( R.id.item1 );
