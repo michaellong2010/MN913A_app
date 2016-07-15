@@ -1,18 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
+
 <item android:id="@+id/item_print"
           android:icon="@drawable/btn_item_print"
           android:title="Print"
-          android:showAsAction="always"/>    
-
-<item android:id="@+id/item_delete"
-          android:icon="@drawable/btn_item_delete"
-          android:title="Delete"
           android:showAsAction="always"/>
-
-<item android:id="@+id/home"
-          android:icon="@drawable/btn_home"
-          android:title="Home"
+    
+<item android:id="@+id/item_goback"
+          android:icon="@drawable/btn_item_back"
+          android:title="back"
           android:showAsAction="always" />    
 
 </menu>

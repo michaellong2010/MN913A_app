@@ -1,6 +1,7 @@
 package com.example.mn913a;
 
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -22,20 +23,30 @@ import android.text.Spanned;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
 import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AbsListView;
+import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.AbsListView.OnScrollListener;
+import android.widget.AdapterView.OnItemClickListener;
 
 public class NormalizationActivity extends Activity {
 	public final String Tag = "NormalizationActivity";
+	public static final String INPUT_ACTIVITY_USE_NEW_UI = "input_activity_use_new_ui";
 	String[] src_from = new String[] { "No.", "Conc.", "A260", "A260_A230", "A260_A280" };
 	String[] dst_from = new String[] { "No.", "Conc.", "sample_vol", "buffer_vol" };
 	List<HashMap<String, String>> fillMaps, selected_fillMaps;
@@ -48,14 +59,47 @@ public class NormalizationActivity extends Activity {
 	EditText ed_target_volume, ed_target_conc;
 	String alert_message;
 	Button btn_calculate;
+	boolean activity_use_new_ui, allow_checked = false;
+	int selection_count = 0;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		this.setContentView( R.layout.normalization_layout );
+		
+		Bundle extras = this.getIntent().getExtras();
+		if (extras.containsKey(this.INPUT_ACTIVITY_USE_NEW_UI))
+    		activity_use_new_ui = extras.getBoolean( INPUT_ACTIVITY_USE_NEW_UI );
+    	else
+    		activity_use_new_ui = false;
+		
 		ActionBar abr = this.getActionBar();
     	abr.setTitle("Analysis--Normalization");
     	abr.setDisplayHomeAsUpEnabled(true);
+    	abr.setBackgroundDrawable( this.getResources().getDrawable( R.drawable.top_border ) );
+    	
+    	Window window = getWindow();
+        View v = window.getDecorView();
+        int actionBarId = getResources().getIdentifier("action_bar", "id", "android");
+        ViewGroup actionBarView = (ViewGroup) v.findViewById(actionBarId);
+        try {
+            Field f = actionBarView.getClass().getSuperclass().getDeclaredField("mContentHeight");
+            f.setAccessible(true);
+            f.set(actionBarView, 96);
+        } catch (NoSuchFieldException e) {
+
+        } catch (IllegalAccessException e) {
+
+        }
+        
+    	abr.setDisplayHomeAsUpEnabled( false );
+        abr.setDisplayShowTitleEnabled ( false );
+        abr.setDisplayUseLogoEnabled ( false );
+        abr.setDisplayShowHomeEnabled ( false );
+        abr.setDisplayShowCustomEnabled ( true );
+        abr.setHomeButtonEnabled( false );
+        LinearLayout customActionView = ( LinearLayout ) getLayoutInflater().inflate(R.layout.actionbar_custom_view1, null);
+        abr.setCustomView(customActionView);
 		fillMaps = ( List<HashMap<String, String>> ) this.getIntent().getSerializableExtra( "arraylist" );
 		selected_fillMaps = new ArrayList<HashMap<String, String>>();
 		Iterator<HashMap<String, String>> it;
@@ -79,10 +123,60 @@ public class NormalizationActivity extends Activity {
 		listview_header = ( LinearLayout ) listview_toplayout.findViewById( R.id.listview_header );
 		result_listview = ( ListView ) listview_toplayout.findViewById( R.id.listview );
 		
-		inflater.inflate ( R.layout.normalization_listview_header, listview_header, true );
-		adapter2 = new normalization_adapter ( this, selected_fillMaps );
+		if ( activity_use_new_ui == false )
+			inflater.inflate ( R.layout.normalization_listview_header, listview_header, true );
+		else
+			if ( activity_use_new_ui == true )
+				inflater.inflate ( R.layout.normalization_listview_header1, listview_header, true );
+		adapter2 = new normalization_adapter ( this, selected_fillMaps, activity_use_new_ui );
 		result_listview.setAdapter( adapter2 );
 		
+		result_listview.setDividerHeight( 3 );
+		result_listview.setOnItemClickListener( new OnItemClickListener () {
+			CheckBox checkbox1;
+			//int selection_count = 0;
+
+			@Override
+			public void onItemClick(AdapterView<?> parent, View view,
+					int position, long id) {
+				checkbox1 = ( CheckBox ) view.findViewById( R.id.checkbox2 );
+				
+				if ( allow_checked == true ) {
+					checkbox1.toggle();
+					if ( checkbox1.isChecked() ) {
+						selected_fillMaps.get( position ).put( "isSelected", "true" );
+						( ( ListView ) parent ).setItemChecked( position, true );
+					}
+					else {
+						selected_fillMaps.get( position ).put( "isSelected", "false" );
+						( ( ListView ) parent ).setItemChecked( position, false );
+					}
+					
+					//selection_count = 0;
+					if ( selected_fillMaps.get( position ).get( "isSelected" ) != null )
+						if ( selected_fillMaps.get( position ).get( "isSelected" ).equals( "true" ) )
+							selection_count++;
+						else
+							if ( selected_fillMaps.get( position ).get( "isSelected" ).equals( "false" ) )
+								selection_count--;
+					/*for ( HashMap <String, String> map : selected_fillMaps ) {
+						if ( map.get( "isSelected" ) != null && map.get( "isSelected" ).equals( "true" )) {
+							selection_count++;
+							//break;
+						}
+					}*/
+				}
+				
+				if ( NormalizationActivity.this.activity_use_new_ui == true ) {
+					if ( selection_count > 0 ) {
+						item_print_result.setVisible( true );
+					}
+					else {
+						item_print_result.setVisible( false );
+					}
+				}
+			}
+		} );
 		result_listview.setOnScrollListener( new OnScrollListener() {
 
 			@Override
@@ -109,7 +203,6 @@ public class NormalizationActivity extends Activity {
 		user_setting_layout = ( LinearLayout ) this.findViewById( R.id.user_setting );
 		ed_target_volume = ( EditText ) user_setting_layout.findViewById( R.id.editText_volume );
 		ed_target_conc = ( EditText ) user_setting_layout.findViewById( R.id.editText_conc );
-		Bundle extras = this.getIntent().getExtras();
     	if ( extras.containsKey ( "target conc." ) ) {
     		target_conc = extras.getDouble( "target conc." );
     		ed_target_conc.setText( Double.toString( target_conc ) );
@@ -118,7 +211,7 @@ public class NormalizationActivity extends Activity {
     		target_volume = extras.getDouble( "target vol." );
     		ed_target_volume.setText( Double.toString( target_volume ) );
     	}
-        
+		
 		ed_target_volume.setFilters(apped_input_filter(ed_target_volume.getFilters(), new DecimalInputFilter(ed_target_volume, 5, 2, 0.0, 2000, 500)));
 		ed_target_volume.setOnEditorActionListener ( ed_action_listener );
 		ed_target_volume.setOnFocusChangeListener( new View.OnFocusChangeListener( ) {
@@ -174,6 +267,15 @@ public class NormalizationActivity extends Activity {
 				IME_toggle();
 			}
 		});
+		
+		View decorView = getWindow().getDecorView();
+		// Hide both the navigation bar and the status bar.
+		// SYSTEM_UI_FLAG_FULLSCREEN is only available on Android 4.1 and higher, but as
+		// a general rule, you should design your app to hide the status bar whenever you
+		// hide the navigation bar.
+		int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+		              | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+		decorView.setSystemUiVisibility(uiOptions);
 	}
 	
 	@Override
@@ -309,6 +411,15 @@ public class NormalizationActivity extends Activity {
             imm.toggleSoftInput(0, InputMethodManager.HIDE_IMPLICIT_ONLY); // show
             btn_calculate.setEnabled( false );
         }
+        
+		View decorView = getWindow().getDecorView();
+		// Hide both the navigation bar and the status bar.
+		// SYSTEM_UI_FLAG_FULLSCREEN is only available on Android 4.1 and higher, but as
+		// a general rule, you should design your app to hide the status bar whenever you
+		// hide the navigation bar.
+		int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+		              | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+		decorView.setSystemUiVisibility(uiOptions);
     }//end method
 
 	public void Calculate ( View v ) {
@@ -355,7 +466,70 @@ public class NormalizationActivity extends Activity {
 							}
 							
 				}
-				adapter2.notifyDataSetChanged();				
+				adapter2.notifyDataSetChanged();
+				allow_checked = true;
 			}
     }
+	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		int button_action_id = 0;
+		
+		if ( item.getItemId() == 0 ) {
+			button_action_id = this.action_id;
+		}
+		else {
+			button_action_id = item.getItemId();
+		}
+		
+		switch ( button_action_id ) {
+		  case android.R.id.home:
+			  onBackPressed();
+			  return true;
+		
+		}
+		return super.onOptionsItemSelected( item );
+	}
+	
+	MenuItem item_goback, item_print_result, Dummy_menu_item;
+	Menu main_menu;
+	ImageButton btn_goback, btn_print_result;
+	int action_id = 0;
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		MenuInflater inflater = getMenuInflater();
+		
+		inflater.inflate(R.menu.normalization_right_side_menu, menu);
+		item_goback = menu.findItem ( R.id.item_goback );
+		item_goback.setActionView( R.layout.actionview_item_goback );
+		btn_goback = ( ImageButton ) item_goback.getActionView ( );
+		
+		item_print_result = menu.findItem(R.id.item_print);
+	    item_print_result.setActionView( R.layout.actionview_item_print );
+	    item_print_result.setVisible( false );
+	    btn_print_result = ( ImageButton ) item_print_result.getActionView();
+	    
+	    Dummy_menu_item = menu.add( Menu.NONE, Menu.NONE, Menu.NONE, "dummy");
+	    Dummy_menu_item.setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
+	    Dummy_menu_item.setVisible( false );
+	    
+	    btn_goback.setOnClickListener( new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				action_id = android.R.id.home;
+				onOptionsItemSelected ( Dummy_menu_item );
+			}
+		} );
+	    
+	    btn_print_result.setOnClickListener( new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				Log.d ( "btn_print_result", "click" );
+			}
+	    } );
+		return true;
+	}
 }

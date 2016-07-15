@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="horizontal"
-    android:weightSum="1"
+    
     android:gravity="top"
     android:background="@drawable/mn_913a_ui_bg" >
     
@@ -14,16 +14,19 @@
     android:layout_height="match_parent"
     android:gravity="top"
     android:orientation="vertical"
-    android:layout_weight=".7"
-    android:background="@android:color/darker_gray" >
+    android:layout_weight=".65"
+    android:background="@color/left_listview_bg" >
     
        <TextView
             android:id="@+id/target_volume"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="100dp"
+            android:layout_marginTop="20dp"
+            android:layout_marginLeft="60dp"
             android:textSize="12pt"
-            android:text="total volume" />
+            android:text="total volume"
+            android:textColor="@android:color/black"
+             />
 
        <EditText
             android:id="@+id/editText_volume"
@@ -38,7 +41,8 @@
             android:singleLine="true"
             android:textAppearance="?android:attr/textAppearanceLarge"
             android:textColor="#FF0000FF"
-            android:layout_marginTop="10dp" >
+            android:layout_marginTop="5dp"
+            android:layout_gravity="center_horizontal" >
             
        </EditText>
 
@@ -46,9 +50,12 @@
             android:id="@+id/target_conc"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="30dp"
+            android:layout_marginTop="20dp"
+            android:layout_marginLeft="60dp"
             android:textSize="12pt"
-            android:text="target concentration" />
+            android:text="target concentration"
+            android:textColor="@android:color/black"
+             />
 
        <EditText
             android:id="@+id/editText_conc"
@@ -63,7 +70,8 @@
             android:singleLine="true"
             android:textAppearance="?android:attr/textAppearanceLarge"
             android:textColor="#FF0000FF"
-            android:layout_marginTop="10dp" >
+            android:layout_marginTop="5dp"
+            android:layout_gravity="center_horizontal" >
             
        </EditText>
 
@@ -75,7 +83,8 @@
            android:text="Calculate"
            android:background="@android:drawable/btn_default"
            android:onClick="Calculate"
-           android:enabled="false" />
+           android:enabled="false"
+           android:layout_marginLeft="270dp" />
 
 </LinearLayout>
 
@@ -85,7 +94,8 @@
     android:layout_height="match_parent"
     android:gravity="top"
     android:orientation="vertical"
-    android:layout_weight=".3" >
+    android:layout_weight=".35"
+    android:background="@color/right_listview_bg" >
 
 </LinearLayout>
 

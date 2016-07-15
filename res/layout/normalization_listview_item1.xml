@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:descendantFocusability="blocksDescendants"
+    android:gravity="center_vertical"
+    android:orientation="horizontal" >
+
+    <TextView
+        android:id="@+id/item1"
+        android:layout_width="0dp"
+        android:layout_height="54dp"
+        android:layout_weight="1"
+        android:clickable="false"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
+        android:fontFamily="Arial"
+        android:gravity="center"
+        android:text="No."
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:textSize="9pt" />
+
+    <TextView
+        android:id="@+id/item2"
+        android:layout_width="0dp"
+        android:layout_height="54dp"
+        android:layout_weight="1"
+        android:clickable="false"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
+        android:fontFamily="Arial"
+        android:gravity="center"
+        android:text="A280"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:textSize="9pt" />
+
+    <TextView
+        android:id="@+id/item3"
+        android:layout_width="0dp"
+        android:layout_height="54dp"
+        android:layout_weight="1"
+        android:clickable="false"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
+        android:fontFamily="Arial"
+        android:gravity="center"
+        android:text="Coeff."
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:textSize="9pt"
+        android:textColor="@android:color/holo_red_light" />
+
+    <TextView
+        android:id="@+id/item4"
+        android:layout_width="0dp"
+        android:layout_height="54dp"
+        android:layout_weight="1"
+        android:clickable="false"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
+        android:fontFamily="Arial"
+        android:gravity="center"
+        android:text="Conc."
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:textSize="9pt"
+        android:textColor="@android:color/holo_red_light" />
+
+    <CheckBox
+        android:id="@+id/checkbox2"
+        android:layout_width="0dp"
+        android:layout_height="54dp"
+        android:layout_weight="0.5"
+        android:clickable="false"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
+        android:gravity="center"
+        android:text=""
+        android:textSize="9pt" />
+
+</LinearLayout>

@@ -751,6 +751,7 @@ public class LogFileChooserActivity extends FileChooserActivity {
 						intent.putExtra( "target conc.", LogFileChooserActivity.this.getIntent().getExtras().getDouble( "target conc." ) );
 					if ( LogFileChooserActivity.this.getIntent().getExtras().containsKey( "target vol." ) )
 						intent.putExtra( "target vol.", LogFileChooserActivity.this.getIntent().getExtras().getDouble( "target vol." ) );
+					intent.putExtra( NormalizationActivity.INPUT_ACTIVITY_USE_NEW_UI, false );
 					LogFileChooserActivity.this.startActivityForResult ( intent, 2005 );
 					break;
 				case R.id.item_selection_all:
@@ -1474,37 +1475,33 @@ public class LogFileChooserActivity extends FileChooserActivity {
 	public boolean onCreateOptionsMenu(Menu menu) {
 	    MenuInflater inflater = getMenuInflater();
 	    if ( activity_use_new_ui == true ) {
-		    inflater.inflate(R.menu.management_right_side_menu, menu);
-		    
-		    main_menu = menu;
-		    item_print_result = menu.findItem(R.id.item_print);
-		    item_print_result.setActionView( R.layout.actionview_item_print );
-		    btn_print_result = ( ImageButton ) item_print_result.getActionView();
-		    item_delete_result = menu.findItem(R.id.item_delete);
-		    item_delete_result.setActionView( R.layout.actionview_item_delete );
-		    btn_delete_result = ( ImageButton ) item_delete_result.getActionView();
-		    item_normalization = menu.findItem(R.id.item_normalization_analysis);
-		    item_normalization.setActionView ( R.layout.actionview_item_normalization_analysis );
-		    btn_normalization = ( ImageButton ) item_normalization.getActionView();
-		    item_home = menu.findItem( R.id.home );
-		    item_home.setActionView( R.layout.actionview_item_home );
-		    btn_home = ( ImageButton ) item_home.getActionView();
-		    btn_home.setOnClickListener( new View.OnClickListener( ) {
-				@Override
-				public void onClick(View v) {
-					// TODO Auto-generated method stub
-					Log.d ( "btn_home", "click" );
-					action_id = android.R.id.home; 
-					LogFileChooserActivity.this.onOptionsItemSelected( Dummy_menu_item );
-				}
-			} );
-		    
-		    Dummy_menu_item = menu.add( Menu.NONE, Menu.NONE, Menu.NONE, "dummy");
-		    Dummy_menu_item.setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
-		    Dummy_menu_item.setVisible( false );
-
-		    item_normalization.setVisible( false );
 		    if ( activity_use_for.equals( ACTIVITY_USE_FOR_MANAGEMENT ) ) {
+			    inflater.inflate(R.menu.management_right_side_menu, menu);
+			    
+			    main_menu = menu;
+			    item_print_result = menu.findItem(R.id.item_print);
+			    item_print_result.setActionView( R.layout.actionview_item_print );
+			    btn_print_result = ( ImageButton ) item_print_result.getActionView();
+			    item_delete_result = menu.findItem(R.id.item_delete);
+			    item_delete_result.setActionView( R.layout.actionview_item_delete );
+			    btn_delete_result = ( ImageButton ) item_delete_result.getActionView();
+			    item_home = menu.findItem( R.id.home );
+			    item_home.setActionView( R.layout.actionview_item_home );
+			    btn_home = ( ImageButton ) item_home.getActionView();
+			    btn_home.setOnClickListener( new View.OnClickListener( ) {
+					@Override
+					public void onClick(View v) {
+						// TODO Auto-generated method stub
+						Log.d ( "btn_home", "click" );
+						action_id = android.R.id.home; 
+						LogFileChooserActivity.this.onOptionsItemSelected( Dummy_menu_item );
+					}
+				} );
+			    
+			    Dummy_menu_item = menu.add( Menu.NONE, Menu.NONE, Menu.NONE, "dummy");
+			    Dummy_menu_item.setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
+			    Dummy_menu_item.setVisible( false );
+
 			    btn_print_result.setOnClickListener( new View.OnClickListener( ) {
 
 					@Override
@@ -1665,8 +1662,32 @@ public class LogFileChooserActivity extends FileChooserActivity {
 		    }
 		    else 
 		    	if ( activity_use_for.equals( ACTIVITY_USE_FOR_ANALYSIS ) ) {
-		    		item_print_result.setVisible( false );
-		    		item_delete_result.setVisible( false );
+		    		//item_print_result.setVisible( false );
+		    		//item_delete_result.setVisible( false );
+				    inflater.inflate(R.menu.analysis_right_side_menu, menu);
+				    
+				    main_menu = menu;
+				    item_normalization = menu.findItem(R.id.item_normalization_analysis);
+				    item_normalization.setActionView ( R.layout.actionview_item_normalization_analysis );
+				    btn_normalization = ( ImageButton ) item_normalization.getActionView();
+				    item_home = menu.findItem( R.id.home );
+				    item_home.setActionView( R.layout.actionview_item_home );
+				    btn_home = ( ImageButton ) item_home.getActionView();
+				    btn_home.setOnClickListener( new View.OnClickListener( ) {
+						@Override
+						public void onClick(View v) {
+							// TODO Auto-generated method stub
+							Log.d ( "btn_home", "click" );
+							action_id = android.R.id.home; 
+							LogFileChooserActivity.this.onOptionsItemSelected( Dummy_menu_item );
+						}
+					} );
+				    
+				    Dummy_menu_item = menu.add( Menu.NONE, Menu.NONE, Menu.NONE, "dummy");
+				    Dummy_menu_item.setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
+				    Dummy_menu_item.setVisible( false );
+
+				    item_normalization.setVisible( false );
 		    		btn_normalization.setOnClickListener( new View.OnClickListener() {
 						@Override
 						public void onClick(View v) {
@@ -1679,6 +1700,7 @@ public class LogFileChooserActivity extends FileChooserActivity {
 								intent.putExtra( "target conc.", LogFileChooserActivity.this.getIntent().getExtras().getDouble( "target conc." ) );
 							if ( LogFileChooserActivity.this.getIntent().getExtras().containsKey( "target vol." ) )
 								intent.putExtra( "target vol.", LogFileChooserActivity.this.getIntent().getExtras().getDouble( "target vol." ) );
+							intent.putExtra( NormalizationActivity.INPUT_ACTIVITY_USE_NEW_UI, true );
 							LogFileChooserActivity.this.startActivityForResult ( intent, 2005 );
 						}
 					} );
@@ -1841,6 +1863,15 @@ public class LogFileChooserActivity extends FileChooserActivity {
 	    		if ( this.getIntent().getExtras().containsKey ( "target vol." ) )
 	    			this.getIntent().getExtras().remove( "target vol." );
     		Log.d ( Tag, "onActivityResult: 2005" );
+    		
+    		View decorView = getWindow().getDecorView();
+    		// Hide both the navigation bar and the status bar.
+    		// SYSTEM_UI_FLAG_FULLSCREEN is only available on Android 4.1 and higher, but as
+    		// a general rule, you should design your app to hide the status bar whenever you
+    		// hide the navigation bar.
+    		int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+    		              | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+    		decorView.setSystemUiVisibility(uiOptions);
 		}
 	}
 	

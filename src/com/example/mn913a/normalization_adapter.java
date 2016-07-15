@@ -15,10 +15,12 @@ import android.widget.TextView;
 public class normalization_adapter extends BaseAdapter {
 	private Context mContext;
 	private List<HashMap<String, String>> mItems;
+	boolean adapter_use_new_ui;
 	
-	public normalization_adapter(Context context, List<HashMap<String, String>> items) {
+	public normalization_adapter(Context context, List<HashMap<String, String>> items, boolean use_new_ui) {
         mContext = context;
         mItems = items;
+        adapter_use_new_ui = use_new_ui;
     }
 	
 	@Override
@@ -48,7 +50,11 @@ public class normalization_adapter extends BaseAdapter {
         TextView tv;
         
         if (v == null) {
-            v = LayoutInflater.from(mContext).inflate(R.layout.normalization_listview_item, parent, false);
+        	if ( adapter_use_new_ui == false )
+        		v = LayoutInflater.from(mContext).inflate(R.layout.normalization_listview_item, parent, false);
+        	else
+        		if ( adapter_use_new_ui == true )
+        			v = LayoutInflater.from(mContext).inflate(R.layout.normalization_listview_item1, parent, false);
         }
         normalization_layout = ( LinearLayout ) v;
         
@@ -60,6 +66,16 @@ public class normalization_adapter extends BaseAdapter {
         tv.setText( map.get("sample_vol") );
         tv =  ( TextView ) normalization_layout.findViewById( R.id.item4 );
         tv.setText( map.get("buffer_vol") );
+        
+        if ( adapter_use_new_ui == true ) {
+        	CheckBox checkbox1 = ( CheckBox ) normalization_layout.findViewById( R.id.checkbox2 );
+            if ( map.get("isSelected") != null && map.get("isSelected").equals( "true" ) ) {
+            	checkbox1.setChecked( true );
+            }
+            else {
+            	checkbox1.setChecked( false );
+            }
+        }
 		return v;
 	}
 
