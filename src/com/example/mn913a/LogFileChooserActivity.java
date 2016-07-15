@@ -38,6 +38,7 @@ import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.os.Bundle;
 import android.os.Environment;
+import android.support.v7.widget.ActionBarOverlayLayout;
 import android.util.Log;
 import android.view.ActionMode;
 import android.view.Gravity;
@@ -349,6 +350,7 @@ public class LogFileChooserActivity extends FileChooserActivity {
         			btn_storage.setVisibility( View.INVISIBLE );
         			btn_select_all.setVisibility( View.INVISIBLE );
         		}
+        	
     	}
 		
         /*20131214 added by michael
@@ -1177,18 +1179,27 @@ public class LogFileChooserActivity extends FileChooserActivity {
 							}
 						}
 						else {
-							if ( selection_count > 0 ) {
-								if ( item_print_result.isVisible() == false )
-									item_print_result.setVisible( true );
-								if ( item_delete_result.isVisible() == false )
-									item_delete_result.setVisible( true );
+							if ( activity_use_for.equals( ACTIVITY_USE_FOR_MANAGEMENT ) ) {
+								if ( selection_count > 0 ) {
+									if ( item_print_result.isVisible() == false )
+										item_print_result.setVisible( true );
+									if ( item_delete_result.isVisible() == false )
+										item_delete_result.setVisible( true );
+								}
+								else {
+									if ( item_print_result.isVisible() == true )
+										item_print_result.setVisible( false );
+									if ( item_delete_result.isVisible() == true )
+										item_delete_result.setVisible( false );
+								}
 							}
-							else {
-								if ( item_print_result.isVisible() == true )
-									item_print_result.setVisible( false );
-								if ( item_delete_result.isVisible() == true )
-									item_delete_result.setVisible( false );
-							}
+							else
+								if ( activity_use_for.equals( ACTIVITY_USE_FOR_ANALYSIS ) ) {
+									if ( selection_count > 0 )
+										item_normalization.setVisible( true );	
+									else
+										item_normalization.setVisible( false );
+								}
 						}
 					}
 					
@@ -1319,18 +1330,27 @@ public class LogFileChooserActivity extends FileChooserActivity {
 								}
 							}
 							else {
-								if ( selection_count > 0 ) {
-									if ( item_print_result.isVisible() == false )
-										item_print_result.setVisible( true );
-									if ( item_delete_result.isVisible() == false )
-										item_delete_result.setVisible( true );
+								if ( activity_use_for.equals( ACTIVITY_USE_FOR_MANAGEMENT ) ) {
+									if ( selection_count > 0 ) {
+										if ( item_print_result.isVisible() == false )
+											item_print_result.setVisible( true );
+										if ( item_delete_result.isVisible() == false )
+											item_delete_result.setVisible( true );
+									}
+									else {
+										if ( item_print_result.isVisible() == true )
+											item_print_result.setVisible( false );
+										if ( item_delete_result.isVisible() == true )
+											item_delete_result.setVisible( false );
+									}
 								}
-								else {
-									if ( item_print_result.isVisible() == true )
-										item_print_result.setVisible( false );
-									if ( item_delete_result.isVisible() == true )
-										item_delete_result.setVisible( false );
-								}
+								else
+									if ( activity_use_for.equals( ACTIVITY_USE_FOR_ANALYSIS ) ) {
+										if ( selection_count > 0 )
+											item_normalization.setVisible( true );	
+										else
+											item_normalization.setVisible( false );
+									}
 							}
 						}
 						
@@ -1447,9 +1467,9 @@ public class LogFileChooserActivity extends FileChooserActivity {
 	}
 	
 	MenuItem item_open_file, item_delete_file, item_rename_file, item_select_all_file, item_unselect_all_file;
-	MenuItem item_print_result, item_delete_result, item_home, Dummy_menu_item;
+	MenuItem item_print_result, item_delete_result, item_home, item_normalization, Dummy_menu_item;
 	Menu main_menu;
-	ImageButton btn_home, btn_delete_result, btn_print_result;
+	ImageButton btn_home, btn_delete_result, btn_print_result, btn_normalization;
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 	    MenuInflater inflater = getMenuInflater();
@@ -1463,6 +1483,9 @@ public class LogFileChooserActivity extends FileChooserActivity {
 		    item_delete_result = menu.findItem(R.id.item_delete);
 		    item_delete_result.setActionView( R.layout.actionview_item_delete );
 		    btn_delete_result = ( ImageButton ) item_delete_result.getActionView();
+		    item_normalization = menu.findItem(R.id.item_normalization_analysis);
+		    item_normalization.setActionView ( R.layout.actionview_item_normalization_analysis );
+		    btn_normalization = ( ImageButton ) item_normalization.getActionView();
 		    item_home = menu.findItem( R.id.home );
 		    item_home.setActionView( R.layout.actionview_item_home );
 		    btn_home = ( ImageButton ) item_home.getActionView();
@@ -1480,6 +1503,7 @@ public class LogFileChooserActivity extends FileChooserActivity {
 		    Dummy_menu_item.setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
 		    Dummy_menu_item.setVisible( false );
 
+		    item_normalization.setVisible( false );
 		    if ( activity_use_for.equals( ACTIVITY_USE_FOR_MANAGEMENT ) ) {
 			    btn_print_result.setOnClickListener( new View.OnClickListener( ) {
 
@@ -1643,6 +1667,21 @@ public class LogFileChooserActivity extends FileChooserActivity {
 		    	if ( activity_use_for.equals( ACTIVITY_USE_FOR_ANALYSIS ) ) {
 		    		item_print_result.setVisible( false );
 		    		item_delete_result.setVisible( false );
+		    		btn_normalization.setOnClickListener( new View.OnClickListener() {
+						@Override
+						public void onClick(View v) {
+							// TODO Auto-generated method stub
+							Log.d ( "btn_normalization", "click" );
+							Intent intent = new Intent ( LogFileChooserActivity.this, NormalizationActivity.class );
+							intent.putExtra( "arraylist" , (Serializable) fillMaps );
+							//intent.getExtras().putSerializable("arraylist", (Serializable) fillMaps);
+							if ( LogFileChooserActivity.this.getIntent().getExtras().containsKey( "target conc." ) )
+								intent.putExtra( "target conc.", LogFileChooserActivity.this.getIntent().getExtras().getDouble( "target conc." ) );
+							if ( LogFileChooserActivity.this.getIntent().getExtras().containsKey( "target vol." ) )
+								intent.putExtra( "target vol.", LogFileChooserActivity.this.getIntent().getExtras().getDouble( "target vol." ) );
+							LogFileChooserActivity.this.startActivityForResult ( intent, 2005 );
+						}
+					} );
 		    	}
 		    update_actionbar_optiomenu ();
 	    }

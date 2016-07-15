@@ -10,6 +10,11 @@
           android:title="Delete"
           android:showAsAction="always"/>
 
+<item android:id="@+id/item_normalization_analysis"
+          android:icon="@drawable/btn_item_normalization"
+          android:title="Normalization"
+          android:showAsAction="always"/>
+
 <item android:id="@+id/home"
           android:icon="@drawable/btn_home"
           android:title="Home"
