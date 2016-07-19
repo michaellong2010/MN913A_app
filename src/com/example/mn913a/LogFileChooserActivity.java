@@ -1186,6 +1186,7 @@ public class LogFileChooserActivity extends FileChooserActivity {
 										item_print_result.setVisible( true );
 									if ( item_delete_result.isVisible() == false )
 										item_delete_result.setVisible( true );
+									mSelected_items_count = selection_count;
 								}
 								else {
 									if ( item_print_result.isVisible() == true )
@@ -1196,8 +1197,10 @@ public class LogFileChooserActivity extends FileChooserActivity {
 							}
 							else
 								if ( activity_use_for.equals( ACTIVITY_USE_FOR_ANALYSIS ) ) {
-									if ( selection_count > 0 )
-										item_normalization.setVisible( true );	
+									if ( selection_count > 0 ) {
+										item_normalization.setVisible( true );
+										mSelected_items_count = selection_count;
+									}
 									else
 										item_normalization.setVisible( false );
 								}
@@ -1337,6 +1340,7 @@ public class LogFileChooserActivity extends FileChooserActivity {
 											item_print_result.setVisible( true );
 										if ( item_delete_result.isVisible() == false )
 											item_delete_result.setVisible( true );
+										mSelected_items_count = selection_count;
 									}
 									else {
 										if ( item_print_result.isVisible() == true )
@@ -1347,8 +1351,10 @@ public class LogFileChooserActivity extends FileChooserActivity {
 								}
 								else
 									if ( activity_use_for.equals( ACTIVITY_USE_FOR_ANALYSIS ) ) {
-										if ( selection_count > 0 )
-											item_normalization.setVisible( true );	
+										if ( selection_count > 0 ) {
+											item_normalization.setVisible( true );
+											mSelected_items_count = selection_count;
+										}
 										else
 											item_normalization.setVisible( false );
 									}

@@ -41,7 +41,7 @@ public class MN_913A_Device {
     private final LinkedList<UsbRequest> mInRequestPool = new LinkedList<UsbRequest>();
 	
     IntBuffer MN913A_dev_data;
-    public int is_dev_busy = 0, Has_Calibration = 0, AutoMeasure_Detected = 0;
+    public int is_dev_busy = 0, Has_Calibration = 0, AutoMeasure_Detected = 0, Invalid_Measure_Assert = 0;
     Object lock1, lock2;
     
     private final CMD_T message;
@@ -301,6 +301,7 @@ public class MN_913A_Device {
     					Min_Voltage_Intensity = MN913A_dev_data.get ( 4 );
     					Has_Calibration = MN913A_dev_data.get ( 5 );
     					AutoMeasure_Detected = MN913A_dev_data.get ( 6 );
+    					Invalid_Measure_Assert = MN913A_dev_data.get ( 7 );
     				}
     				else
     					if ( itracker_cmd == CMD_T.HID_CMD_GET_TIME && result ) {

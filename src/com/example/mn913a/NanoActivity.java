@@ -260,6 +260,15 @@ public class NanoActivity extends Activity {
 		alert_dlg.setTitle( "Message" );
 		alert_dlg.setCanceledOnTouchOutside( false );
 		alert_dlg.setCancelable( false );
+		alert_dlg.setOnDismissListener( new DialogInterface.OnDismissListener () {
+
+			@Override
+			public void onDismiss(DialogInterface dialog) {
+				// TODO Auto-generated method stub
+				Log.d ( "alert_dlg", "setOnDismissListener" ); 
+			}
+			
+		} );
 		
 		alert_dlg2 = alert_dlg_builder.create();
 		alert_dlg2.setTitle( "Message" );
@@ -1175,8 +1184,8 @@ public class NanoActivity extends Activity {
 		Log.d ( Tag, "reset calibration" );
 		
 		//ImageButton imageButton1, imageButton2, imageButton3, imageButton4, btn_protein, btn_analysis, btn_calibration;
-		main_page_btn_dsDNA = imageButton1;
-/*		Auto_running_thread = new Thread() {
+		/*main_page_btn_dsDNA = imageButton1;
+		Auto_running_thread = new Thread() {
 			int measure_iteration;
 			int byte_offset = 0, dna_type = 0;
 			byte [] byte_array = new byte [8192];
@@ -1262,6 +1271,10 @@ public class NanoActivity extends Activity {
 					bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt( dna_data_list.size() ).array();
 					System.arraycopy ( bytes, 0, byte_array, 4, bytes.length );
 					byte_offset = byte_offset + bytes.length;
+					
+					byte [] datetime_data = new byte [ 24 ];
+					System.arraycopy ( datetime_data, 0, byte_array, byte_offset, datetime_data.length );
+				    byte_offset = byte_offset + datetime_data.length;
 					for ( DNA_measure_data dna_data: dna_data_list ) {
 						bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt( dna_data.index ).array();
 						System.arraycopy ( bytes, 0, byte_array, byte_offset, bytes.length );
@@ -1388,7 +1401,7 @@ public class NanoActivity extends Activity {
 				  //NanoSqlDatabase.truncateDecimal(  dna_data.A260 * 24.38, 3 ).doubleValue() +  ", " +
 				  NanoSqlDatabase.truncateDecimal(  dna_data.Conc / 50, 3 ).doubleValue() +  ", " +
 				  NanoSqlDatabase.truncateDecimal(  ( dna_data.A260 * 210 - dna_data.A320 ) / ( dna_data.A230 * 167 - dna_data.A320 ), 3 ).doubleValue() + ", " +
-				  NanoSqlDatabase.truncateDecimal(  ( dna_data.A260 * 19 - dna_data.A320 ) / ( dna_data.A280 * 23- dna_data.A320 ), 3 ).doubleValue();
+				  NanoSqlDatabase.truncateDecimal(  ( dna_data.A260 * 19 - dna_data.A320 ) / ( dna_data.A280 * 23 - dna_data.A320 ), 3 ).doubleValue();
 				}
 				else {
 					measure_result = Integer.toString( dna_data.index ) + ", " + NanoSqlDatabase.truncateDecimal(  dna_data.Conc, 3 ).doubleValue() +  ", " +
@@ -2474,8 +2487,10 @@ public class NanoActivity extends Activity {
     		    //( ( TextView ) NanoActivity.this.findViewById( R.id.textView5 ) ).setText( Double.toString( NanoSqlDatabase.truncateDecimal(  dna_data.Conc / 50, 3 ).doubleValue() ) );
     		    ( ( TextView ) NanoActivity.this.findViewById( R.id.textView3 ) ).setText( Double.toString( NanoSqlDatabase.truncateDecimal(  dna_data.Conc / 50, 3 ).doubleValue() ) );
     		    
-    		    ( ( TextView ) NanoActivity.this.findViewById( R.id.textView4 ) ).setText( Double.toString( NanoSqlDatabase.truncateDecimal(  dna_data.A230, 3 ).doubleValue() ) );
-    		    ( ( TextView ) NanoActivity.this.findViewById( R.id.textView5 ) ).setText( Double.toString( NanoSqlDatabase.truncateDecimal(  dna_data.A280, 3 ).doubleValue() ) );
+    		    //( ( TextView ) NanoActivity.this.findViewById( R.id.textView4 ) ).setText( Double.toString( NanoSqlDatabase.truncateDecimal(  dna_data.A230, 3 ).doubleValue() ) );
+    		    //( ( TextView ) NanoActivity.this.findViewById( R.id.textView5 ) ).setText( Double.toString( NanoSqlDatabase.truncateDecimal(  dna_data.A280, 3 ).doubleValue() ) );
+    		    ( ( TextView ) NanoActivity.this.findViewById( R.id.textView4 ) ).setText( "" );
+    		    ( ( TextView ) NanoActivity.this.findViewById( R.id.textView5 ) ).setText( "" );
     			break;
     			
     		case UPDATE_PROTEIN_RESULT_UI:
@@ -2536,6 +2551,11 @@ public class NanoActivity extends Activity {
 										//Log.d ( Tag, "MN913A device not busy");
 										break;
 									}
+									else
+										if ( mNano_dev.Invalid_Measure_Assert == 1 ) {
+											alert_message = "Calibration fail, please try again!";
+											break;
+										}
 								}
 								Log.d ( Tag, "Getting MN913A status finish");
 							} catch (InterruptedException e) {
@@ -2544,6 +2564,7 @@ public class NanoActivity extends Activity {
 							}
                 		  }
                 		  
+                		  if ( mNano_dev.Invalid_Measure_Assert == 0 ) {
                 		  if ( mNano_dev.MN913A_IOCTL ( CMD_T.HID_CMD_MN913A_RAW_DATA, 0, 16, composite_raw_data, 0) ) {
                 			  channel_blank.set_channel_raw_data ( composite_raw_data );
                 			  if ( channel_blank.ch2_xenon_mean < 850000 )
@@ -2561,8 +2582,8 @@ public class NanoActivity extends Activity {
 								alert_dlg.dismiss();
 								alert_message = "Device Calibrating!";
 								alert_dlg.setMessage( alert_message );
-								alert_dlg.setCanceledOnTouchOutside( true );
-								alert_dlg.setCancelable( true );
+								//alert_dlg.setCanceledOnTouchOutside( true );
+								//alert_dlg.setCancelable( true );
 		  					    alert_dlg.show();								
 							}
                 			  
@@ -2590,18 +2611,27 @@ public class NanoActivity extends Activity {
 								//Log.d ( Tag, "MN913A device not busy");
 								  break;
 							  }
+							  else
+								  if ( mNano_dev.Invalid_Measure_Assert == 1 ) {
+									  alert_message = "Calibration fail, please try again!";
+									  break;
+								  }
 						  }
+              			      if ( mNano_dev.Invalid_Measure_Assert == 0 ) {
               			      preference_editor.putInt( "Xenon max voltage level", mNano_dev.Get_Max_Volt_Level ( ) );
               			      preference_editor.putInt( "Xenon min voltage level", mNano_dev.Get_Min_Volt_Level ( ) );
               			      preference_editor.putFloat( "Xenon max voltage intensity", ( float ) mNano_dev.Get_Max_Voltage_Intensity ( ) );
               			      preference_editor.putFloat( "Xenon min voltage intensity", (float) mNano_dev.Get_Min_Voltage_Intensity ( ) );
               			      preference_editor.commit( );
+              			      }
                 		  }
                 		  else {
                 			  mNano_dev.Has_Calibration = 1;
                 			  mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_MN913A_SETTING, 0, 0, null, 0);
                 		  }
-                		  NanoActivity.this.runOnUiThread( new Runnable() {
+                		  }
+                		  if ( mNano_dev.Invalid_Measure_Assert == 0 ) {
+                		  /*NanoActivity.this.runOnUiThread( new Runnable() {
 
 							@Override
 							public void run() {
@@ -2618,7 +2648,7 @@ public class NanoActivity extends Activity {
 								              | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
 								decorView.setSystemUiVisibility(uiOptions);
 							}
-                		  });
+                		  });*/
                 		  
                 		  try {
 							while ( mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_MN913A_STATUS, 0, 0, null, 0) ) {
@@ -2627,12 +2657,19 @@ public class NanoActivity extends Activity {
 									//Log.d ( Tag, "MN913A device not busy");
 									break;
 								}
+								else
+								   if ( mNano_dev.Invalid_Measure_Assert == 1 ) {
+									  alert_message = "Calibration fail, please try again!";
+									  break;
+								   }
 							}
 							Log.d ( Tag, "Getting MN913A status finish");
 						  } catch (InterruptedException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
 						  }
+                		  }
+                		  if ( mNano_dev.Invalid_Measure_Assert == 0 ) {
                 		  if ( mNano_dev.MN913A_IOCTL ( CMD_T.HID_CMD_MN913A_RAW_DATA, 0, 16, composite_raw_data, 0) ) {
                 			  channel_sample.set_channel_raw_data ( composite_raw_data );
 
@@ -2653,7 +2690,8 @@ public class NanoActivity extends Activity {
                         		  
                 				  cali_data.put( "datetime", df1.format(new Date()) );
                 				  
-                				  if ( channel_sample.ch2_xenon_mean > 824500 || channel_sample.ch2_xenon_mean < 875500 ) {
+                				  //if ( channel_sample.ch2_xenon_mean > 824500 || channel_sample.ch2_xenon_mean < 875500 ) {
+                				  if ( Double.parseDouble( cali_data.get( "after" ) ) > 95) {
                 					  cali_data.put( "situation", "pass" );
                 				  }
                 				  else
@@ -2670,8 +2708,75 @@ public class NanoActivity extends Activity {
                 			  /*checkpoint*/
                 			  //if ( channel_blank.ch2_xenon_mean  mNano_dev.Max_Voltage_Intensity )
                 		  }
+                		  }
+                		  NanoActivity.this.runOnUiThread( new Runnable() {
+
+  							@Override
+  							public void run() {
+  								// TODO Auto-generated method stub
+  								if ( alert_dlg.isShowing( ) /*&& alert_message.equals( "Device Calibrating!"  )*/ )
+  								//if ( alert_dlg.isShowing( ) )
+  									if ( mNano_dev.Invalid_Measure_Assert == 0 )
+  										alert_dlg.dismiss ( );
+  									else {
+										alert_dlg.setMessage( alert_message );
+										alert_dlg.setCanceledOnTouchOutside( true );
+										alert_dlg.setCancelable( true );
+  									}
+  								View decorView = getWindow().getDecorView();
+  								// Hide both the navigation bar and the status bar.
+  								// SYSTEM_UI_FLAG_FULLSCREEN is only available on Android 4.1 and higher, but as
+  								// a general rule, you should design your app to hide the status bar whenever you
+  								// hide the navigation bar.
+  								int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+  								              | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+  								decorView.setSystemUiVisibility(uiOptions);
+  							}
+                  		  });
                 		  break;
                 	  case EXPERIMENT_MEASURE_BLANK:
+                		  if ( mNano_dev.Has_Calibration == 0 ) {
+                    		  NanoActivity.this.runOnUiThread( new Runnable() {
+
+      							@Override
+      							public void run() {
+    								if ( measure_mode < MEASURE_MODE_PROTEIN ) {
+    									Switch sw= ( Switch ) NanoActivity.this.findViewById( R.id.mySwitch );
+    									sw.setEnabled( true );
+    								}
+
+    								Switch sw1= ( Switch ) NanoActivity.this.findViewById( R.id.Led_switch );
+    								sw1.setEnabled( true );
+    								Switch sw2 = ( Switch ) NanoActivity.this.findViewById( R.id.Auto_measure_switch );
+    								if ( mNano_dev.Invalid_Measure_Assert == 0 )
+    									sw2.setEnabled( true );
+    								else
+    									sw2.setEnabled( false );
+    							    if ( sw2.isChecked() ) {
+    									NanoActivity.this.findViewById( R.id.imageButton1 ).setEnabled( false );
+    									NanoActivity.this.findViewById( R.id.imageButton2 ).setEnabled( false );							    	
+    							    }
+    							    else {
+    									NanoActivity.this.findViewById( R.id.imageButton1 ).setEnabled( true );
+    									if ( mNano_dev.Invalid_Measure_Assert == 0 )
+    										NanoActivity.this.findViewById( R.id.imageButton2 ).setEnabled( true );
+    									else
+    										NanoActivity.this.findViewById( R.id.imageButton2 ).setEnabled( false );
+    							    }
+    							    
+    								View decorView = getWindow().getDecorView();
+    								// Hide both the navigation bar and the status bar.
+    								// SYSTEM_UI_FLAG_FULLSCREEN is only available on Android 4.1 and higher, but as
+    								// a general rule, you should design your app to hide the status bar whenever you
+    								// hide the navigation bar.
+    								int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+    								              | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+    								decorView.setSystemUiVisibility(uiOptions);
+      							}
+                    		  } );
+                			  break;
+                		  }
+                			  
                 		  NanoActivity.this.runOnUiThread( new Runnable() {
 							@Override
 							public void run() {
@@ -2696,6 +2801,11 @@ public class NanoActivity extends Activity {
 										//Log.d ( Tag, "MN913A device not busy");
 										break;
 									}
+									else
+										if ( mNano_dev.Invalid_Measure_Assert == 1 ) {
+											alert_message = "Blank Measuring fail, please try again!";
+											break;
+										}
 								}
 								Log.d ( Tag, "Getting MN913A status finish");
 							} catch (InterruptedException e) {
@@ -2704,6 +2814,7 @@ public class NanoActivity extends Activity {
 							}
                 		  }
                 		  
+                		  if ( mNano_dev.Invalid_Measure_Assert == 0 )
                 		  if ( mNano_dev.MN913A_IOCTL ( CMD_T.HID_CMD_MN913A_RAW_DATA, 0, 16, composite_raw_data, 0) ) {
                 			  channel_blank.set_channel_raw_data ( composite_raw_data );
                 			  /*checkpoint*/
@@ -2714,8 +2825,15 @@ public class NanoActivity extends Activity {
 							@Override
 							public void run() {
 								// TODO Auto-generated method stub
-								if ( alert_dlg.isShowing( ) )
-									alert_dlg.dismiss ( );
+								if ( alert_dlg.isShowing( ) ) {
+									if ( mNano_dev.Invalid_Measure_Assert == 0 )
+										alert_dlg.dismiss ( );
+									else {
+										alert_dlg.setMessage( alert_message );
+										alert_dlg.setCanceledOnTouchOutside( true );
+										alert_dlg.setCancelable( true );
+									}
+								}
 								if ( measure_mode < MEASURE_MODE_PROTEIN ) {
 									Switch sw= ( Switch ) NanoActivity.this.findViewById( R.id.mySwitch );
 									sw.setEnabled( true );
@@ -2724,14 +2842,20 @@ public class NanoActivity extends Activity {
 								Switch sw1= ( Switch ) NanoActivity.this.findViewById( R.id.Led_switch );
 								sw1.setEnabled( true );
 								Switch sw2 = ( Switch ) NanoActivity.this.findViewById( R.id.Auto_measure_switch );
-								sw2.setEnabled( true );
+								if ( mNano_dev.Invalid_Measure_Assert == 0 )
+									sw2.setEnabled( true );
+								else
+									sw2.setEnabled( false );
 							    if ( sw2.isChecked() ) {
 									NanoActivity.this.findViewById( R.id.imageButton1 ).setEnabled( false );
 									NanoActivity.this.findViewById( R.id.imageButton2 ).setEnabled( false );							    	
 							    }
 							    else {
 									NanoActivity.this.findViewById( R.id.imageButton1 ).setEnabled( true );
-									NanoActivity.this.findViewById( R.id.imageButton2 ).setEnabled( true );
+									if ( mNano_dev.Invalid_Measure_Assert == 0 )
+										NanoActivity.this.findViewById( R.id.imageButton2 ).setEnabled( true );
+									else
+										NanoActivity.this.findViewById( R.id.imageButton2 ).setEnabled( false );
 							    }
 							    
 								View decorView = getWindow().getDecorView();
@@ -2768,6 +2892,11 @@ public class NanoActivity extends Activity {
 										//Log.d ( Tag, "MN913A device not busy");
 										break;
 									}
+									else
+										if ( mNano_dev.Invalid_Measure_Assert == 1 ) {
+											alert_message = "Sample Measuring fail, please try again!";
+											break;
+										}
 								}
 								Log.d ( Tag, "Getting MN913A status finish");
 							} catch (InterruptedException e) {
@@ -2776,6 +2905,7 @@ public class NanoActivity extends Activity {
 							}
                 		  }
                 		  
+                		  if ( mNano_dev.Invalid_Measure_Assert == 0 ) {
                 		  if ( mNano_dev.MN913A_IOCTL ( CMD_T.HID_CMD_MN913A_RAW_DATA, 0, 16, composite_raw_data, 0) ) {
                 			  channel_sample.set_channel_raw_data ( composite_raw_data );
                 			  if ( measure_mode < MEASURE_MODE_PROTEIN ) {
@@ -2800,6 +2930,11 @@ public class NanoActivity extends Activity {
     										//Log.d ( Tag, "MN913A device not busy");
     										break;
     									}
+    									else
+    										if ( mNano_dev.Invalid_Measure_Assert == 1 ) {
+    											alert_message = "Sample Measuring fail, please try again!";
+    											break;
+    										}
     								}
     								Log.d ( Tag, "Getting MN913A status finish");
     							} catch (InterruptedException e) {
@@ -2807,6 +2942,7 @@ public class NanoActivity extends Activity {
     								e.printStackTrace();
     							}
                 				
+                    			if ( mNano_dev.Invalid_Measure_Assert == 0 )
                     			if ( mNano_dev.MN913A_IOCTL ( CMD_T.HID_CMD_MN913A_RAW_DATA, 0, 16, composite_raw_data, 0) ) {
                     				channel_sample1.set_channel_raw_data ( composite_raw_data );
                     				//I_sample1 = Math.abs ( channel_sample1.ch2_xenon_mean - channel_sample1.ch2_no_xenon_mean );
@@ -2820,7 +2956,9 @@ public class NanoActivity extends Activity {
                 			  }
                 			  }
                 	    	  /*checkpoint*/
+                			  if ( mNano_dev.Invalid_Measure_Assert == 0 )
                 			  OD_Calculate ();
+                		  }
                 		  }
                 		  NanoActivity.this.runOnUiThread( new Runnable() {
 
@@ -2828,7 +2966,13 @@ public class NanoActivity extends Activity {
 							public void run() {
 								// TODO Auto-generated method stub
 								if ( alert_dlg.isShowing( ) )
-									alert_dlg.dismiss ( );
+									if ( mNano_dev.Invalid_Measure_Assert == 0 )
+										alert_dlg.dismiss ( );
+									else {
+										alert_dlg.setMessage( alert_message );
+										alert_dlg.setCanceledOnTouchOutside( true );
+										alert_dlg.setCancelable( true );
+									}
 								if ( measure_mode < MEASURE_MODE_PROTEIN ) {
 							    Switch sw= ( Switch ) NanoActivity.this.findViewById( R.id.mySwitch );
 							    sw.setEnabled( true );
@@ -2912,11 +3056,11 @@ public class NanoActivity extends Activity {
     			dna_data.A260 = -1;
     		if ( 0.063 <= Transmission_rate && Transmission_rate <= 0.944 ) {
     			//conc=25~1200, linear equation
-    			dna_data.Conc = coeff_k1 * dna_data.A260 + coeff_k2;
+    			//dna_data.Conc = coeff_k1 * dna_data.A260 + coeff_k2;
     			//if ( measure_mode == MEASURE_MODE_dsDNA )
     				//dna_data.Conc = 1047.2 * dna_data.A260 - 11.606;
     				//dna_data.Conc = 1278 * dna_data.A260 - 8.957;
-    				//dna_data.Conc = 1219 * dna_data.A260 - 13.48;
+    				dna_data.Conc = 1219 * dna_data.A260 - 13.48;
     				//dna_data.Conc = dna_data.Conc * 1; 
         		//else
         			//if ( measure_mode == MEASURE_MODE_ssDNA )
@@ -2933,8 +3077,8 @@ public class NanoActivity extends Activity {
     			if ( 0.063 > Transmission_rate ) {
 					//conc more than 1200, non-linear
     				//dna_data.Conc = -13903 * dna_data.A260 * dna_data.A260 + 37750 * dna_data.A260 - 23585;
-    				//dna_data.Conc = 3821 * dna_data.A260 * dna_data.A260 - 5209 * dna_data.A260 + 2965;
-    				dna_data.Conc = coeff_k3 * dna_data.A260 * dna_data.A260 + coeff_k4 * dna_data.A260 + coeff_k5;
+    				dna_data.Conc = 3821 * dna_data.A260 * dna_data.A260 - 5209 * dna_data.A260 + 2965;
+    				//dna_data.Conc = coeff_k3 * dna_data.A260 * dna_data.A260 + coeff_k4 * dna_data.A260 + coeff_k5;
     			}
     			else
     				if ( 0.944 < Transmission_rate ) {
@@ -2942,11 +3086,11 @@ public class NanoActivity extends Activity {
         				I_sample1 = Math.abs ( channel_sample1.ch2_xenon_mean - channel_sample1.ch2_no_xenon_mean );
         				I_blank1 = ( double ) mNano_dev.Get_Min_Voltage_Intensity();
         				if ( I_sample1 != 0) {
-        	    			//dna_data.A260 = ( Math.abs( dna_data.A260 ) + Math.abs( Math.log( I_blank1 / I_sample1 ) / Math.log(10) ) ) / 2;
-        					dna_data.Conc = coeff_k1 * Math.abs( dna_data.A260 );
-        					dna_data.Conc += coeff_k1 * Math.abs( Math.log( I_blank1 / I_sample1 ) / Math.log(10));
-        					dna_data.Conc = dna_data.Conc / 2;
-        	    			//dna_data.Conc = 1000 * dna_data.A260;
+        	    			dna_data.A260 = ( Math.abs( dna_data.A260 ) + Math.abs( Math.log( I_blank1 / I_sample1 ) / Math.log(10) ) ) / 2;
+        					//dna_data.Conc = coeff_k1 * Math.abs( dna_data.A260 );
+        					//dna_data.Conc += coeff_k1 * Math.abs( Math.log( I_blank1 / I_sample1 ) / Math.log(10));
+        					//dna_data.Conc = dna_data.Conc / 2;
+        	    			dna_data.Conc = 1000 * dna_data.A260;
         				}
     				}
 			if ( measure_mode == MEASURE_MODE_ssDNA )
@@ -3095,7 +3239,7 @@ public class NanoActivity extends Activity {
 				} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 					e.printStackTrace();
-				}			  
+				}
 			}
 			Log.d ( Tag, "Exit Auto Measure!" );
 		}
