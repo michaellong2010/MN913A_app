@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="1200dp"
+    android:layout_height="1200dp"
+    android:background="@android:color/white"
+    android:orientation="vertical" >
+
+        <RelativeLayout
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_marginTop="2dp"  >
+        
+		      <ImageView
+			        android:id="@+id/qrimage1"
+			        android:layout_width="wrap_content"
+			        android:layout_height="wrap_content"
+			        android:layout_marginTop="2dp"  
+			        android:layout_marginLeft="10dp" />
+		        
+		      <TextView
+		            android:id="@+id/IpAdress"
+		            android:layout_width="wrap_content"
+		            android:layout_height="wrap_content"
+		            android:text="  "
+		            android:layout_marginTop="435dp"  
+		            android:layout_marginLeft="95dp"
+		            android:textStyle="bold" 
+		            android:textSize="34dp"/>
+
+              <Button
+		            android:id="@+id/dismiss"
+		            android:layout_width="158dp"
+		            android:layout_height="wrap_content"
+		            android:layout_marginTop="510dp"  
+		            android:layout_marginLeft="165dp"
+		            android:background="#FFCCCCCC"
+		            android:textSize="24dp"
+		            android:text="Close" />
+         </RelativeLayout>
+</LinearLayout>

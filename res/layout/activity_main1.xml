@@ -110,6 +110,15 @@
              android:background="@drawable/btn_about"
              android:visibility="visible"
              android:onClick="switch_to_page_page" />
+         
+         <ImageButton
+             android:id="@+id/Switch_Wifi"
+             android:layout_width="110dp"
+             android:layout_height="110dp"
+             android:background="@drawable/btn_share"
+             android:layout_marginLeft="1113dp"
+             android:layout_marginTop="245dp"
+         />
 
          <ImageButton
              android:id="@+id/imageButton8"

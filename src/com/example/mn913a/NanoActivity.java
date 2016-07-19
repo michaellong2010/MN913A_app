@@ -42,8 +42,12 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -56,13 +60,17 @@ import android.text.Editable;
 import android.text.InputFilter;
 import android.text.Spanned;
 import android.text.TextWatcher;
+import android.text.format.Formatter;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
 import android.view.WindowManager;
@@ -83,6 +91,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.ListView;
+import android.widget.PopupWindow;
 import android.widget.RadioGroup;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
@@ -94,6 +103,10 @@ import android.widget.TimePicker;
 import android.widget.Toast;
 import android.database.Cursor;
 import ar.com.daidalos.afiledialog.FileChooserActivity;
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.WriterException;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.qrcode.QRCodeWriter;
 
 public class NanoActivity extends Activity {
 	PendingIntent mPermissionIntent;
@@ -142,7 +155,7 @@ public class NanoActivity extends Activity {
 	ThreadPoolExecutor polling_data_executor = null;
 	Thread_sync Thread_Sync_By_Obj;
 	
-	ImageButton main_page_btn_dsDNA, main_page_btn_calibration, dsDNA_page_home, dsDNA_page_btn_blank, dsDNA_page_btn_sample;
+	ImageButton main_page_btn_dsDNA, main_page_btn_calibration, dsDNA_page_home, dsDNA_page_btn_blank, dsDNA_page_btn_sample, btn_share;
 	int Cur_Protein_quantity_mode, Protein_quantity_mode = -1;
 	Double Protein_quantity_coefficient [] = { 6.67, 13.7, 26.4, 1.0 };
 	EditText ed_protein_quantity;
@@ -160,6 +173,9 @@ public class NanoActivity extends Activity {
 	int Lcd_Brightness_Level = -1, Cur_Lcd_Brightness_Level = -1;
 	MN913A_Properties app_properties;
 	Double coeff_k1, coeff_k2, coeff_k3, coeff_k4, coeff_k5;
+	
+	String ipAddress = null, command, lighttpd, fcgiserver, testcmd;
+	static Bitmap bitmap = null;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -1357,6 +1373,9 @@ public class NanoActivity extends Activity {
     	coeff_k3 = Double.valueOf(app_properties.getProperty (  MN913A_Properties.prop_k3, "61"  ));
     	coeff_k4 = Double.valueOf(app_properties.getProperty (  MN913A_Properties.prop_k4, "61"  ));
     	coeff_k5 = Double.valueOf(app_properties.getProperty (  MN913A_Properties.prop_k5, "61"  ));
+    	
+    	/*20160719 integrated by michael*/
+    	popimage ( );
 	}
 	
 	private void save_measurement_to_file () {
@@ -3423,5 +3442,117 @@ public class NanoActivity extends Activity {
 		
 		if ( mNano_dev.MN913A_IOCTL( CMD_T.HID_CMD_SET_TIME, 0, 1, datetime_data, 0 ) == true )
 			Log.d ( Tag, "sccess");
+	}
+	
+	private class wifibtn_touchListener implements OnTouchListener {
+		public boolean onTouch( View pView, MotionEvent pEvent ) {
+			if (pEvent.getAction() == MotionEvent.ACTION_UP) {
+				
+			}else{
+				btn_share.setImageDrawable(getResources().getDrawable( R.drawable.share_y ));
+			}
+			return false;
+		}
+	}
+	
+	public void popimage ( ) {
+		
+		btn_share = ( ImageButton ) findViewById( R.id.Switch_Wifi );
+		btn_share.setOnTouchListener( new wifibtn_touchListener() );
+		btn_share.setOnClickListener( new Button.OnClickListener(){ 
+            @Override
+            public void onClick(View v) {
+            	//http://zackr.pw/archives/65/
+            	//http://hex.ro/wp/blog/php-and-lighttpd-for-android/
+            	//  ShellExecuter exe = new ShellExecuter();
+            	 // exec_shell_command(" /dev/block/sda /mnt/media1");
+            	////  exec_shell_command(" cp /mnt/sdcard/debug.txt /mnt/sdcard/111AN.txt");
+            	//  getAllStoragePath();
+            	 /* exe.exec_shell_command_mn913a(" /dev/block/sda12 /mnt/media2");
+            	  exe.exec_shell_command_mn913a(" /dev/block/sda2 /mnt/media3");
+            	  exe.exec_shell_command_mn913a("/dev/block/sda3 /mnt/media4");
+            	  exe.exec_shell_command_mn913a("/dev/block/sda4 /mnt/media5");
+            	  exe.exec_shell_command_mn913a(" /dev/block/sda5 /mnt/media6");
+            	  exe.exec_shell_command_mn913a(" /dev/block/sda6 /mnt/media7");
+            	  exe.exec_shell_command_mn913a(" /dev/block/sda7 /mnt/media8");*/
+            	 	WifiManager myWifiManager = (WifiManager)getSystemService(Context.WIFI_SERVICE);
+				    WifiInfo myWifiInfo = myWifiManager.getConnectionInfo();
+				    int myIp = myWifiInfo.getIpAddress();
+				
+				    ipAddress = Formatter.formatIpAddress(myIp);
+			
+	                ShellExecuter exe = new ShellExecuter();
+        
+			        command = "mount -o remount,rw /dev/block/mtdblock3 /system";
+			        String outp = exe.Executer("/system/xbin/su & mount -o remount,rw /dev/block/mmcblk2p5 /system");
+			            
+			        fcgiserver = "/system/xbin/su & /system/xbin/fcgiserver & ";
+			        exe.Executer(fcgiserver);
+			            
+			        lighttpd = "/system/xbin/su & lighttpd -f /system/etc/lighttpd/lighttpd.conf ";
+			        exe.Executer(lighttpd);
+			           
+			        //testcmd = "/system/xbin/su & cp /mnt/sdcard/debug.txt /mnt/sdcard/Download/JAN.txt";
+			        //exe.Executer(testcmd); 
+          
+		            LayoutInflater layoutInflater 
+		            = (LayoutInflater)getBaseContext()
+		             .getSystemService(LAYOUT_INFLATER_SERVICE);  
+		              View popupView = layoutInflater.inflate(R.layout.two_dim_code_popup_layout, null);  
+		              
+		       	     ImageView iv= ( ImageView ) popupView.findViewById ( R.id.qrimage1 );
+		       	     String QRCodeContent ="http://"+ipAddress + "/index.html";
+		             QRCodeWriter writer = new QRCodeWriter();
+		             
+		       	     try {
+		       	            BitMatrix matrix = writer.encode( // int width, int height  350, 360)
+		       	    		QRCodeContent, BarcodeFormat.QR_CODE,550, 500
+		       	      );
+		       	 
+		       	      bitmap = bitmatrixToBitmap(matrix);
+		       	      iv.setImageBitmap(bitmap);
+		
+		       	     } catch (WriterException e) {
+		       	          Log.d("MainActivity", "Writer exception: " + e);
+		       	     }
+       	
+                      final PopupWindow popupWindow = new PopupWindow(
+                         popupView,490,590);// 320,430
+
+    	              TextView textIp = (TextView)popupView.findViewById(R.id.IpAdress);
+    	              textIp.setTextColor(android.graphics.Color.GRAY);
+   	                  textIp.setText( QRCodeContent );   	     
+   	            	  Button btnDismiss = (Button)popupView.findViewById(R.id.dismiss);
+   	                  btnDismiss.setOnClickListener(new Button.OnClickListener(){
+
+   	          @Override
+   	          public void onClick(View v) {
+   	           // TODO Auto-generated method stub
+   	           popupWindow.dismiss();
+   	          
+   	          }});
+   	          popupWindow.showAtLocation( btn_share, Gravity.TOP | Gravity.RIGHT,400, 79 ); //600 139
+              popupWindow.showAsDropDown( btn_share, 1, 1);
+              btn_share.setImageDrawable(getResources().getDrawable ( R.drawable.share_on ) );
+            }         
+
+        });   
+	}
+	
+	public static Bitmap bitmatrixToBitmap(BitMatrix matrix) {
+	    int width = matrix.getWidth();
+	    int height = matrix.getHeight();
+	    int[] pixels = new int[width * height];
+	    for (int y = 0; y < height; y++) {
+	        int offset = y * width;
+	        for (int x = 0; x < width; x++) {
+	            pixels[offset + x] = matrix.get(x, y) ? Color.BLACK : Color.WHITE;
+	        }
+	    }
+	 
+	    bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+	    bitmap.setPixels(pixels, 0, width, 0, 0, width, height);
+
+	    return bitmap;
 	}
 }
