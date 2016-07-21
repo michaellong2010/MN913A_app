@@ -1707,6 +1707,11 @@ public class LogFileChooserActivity extends FileChooserActivity {
 							if ( LogFileChooserActivity.this.getIntent().getExtras().containsKey( "target vol." ) )
 								intent.putExtra( "target vol.", LogFileChooserActivity.this.getIntent().getExtras().getDouble( "target vol." ) );
 							intent.putExtra( NormalizationActivity.INPUT_ACTIVITY_USE_NEW_UI, true );
+							if ( LogFileChooserActivity.this.getIntent().getAction().equals( UsbManager.ACTION_USB_DEVICE_ATTACHED ) ) {
+								UsbDevice device = (UsbDevice) LogFileChooserActivity.this.getIntent().getParcelableExtra(UsbManager.EXTRA_DEVICE);
+								Log.d ( "NanoActivity debug device", device.toString() );
+								intent.putExtra( UsbManager.EXTRA_DEVICE, device);
+							}
 							LogFileChooserActivity.this.startActivityForResult ( intent, 2005 );
 						}
 					} );

@@ -2,6 +2,8 @@ package com.example.mn913a;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -9,14 +11,20 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.example.mn913a.MN_913A_Device.CMD_T;
 import com.example.mn913a.NanoActivity.DecimalInputFilter;
 
 import android.app.ActionBar;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.hardware.usb.UsbDevice;
+import android.hardware.usb.UsbManager;
 import android.os.Bundle;
 import android.text.InputFilter;
 import android.text.Spanned;
@@ -55,12 +63,18 @@ public class NormalizationActivity extends Activity {
 	AlertDialog.Builder alert_dlg_builder;
 	AlertDialog alert_dlg;
 	normalization_adapter adapter2;
-	public double target_volume = -1.0, target_conc = -1.0;
+	public double target_volume = -1.0, target_conc = -1.0, last_target_volume = -1.0, last_target_conc = -1.0;
 	EditText ed_target_volume, ed_target_conc;
 	String alert_message;
 	Button btn_calculate;
 	boolean activity_use_new_ui, allow_checked = false;
 	int selection_count = 0;
+	
+	private static final String ACTION_USB_PERMISSION = "com.example.mn913a.USB_PERMISSION";
+	MN_913A_Device mNano_dev;
+	UsbManager mUsbManager;
+	PendingIntent mPermissionIntent;
+	boolean mRequest_USB_permission, Is_MN913A_Online = false;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -276,6 +290,19 @@ public class NormalizationActivity extends Activity {
 		int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
 		              | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
 		decorView.setSystemUiVisibility(uiOptions);
+		
+    	mUsbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
+		mPermissionIntent = PendingIntent.getBroadcast(this, 0, new Intent(ACTION_USB_PERMISSION), 0);
+		
+		IntentFilter mIntentFilter;
+		mIntentFilter = new IntentFilter();
+		mIntentFilter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
+		mIntentFilter.addAction(ACTION_USB_PERMISSION);
+		registerReceiver(mReceiver, mIntentFilter);
+		
+    	mNano_dev = new MN_913A_Device ( this );
+    	mRequest_USB_permission = false;
+    	EnumerationDevice(getIntent());
 	}
 	
 	@Override
@@ -468,6 +495,8 @@ public class NormalizationActivity extends Activity {
 				}
 				adapter2.notifyDataSetChanged();
 				allow_checked = true;
+				last_target_volume = target_volume; 
+				last_target_conc = target_conc;
 			}
     }
 	
@@ -527,9 +556,165 @@ public class NormalizationActivity extends Activity {
 			
 			@Override
 			public void onClick(View v) {
+				byte[] bytes;
+				int byte_offset = 0, data_count = 0, packed_data_count = 0, total_packed_data_count = 0;
+				byte [] meta_print_data = new byte [ 1024 ];
 				Log.d ( "btn_print_result", "click" );
+				//selected_fillMaps
+				data_count = selection_count;
+				bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt( 2 ).array();
+				System.arraycopy ( bytes, 0, meta_print_data, byte_offset, bytes.length );
+				byte_offset = byte_offset + bytes.length;
+
+				Iterator<HashMap<String, String>> it;
+				HashMap <String, String> map1;
+				it = selected_fillMaps.iterator();
+				while ( data_count > 0 ) {
+				  byte_offset = 4;
+				  
+				  bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt( 10 ).array();
+				  System.arraycopy ( bytes, 0, meta_print_data, byte_offset, bytes.length );
+				  byte_offset = byte_offset + bytes.length;
+				  
+				  bytes = ByteBuffer.allocate(8).order( ByteOrder.LITTLE_ENDIAN ).putDouble( last_target_volume ).array();
+				  System.arraycopy ( bytes, 0, meta_print_data, byte_offset, bytes.length );
+				  byte_offset = byte_offset + bytes.length;
+				  
+				  bytes = ByteBuffer.allocate(8).order( ByteOrder.LITTLE_ENDIAN ).putDouble( last_target_conc ).array();
+				  System.arraycopy ( bytes, 0, meta_print_data, byte_offset, bytes.length );
+				  byte_offset = byte_offset + bytes.length;
+
+				  packed_data_count = 0;
+				  if ( data_count > 10)
+					  total_packed_data_count = 10;
+				  else
+					  total_packed_data_count = data_count;
+				  while ( packed_data_count < total_packed_data_count ) {
+					  map1 = it.next();
+					  if ( map1.get( "isSelected" ) != null && map1.get( "isSelected" ).equals( "true" ) ) {
+						  bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt( Integer.parseInt( map1.get( dst_from[0] ) ) ).array();
+						  System.arraycopy ( bytes, 0, meta_print_data, byte_offset, bytes.length );
+						  byte_offset = byte_offset + bytes.length;
+
+						  //word alignment stuffing
+						  bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt( Integer.parseInt( map1.get( dst_from[0] ) ) ).array();
+						  System.arraycopy ( bytes, 0, meta_print_data, byte_offset, bytes.length );
+						  byte_offset = byte_offset + bytes.length;
+						  
+						  bytes = ByteBuffer.allocate(8).order( ByteOrder.LITTLE_ENDIAN ).putDouble( Double.parseDouble( map1.get( dst_from[1] ) ) ).array();
+						  System.arraycopy ( bytes, 0, meta_print_data, byte_offset, bytes.length );
+						  byte_offset = byte_offset + bytes.length;
+						  
+						  bytes = ByteBuffer.allocate(8).order( ByteOrder.LITTLE_ENDIAN ).putDouble( Double.parseDouble( map1.get( dst_from[2] ) ) ).array();
+						  System.arraycopy ( bytes, 0, meta_print_data, byte_offset, bytes.length );
+						  byte_offset = byte_offset + bytes.length;
+						  
+						  bytes = ByteBuffer.allocate(8).order( ByteOrder.LITTLE_ENDIAN ).putDouble( Double.parseDouble( map1.get( dst_from[3] ) ) ).array();
+						  System.arraycopy ( bytes, 0, meta_print_data, byte_offset, bytes.length );
+						  byte_offset = byte_offset + bytes.length;
+						  packed_data_count++;
+					  }
+				  }
+				  if ( ( byte_offset % 256 ) != 0)
+					  mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_PRINT_META_DATA, 0, ( byte_offset / 256 ) + 1, meta_print_data, 0);
+				  else
+					  mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_PRINT_META_DATA, 0, ( byte_offset / 256 ), meta_print_data, 0);
+				  
+				  if ( data_count > 10) {
+					  data_count -= 10;
+				  }
+				  else {
+					  data_count -= data_count;
+				  }
+				}
 			}
 	    } );
 		return true;
+	}
+	
+	@Override
+    protected void onDestroy() {
+		super.onDestroy();
+		unregisterReceiver(mReceiver);
+	}
+	
+	//Create a broadcast receiver
+    private BroadcastReceiver mReceiver = new BroadcastReceiver() {
+
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			// TODO Auto-generated method stub
+			String action = intent.getAction();
+			UsbDevice device = (UsbDevice) intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
+			
+			if (action.equals(UsbManager.ACTION_USB_DEVICE_DETACHED)) {
+				if (mNano_dev != null && mNano_dev.getDevice() != null) {
+					if (device.getProductId() == mNano_dev.getDevice().getProductId() && device.getVendorId() == mNano_dev.getDevice().getVendorId()) {
+						mNano_dev.DeviceOffline();
+						Log.d( Tag, "MN913A DETACHED" );
+						mNano_dev.Reset_Device_Info();
+						Is_MN913A_Online = false;
+					}
+				}
+			}
+			else
+				if (action.equals(ACTION_USB_PERMISSION)) {
+					if (intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
+						if (device != null) {
+							Is_MN913A_Online = true;
+							Log.d(Tag, "permission allowed for device "+device);
+						}
+					}
+					else {
+						Is_MN913A_Online = false;
+						Log.d(Tag, "permission denied for device " + device);
+					}
+					
+					if (mRequest_USB_permission==true) {
+						//hide_system_bar();
+						mRequest_USB_permission = false;
+					}
+					
+					if (mRequest_USB_permission==true) {
+						mRequest_USB_permission = false;
+					}
+				}
+		}
+    	
+    };
+    
+    protected void onNewIntent(Intent intent) {
+    	mNano_dev.show_debug("New intent: "+intent.getAction()+"\n");
+    	if (intent.getAction().equals(UsbManager.ACTION_USB_DEVICE_ATTACHED))
+    		EnumerationDevice(intent);
+    }
+    
+	public void EnumerationDevice(Intent intent) {
+		if (intent.getAction().equals(Intent.ACTION_MAIN)) {
+			if (mNano_dev.Enumeration()) {
+				//connection_status_v.setImageResource ( R.drawable.usb_connection );
+				Is_MN913A_Online = true;
+			}
+			else {
+				if (mNano_dev.isDeviceOnline()) {
+					mRequest_USB_permission = true;
+					mUsbManager.requestPermission(mNano_dev.getDevice(), mPermissionIntent);
+				}
+				else {
+					Is_MN913A_Online = false;
+				}
+			}
+		}
+    	else
+    		if (intent.getAction().equals(UsbManager.ACTION_USB_DEVICE_ATTACHED)) {
+    			UsbDevice device = (UsbDevice) intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
+    			Log.d ( "LogFileChooser debug device", device.toString() );
+    			if (mNano_dev.Enumeration(device)) {
+    				Is_MN913A_Online = true;
+    			}
+    			else {
+    				Is_MN913A_Online = false;
+    			}
+    		}
 	}
 }
