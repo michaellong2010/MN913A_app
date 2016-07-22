@@ -44,6 +44,11 @@ public class MN_913A_Device {
     public int is_dev_busy = 0, Has_Calibration = 0, AutoMeasure_Detected = 0, Invalid_Measure_Assert = 0;
     Object lock1, lock2;
     
+    public int Fw_Version_Code;
+	public String Fw_Version_Name, Fw_md5_checksum;
+	public int Hw_Version_Code;
+	public byte[] fw_header_bytes = new byte[256];
+	
     private final CMD_T message;
 
 	public void Reset_Device_Info() {
@@ -307,6 +312,41 @@ public class MN_913A_Device {
     					if ( itracker_cmd == CMD_T.HID_CMD_GET_TIME && result ) {
     						System.arraycopy( message.mDataBuffer.array(), 0, dataBytes, 0, 256 );
     					}
+    					else
+    						if (itracker_cmd==CMD_T.HID_CMD_MN913_FW_HEADER && result) {
+    							Log.d ( Tag, "??  HID_CMD_ITRACKER_FW_HEADER");
+    							StringBuffer sb = new StringBuffer("");
+    							byte b;
+    							message.mDataBuffer.get(dataBytes, 0, (arg1-arg0)*PAGE_SIZE);
+    							System.arraycopy(dataBytes, 0, fw_header_bytes, 0, (arg1-arg0)*PAGE_SIZE);
+    							message.mDataBuffer.order(ByteOrder.LITTLE_ENDIAN);				
+
+    							message.mDataBuffer.position(0);
+    							Fw_Version_Code = message.mDataBuffer.getInt();
+    							System.out.println("?Fw_Version_Code?????    =======");
+    							Log.d ( Tag, "??  Fw_Version_Code" + Fw_Version_Code);
+    							System.out.println("?Fw_Version_Code?????    =======");
+    							message.mDataBuffer.position(4);
+    							for (int i = 0; i < 48; i++) {
+    								b = message.mDataBuffer.get();
+    								if (b!=0x00)
+    									sb.append(new String(new byte []{b}));
+    								else
+    									break;
+    							}
+    							Fw_Version_Name = sb.toString();
+    							System.out.println("???????    =======");
+    							System.out.println(Fw_Version_Name);
+    							System.out.println("???????    =======");
+    							sb.delete(0, sb.length());
+    							message.mDataBuffer.position(56);
+    							Hw_Version_Code = message.mDataBuffer.getInt();
+    							message.mDataBuffer.position(60);
+    							for (int i = 0; i < 16; i++) {
+    								sb.append(Integer.toString((message.mDataBuffer.get() & 0xff) + 0x100, 16).substring(1));
+    							}
+    							this.Fw_md5_checksum = sb.toString();
+    						}
     			if (result)
     				return true;
     			else
@@ -432,6 +472,8 @@ public class MN_913A_Device {
 	    public static final int HID_CMD_SET_TIME = 0x93;
 	    public static final int HID_CMD_SET_LCD_BRIGHTNESS = 0x95;
 	    public static final int HID_CMD_PRINT_META_DATA = 0xC1;
+	    public static final int HID_CMD_MN913_FW_UPGRADE = 0xA0 ;  //20160705 Jan
+	    public static final int HID_CMD_MN913_FW_HEADER =  0xA1 ;  //20160705 Jan
 	    
 	    public CMD_T() {
 	        mMessageBuffer = ByteBuffer.allocate(SZ_CMD_T);
@@ -518,7 +560,7 @@ public class MN_913A_Device {
 	    	result = write_out(mMessageBuffer, mMessageBuffer.limit());
 			int command;
 			command = (int) cmd&0xff;
-			if ( command != CMD_T.HID_CMD_PRINT_DNA_RESULT && command != CMD_T.HID_CMD_PRINT_PROTEIN_RESULT && command != CMD_T.HID_CMD_SET_TIME 
+			if (command != CMD_T.HID_CMD_MN913_FW_UPGRADE&& command != CMD_T.HID_CMD_PRINT_DNA_RESULT && command != CMD_T.HID_CMD_PRINT_PROTEIN_RESULT && command != CMD_T.HID_CMD_SET_TIME  
 					&& command != CMD_T.HID_CMD_SET_LCD_BRIGHTNESS && command != CMD_T.HID_CMD_PRINT_META_DATA ) {
 				mDataBuffer.clear();
 				mDataBuffer.limit((arg2-arg1)*PAGE_SIZE);
@@ -574,6 +616,15 @@ public class MN_913A_Device {
 			case HID_CMD_GET_TIME:
 				if (result)
 					result = read_in(mDataBuffer, mDataBuffer.limit());
+				break;
+			    /*20160705 added by Jan*/
+			case HID_CMD_MN913_FW_HEADER:
+	        	if (result)
+	        		result = read_in(mDataBuffer, mDataBuffer.limit());
+	        	break;
+			case HID_CMD_MN913_FW_UPGRADE:
+				if (result)
+					result = write_out(mDataBuffer, mDataBuffer.limit());
 				break;
 			}
 			return result;
@@ -661,6 +712,21 @@ public class MN_913A_Device {
 				break;
 			case HID_CMD_PRINT_META_DATA:
 				arg1 = argu0;
+				arg2 = argu1;
+				mDataBuffer.clear();
+				mDataBuffer.limit(arg2*PAGE_SIZE);
+				mDataBuffer.put(data, 0, arg2*PAGE_SIZE);
+				break;
+			case HID_CMD_MN913_FW_HEADER:
+				System.out.println("HID_CMD_ITRACKER_FW_HEADER LINE is " + new Exception().getStackTrace()[0].getLineNumber()+"\n");
+				arg1 = argu0;
+				arg2 = argu1;
+				mDataBuffer.clear();
+				mDataBuffer.limit(arg2*PAGE_SIZE);
+				mDataBuffer.put(data, 0, arg2*PAGE_SIZE);
+				break;
+		    case HID_CMD_MN913_FW_UPGRADE:
+	    		arg1 = argu0;
 				arg2 = argu1;
 				mDataBuffer.clear();
 				mDataBuffer.limit(arg2*PAGE_SIZE);

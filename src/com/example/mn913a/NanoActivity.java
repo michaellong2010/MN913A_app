@@ -42,6 +42,10 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.hardware.usb.UsbDevice;
@@ -155,7 +159,7 @@ public class NanoActivity extends Activity {
 	ThreadPoolExecutor polling_data_executor = null;
 	Thread_sync Thread_Sync_By_Obj;
 	
-	ImageButton main_page_btn_dsDNA, main_page_btn_calibration, dsDNA_page_home, dsDNA_page_btn_blank, dsDNA_page_btn_sample, btn_share;
+	ImageButton btn_update_check, btn_user_manual, main_page_btn_dsDNA, main_page_btn_calibration, dsDNA_page_home, dsDNA_page_btn_blank, dsDNA_page_btn_sample, btn_share;
 	int Cur_Protein_quantity_mode, Protein_quantity_mode = -1;
 	Double Protein_quantity_coefficient [] = { 6.67, 13.7, 26.4, 1.0 };
 	EditText ed_protein_quantity;
@@ -176,6 +180,10 @@ public class NanoActivity extends Activity {
 	
 	String ipAddress = null, command, lighttpd, fcgiserver, testcmd;
 	static Bitmap bitmap = null;
+	private int versionCode;
+	private String versionName;
+	byte[] dataBytes = new byte[1024];
+	byte[] dataBytes1 = new byte[1024];
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -208,6 +216,22 @@ public class NanoActivity extends Activity {
 		mNano_dev = new MN_913A_Device ( this );
 		mRequest_USB_permission = false;
 		inflater = (LayoutInflater) getSystemService ( Context.LAYOUT_INFLATER_SERVICE );
+		
+		/*20160720 integrated by Jan*/
+		PackageManager pm = getPackageManager();
+    	PackageInfo pkginfo =null;
+    	ApplicationInfo App_Info =null;
+    	
+    	try {
+    		pkginfo = pm.getPackageInfo(getPackageName(), 0);
+    		App_Info = pkginfo.applicationInfo;
+		} catch (NameNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    	versionCode = pkginfo.versionCode;
+    	versionName = pkginfo.versionName;
+    	/*20160720 integrated by Jan*/
 		//EnumerationDevice(getIntent());
 	
 		/*SeekBar seekbar1;
@@ -1152,6 +1176,86 @@ public class NanoActivity extends Activity {
 		});
 		btn_setting = ( ImageButton ) findViewById( R.id.imageButton8 );
 		btn_about = ( ImageButton ) findViewById( R.id.imageButton7 );
+		
+		class user_manual_touchListener implements OnTouchListener {
+			/*20160721 integrated Jan*/
+			public boolean onTouch(View pView, MotionEvent pEvent) {
+				if (pEvent.getAction() == MotionEvent.ACTION_UP) {
+					btn_user_manual.setImageDrawable(getResources().getDrawable(R.drawable.user_manual));
+				}else{
+					btn_user_manual.setImageDrawable(getResources().getDrawable(R.drawable.user_manual_y));
+				}
+				return false;
+			}
+		}
+		
+		
+		class check_touchListener implements OnTouchListener {
+			/*20160721 integrated Jan*/
+			public boolean onTouch(View pView, MotionEvent pEvent) {
+				if (pEvent.getAction() == MotionEvent.ACTION_UP) {
+					btn_update_check.setImageDrawable(getResources().getDrawable(R.drawable.update_check));
+				}else{
+					btn_update_check.setImageDrawable(getResources().getDrawable(R.drawable.update_check_y));
+				}
+				return false;
+			}
+		}
+		
+		/*20160721 integrated by Jan*/
+		btn_about = ( ImageButton ) findViewById( R.id.imageButton7 );
+		btn_about.setOnClickListener(new Button.OnClickListener(){ 
+			TextView iTrack_app_ver_desc,FW_ver_desc;
+            @Override
+
+            public void onClick(View v) {
+        		mLayout_Content.removeAllViews ( );
+        		if ( mLayout_DNA_MeasurePage == null) {
+        			mLayout_DNA_MeasurePage = ( LinearLayout ) inflater.inflate( R.layout.about, null );
+        		}
+        		mLayout_Content.addView( mLayout_DNA_MeasurePage );
+        		mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_MN913_FW_HEADER, 0, 1, dataBytes, 1);
+        		iTrack_app_ver_desc = (TextView)findViewById(R.id.AppInfoText);
+        		FW_ver_desc = (TextView)findViewById(R.id.FwInfoText);
+        		
+        		iTrack_app_ver_desc.setText("APP version:  " + getAppDesc());
+        		FW_ver_desc.setText("Firmware version:  " + getFirmwareDesc());
+
+        		btn_update_check = ( ImageButton ) NanoActivity.this.findViewById ( R.id.update_check );
+        		btn_update_check.setEnabled( true );
+        		btn_update_check.setOnTouchListener(new check_touchListener());
+        		btn_update_check.setOnClickListener( new OnClickListener() {
+
+					@Override
+					public void onClick(View v) {
+						
+					   Intent intent = new Intent(NanoActivity.this, Nano_UpdateFun.class);
+						intent.setAction( NanoActivity.this.getIntent().getAction() );
+						if ( NanoActivity.this.getIntent().getAction().equals( UsbManager.ACTION_USB_DEVICE_ATTACHED ) ) {
+							UsbDevice device = (UsbDevice) NanoActivity.this.getIntent().getParcelableExtra(UsbManager.EXTRA_DEVICE);
+							Log.d ( "NanoActivity Nano_UpdateFun Func", device.toString() );
+							intent.putExtra( UsbManager.EXTRA_DEVICE, device);
+						}
+						NanoActivity.this.startActivityForResult ( intent, 1023 );
+					}
+					
+				});
+        		
+        		btn_user_manual = ( ImageButton ) NanoActivity.this.findViewById ( R.id.user_manual );
+        		btn_user_manual.setEnabled( true );
+        		btn_user_manual.setOnTouchListener(new user_manual_touchListener());
+        		btn_user_manual.setOnClickListener( new OnClickListener() {
+
+					@Override
+					public void onClick(View v) {
+						Log.d ( Tag, "############# user_manual" );
+					}
+					
+				});
+            }         
+
+        });
+
 		metrics = new DisplayMetrics();
     	if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
     		((WindowManager) getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getRealMetrics(metrics);
@@ -3075,11 +3179,11 @@ public class NanoActivity extends Activity {
     			dna_data.A260 = -1;
     		if ( 0.063 <= Transmission_rate && Transmission_rate <= 0.944 ) {
     			//conc=25~1200, linear equation
-    			//dna_data.Conc = coeff_k1 * dna_data.A260 + coeff_k2;
+    			dna_data.Conc = coeff_k1 * dna_data.A260 + coeff_k2;
     			//if ( measure_mode == MEASURE_MODE_dsDNA )
     				//dna_data.Conc = 1047.2 * dna_data.A260 - 11.606;
     				//dna_data.Conc = 1278 * dna_data.A260 - 8.957;
-    				dna_data.Conc = 1219 * dna_data.A260 - 13.48;
+    				//dna_data.Conc = 1219 * dna_data.A260 - 13.48;
     				//dna_data.Conc = dna_data.Conc * 1; 
         		//else
         			//if ( measure_mode == MEASURE_MODE_ssDNA )
@@ -3096,8 +3200,8 @@ public class NanoActivity extends Activity {
     			if ( 0.063 > Transmission_rate ) {
 					//conc more than 1200, non-linear
     				//dna_data.Conc = -13903 * dna_data.A260 * dna_data.A260 + 37750 * dna_data.A260 - 23585;
-    				dna_data.Conc = 3821 * dna_data.A260 * dna_data.A260 - 5209 * dna_data.A260 + 2965;
-    				//dna_data.Conc = coeff_k3 * dna_data.A260 * dna_data.A260 + coeff_k4 * dna_data.A260 + coeff_k5;
+    				//dna_data.Conc = 3821 * dna_data.A260 * dna_data.A260 - 5209 * dna_data.A260 + 2965;
+    				dna_data.Conc = coeff_k3 * dna_data.A260 * dna_data.A260 + coeff_k4 * dna_data.A260 + coeff_k5;
     			}
     			else
     				if ( 0.944 < Transmission_rate ) {
@@ -3105,11 +3209,11 @@ public class NanoActivity extends Activity {
         				I_sample1 = Math.abs ( channel_sample1.ch2_xenon_mean - channel_sample1.ch2_no_xenon_mean );
         				I_blank1 = ( double ) mNano_dev.Get_Min_Voltage_Intensity();
         				if ( I_sample1 != 0) {
-        	    			dna_data.A260 = ( Math.abs( dna_data.A260 ) + Math.abs( Math.log( I_blank1 / I_sample1 ) / Math.log(10) ) ) / 2;
-        					//dna_data.Conc = coeff_k1 * Math.abs( dna_data.A260 );
-        					//dna_data.Conc += coeff_k1 * Math.abs( Math.log( I_blank1 / I_sample1 ) / Math.log(10));
-        					//dna_data.Conc = dna_data.Conc / 2;
-        	    			dna_data.Conc = 1000 * dna_data.A260;
+        	    			//dna_data.A260 = ( Math.abs( dna_data.A260 ) + Math.abs( Math.log( I_blank1 / I_sample1 ) / Math.log(10) ) ) / 2;
+        					dna_data.Conc = coeff_k1 * Math.abs( dna_data.A260 );
+        					dna_data.Conc += coeff_k1 * Math.abs( Math.log( I_blank1 / I_sample1 ) / Math.log(10));
+        					dna_data.Conc = dna_data.Conc / 2;
+        	    			//dna_data.Conc = 1000 * dna_data.A260;
         				}
     				}
 			if ( measure_mode == MEASURE_MODE_ssDNA )
@@ -3555,4 +3659,14 @@ public class NanoActivity extends Activity {
 
 	    return bitmap;
 	}
+	
+    public String getFirmwareDesc() {
+    	//return Integer.toString(versionCode); 
+    	return Integer.toString(mNano_dev.Fw_Version_Code) + "---" +  mNano_dev.Fw_Version_Name;//jan mark
+    }
+    
+    public String getAppDesc() { //20160629 Jan
+    	//return "versionCode=" + Integer.toString(versionCode) + "  " + "versionName=" + versionName;
+    	return Integer.toString(versionCode) + "---"  + versionName;
+    }
 }
