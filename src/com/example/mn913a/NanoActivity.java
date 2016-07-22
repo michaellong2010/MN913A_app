@@ -176,7 +176,7 @@ public class NanoActivity extends Activity {
 	Calendar calendar = Calendar.getInstance();
 	int Lcd_Brightness_Level = -1, Cur_Lcd_Brightness_Level = -1;
 	MN913A_Properties app_properties;
-	Double coeff_k1, coeff_k2, coeff_k3, coeff_k4, coeff_k5;
+	Double coeff_k1, coeff_k2, coeff_k3, coeff_k4, coeff_k5, coeff_p1, coeff_p2;
 	
 	String ipAddress = null, command, lighttpd, fcgiserver, testcmd;
 	static Bitmap bitmap = null;
@@ -1477,7 +1477,10 @@ public class NanoActivity extends Activity {
     	coeff_k3 = Double.valueOf(app_properties.getProperty (  MN913A_Properties.prop_k3, "61"  ));
     	coeff_k4 = Double.valueOf(app_properties.getProperty (  MN913A_Properties.prop_k4, "61"  ));
     	coeff_k5 = Double.valueOf(app_properties.getProperty (  MN913A_Properties.prop_k5, "61"  ));
+    	coeff_p1 = Double.valueOf(app_properties.getProperty (  MN913A_Properties.prop_p1, "61"  ));
+    	coeff_p2 = Double.valueOf(app_properties.getProperty (  MN913A_Properties.prop_p2, "61"  ));
     	
+    	app_properties.flush();
     	/*20160719 integrated by michael*/
     	popimage ( );
 	}
@@ -1522,25 +1525,38 @@ public class NanoActivity extends Activity {
 				if ( dna_data.include_A320 == true ) {
 				  measure_result = Integer.toString( dna_data.index ) + ", " + NanoSqlDatabase.truncateDecimal(  dna_data.Conc, 3 ).doubleValue() +  ", " +
 				  //NanoSqlDatabase.truncateDecimal(  dna_data.A260 * 24.38, 3 ).doubleValue() +  ", " +
-				  NanoSqlDatabase.truncateDecimal(  dna_data.Conc / 50, 3 ).doubleValue() +  ", " +
-				  NanoSqlDatabase.truncateDecimal(  ( dna_data.A260 * 210 - dna_data.A320 ) / ( dna_data.A230 * 167 - dna_data.A320 ), 3 ).doubleValue() + ", " +
-				  NanoSqlDatabase.truncateDecimal(  ( dna_data.A260 * 19 - dna_data.A320 ) / ( dna_data.A280 * 23 - dna_data.A320 ), 3 ).doubleValue();
+				  //NanoSqlDatabase.truncateDecimal(  dna_data.Conc / 50, 3 ).doubleValue() +  ", " +
+				  NanoSqlDatabase.truncateDecimal(  dna_data.OD260, 3 ).doubleValue() +  ", " +
+				  //NanoSqlDatabase.truncateDecimal(  ( dna_data.A260 * 210 - dna_data.A320 ) / ( dna_data.A230 * 167 - dna_data.A320 ), 3 ).doubleValue() + ", " +
+				  //NanoSqlDatabase.truncateDecimal(  ( dna_data.A260 * 19 - dna_data.A320 ) / ( dna_data.A280 * 23 - dna_data.A320 ), 3 ).doubleValue();
+				  NanoSqlDatabase.truncateDecimal(  ( dna_data.OD260 - dna_data.A320 ) / ( dna_data.OD230 - dna_data.A320 ), 3 ).doubleValue() + ", " +
+				  NanoSqlDatabase.truncateDecimal(  ( dna_data.OD260 - dna_data.A320 ) / ( dna_data.OD280 - dna_data.A320 ), 3 ).doubleValue() + ", " +
+				  NanoSqlDatabase.truncateDecimal(  dna_data.OD230, 3 ).doubleValue() +  ", " +
+				  NanoSqlDatabase.truncateDecimal(  dna_data.OD280, 3 ).doubleValue();
 				}
 				else {
 					measure_result = Integer.toString( dna_data.index ) + ", " + NanoSqlDatabase.truncateDecimal(  dna_data.Conc, 3 ).doubleValue() +  ", " +
 				    //NanoSqlDatabase.truncateDecimal(  dna_data.A260 * 24.38, 3 ).doubleValue() +  ", " +
-				    NanoSqlDatabase.truncateDecimal(  dna_data.Conc / 50, 3 ).doubleValue() +  ", " +
-					NanoSqlDatabase.truncateDecimal(  ( dna_data.A260 * 210 ) / ( dna_data.A230 * 167 ), 3 ).doubleValue() + ", " +
-					NanoSqlDatabase.truncateDecimal(  ( dna_data.A260 * 19 ) / ( dna_data.A280 * 23 ), 3 ).doubleValue();					
+				    //NanoSqlDatabase.truncateDecimal(  dna_data.Conc / 50, 3 ).doubleValue() +  ", " +
+				    NanoSqlDatabase.truncateDecimal(  dna_data.OD260, 3 ).doubleValue() +  ", " +
+					//NanoSqlDatabase.truncateDecimal(  ( dna_data.A260 * 210 ) / ( dna_data.A230 * 167 ), 3 ).doubleValue() + ", " +
+					//NanoSqlDatabase.truncateDecimal(  ( dna_data.A260 * 19 ) / ( dna_data.A280 * 23 ), 3 ).doubleValue();
+					NanoSqlDatabase.truncateDecimal(  ( dna_data.OD260 ) / ( dna_data.OD230 ), 3 ).doubleValue() + ", " +
+					NanoSqlDatabase.truncateDecimal(  ( dna_data.OD260 ) / ( dna_data.OD280 ), 3 ).doubleValue() + ", " +
+					NanoSqlDatabase.truncateDecimal(  dna_data.OD230, 3 ).doubleValue() +  ", " +
+					NanoSqlDatabase.truncateDecimal(  dna_data.OD280, 3 ).doubleValue();
 				}
 				write_file.write_file ( measure_result, true );
 			}
 			break;
 		case MEASURE_MODE_PROTEIN:
 			for ( Protein_measure_data protein_data: protein_data_list ) {
-				measure_result = Integer.toString( protein_data.index ) + ", " + NanoSqlDatabase.truncateDecimal(  protein_data.A280, 3 ).doubleValue()	+
+				/*measure_result = Integer.toString( protein_data.index ) + ", " + NanoSqlDatabase.truncateDecimal(  protein_data.A280, 3 ).doubleValue()	+
 						", " + NanoSqlDatabase.truncateDecimal(  protein_data.coefficient, 3 ).doubleValue()
-						+ ", " + NanoSqlDatabase.truncateDecimal(  protein_data.Conc, 3 ).doubleValue();
+						+ ", " + NanoSqlDatabase.truncateDecimal(  protein_data.Conc, 3 ).doubleValue();*/
+				measure_result = Integer.toString( protein_data.index ) + ", " + NanoSqlDatabase.truncateDecimal(  protein_data.OD280, 3 ).doubleValue()	+
+				", " + NanoSqlDatabase.truncateDecimal(  protein_data.coefficient, 3 ).doubleValue()
+				+ ", " + NanoSqlDatabase.truncateDecimal(  protein_data.Conc, 3 ).doubleValue();
 				write_file.write_file ( measure_result, true );
 			}
 			break;
@@ -2597,23 +2613,28 @@ public class NanoActivity extends Activity {
     		    if ( dna_data.include_A320 == true ) {
     		    	//( ( TextView ) NanoActivity.this.findViewById( R.id.textView3 ) ).setText( Double.toString( NanoSqlDatabase.truncateDecimal(  ( dna_data.A260 * 19 - dna_data.A320 ) / ( dna_data.A280 * 23 - dna_data.A320 ), 3 ).doubleValue() ) );
     		    	//( ( TextView ) NanoActivity.this.findViewById( R.id.textView4 ) ).setText( Double.toString( NanoSqlDatabase.truncateDecimal(  ( dna_data.A260 * 210 - dna_data.A320 ) / ( dna_data.A230 * 167 - dna_data.A320 ), 3 ).doubleValue() ) );
-    		    	( ( TextView ) NanoActivity.this.findViewById( R.id.textView6 ) ).setText( Double.toString( NanoSqlDatabase.truncateDecimal(  ( dna_data.A260 * 19 - dna_data.A320 ) / ( dna_data.A280 * 23 - dna_data.A320 ), 3 ).doubleValue() ) );
-    		    	( ( TextView ) NanoActivity.this.findViewById( R.id.textView7 ) ).setText( Double.toString( NanoSqlDatabase.truncateDecimal(  ( dna_data.A260 * 210 - dna_data.A320 ) / ( dna_data.A230 * 167 - dna_data.A320 ), 3 ).doubleValue() ) );
+    		    	//( ( TextView ) NanoActivity.this.findViewById( R.id.textView6 ) ).setText( Double.toString( NanoSqlDatabase.truncateDecimal(  ( dna_data.A260 * 19 - dna_data.A320 ) / ( dna_data.A280 * 23 - dna_data.A320 ), 3 ).doubleValue() ) );
+    		    	//( ( TextView ) NanoActivity.this.findViewById( R.id.textView7 ) ).setText( Double.toString( NanoSqlDatabase.truncateDecimal(  ( dna_data.A260 * 210 - dna_data.A320 ) / ( dna_data.A230 * 167 - dna_data.A320 ), 3 ).doubleValue() ) );
+    		    	( ( TextView ) NanoActivity.this.findViewById( R.id.textView6 ) ).setText( Double.toString( NanoSqlDatabase.truncateDecimal(  ( dna_data.OD260 - dna_data.A320 ) / ( dna_data.OD280 - dna_data.A320 ), 3 ).doubleValue() ) );
+    		    	( ( TextView ) NanoActivity.this.findViewById( R.id.textView7 ) ).setText( Double.toString( NanoSqlDatabase.truncateDecimal(  ( dna_data.OD260 - dna_data.A320 ) / ( dna_data.OD230 - dna_data.A320 ), 3 ).doubleValue() ) );
     		    }
     		    else {
     		    	//( ( TextView ) NanoActivity.this.findViewById( R.id.textView3 ) ).setText( Double.toString( NanoSqlDatabase.truncateDecimal(  ( ( dna_data.A260 ) * 19 ) / ( ( dna_data.A280 ) * 23 ), 3 ).doubleValue() ) );
     		    	//( ( TextView ) NanoActivity.this.findViewById( R.id.textView4 ) ).setText( Double.toString( NanoSqlDatabase.truncateDecimal(  ( ( dna_data.A260 ) * 210 ) / ( ( dna_data.A230 ) * 167 ), 3 ).doubleValue() ) );
-    		    	( ( TextView ) NanoActivity.this.findViewById( R.id.textView6 ) ).setText( Double.toString( NanoSqlDatabase.truncateDecimal(  ( ( dna_data.A260 ) * 19 ) / ( ( dna_data.A280 ) * 23 ), 3 ).doubleValue() ) );
-    		    	( ( TextView ) NanoActivity.this.findViewById( R.id.textView7 ) ).setText( Double.toString( NanoSqlDatabase.truncateDecimal(  ( ( dna_data.A260 ) * 210 ) / ( ( dna_data.A230 ) * 167 ), 3 ).doubleValue() ) );
+    		    	//( ( TextView ) NanoActivity.this.findViewById( R.id.textView6 ) ).setText( Double.toString( NanoSqlDatabase.truncateDecimal(  ( ( dna_data.A260 ) * 19 ) / ( ( dna_data.A280 ) * 23 ), 3 ).doubleValue() ) );
+    		    	//( ( TextView ) NanoActivity.this.findViewById( R.id.textView7 ) ).setText( Double.toString( NanoSqlDatabase.truncateDecimal(  ( ( dna_data.A260 ) * 210 ) / ( ( dna_data.A230 ) * 167 ), 3 ).doubleValue() ) );
+    		    	( ( TextView ) NanoActivity.this.findViewById( R.id.textView6 ) ).setText( Double.toString( NanoSqlDatabase.truncateDecimal(  ( ( dna_data.OD260 ) ) / ( ( dna_data.OD280 ) ), 3 ).doubleValue() ) );
+    		    	( ( TextView ) NanoActivity.this.findViewById( R.id.textView7 ) ).setText( Double.toString( NanoSqlDatabase.truncateDecimal(  ( ( dna_data.OD260 ) ) / ( ( dna_data.OD230 ) ), 3 ).doubleValue() ) );
     		    }
     		    //( ( TextView ) NanoActivity.this.findViewById( R.id.textView5 ) ).setText( Double.toString( NanoSqlDatabase.truncateDecimal(  dna_data.A260 * 24.38, 3 ).doubleValue() ) );
     		    //( ( TextView ) NanoActivity.this.findViewById( R.id.textView5 ) ).setText( Double.toString( NanoSqlDatabase.truncateDecimal(  dna_data.Conc / 50, 3 ).doubleValue() ) );
-    		    ( ( TextView ) NanoActivity.this.findViewById( R.id.textView3 ) ).setText( Double.toString( NanoSqlDatabase.truncateDecimal(  dna_data.Conc / 50, 3 ).doubleValue() ) );
+    		    //( ( TextView ) NanoActivity.this.findViewById( R.id.textView3 ) ).setText( Double.toString( NanoSqlDatabase.truncateDecimal(  dna_data.Conc / 50, 3 ).doubleValue() ) );
+    		    ( ( TextView ) NanoActivity.this.findViewById( R.id.textView3 ) ).setText( Double.toString( NanoSqlDatabase.truncateDecimal(  dna_data.OD260, 3 ).doubleValue() ) );
     		    
     		    //( ( TextView ) NanoActivity.this.findViewById( R.id.textView4 ) ).setText( Double.toString( NanoSqlDatabase.truncateDecimal(  dna_data.A230, 3 ).doubleValue() ) );
     		    //( ( TextView ) NanoActivity.this.findViewById( R.id.textView5 ) ).setText( Double.toString( NanoSqlDatabase.truncateDecimal(  dna_data.A280, 3 ).doubleValue() ) );
-    		    ( ( TextView ) NanoActivity.this.findViewById( R.id.textView4 ) ).setText( "" );
-    		    ( ( TextView ) NanoActivity.this.findViewById( R.id.textView5 ) ).setText( "" );
+    		    ( ( TextView ) NanoActivity.this.findViewById( R.id.textView4 ) ).setText( Double.toString( NanoSqlDatabase.truncateDecimal(  dna_data.OD230, 3 ).doubleValue() ) );
+    		    ( ( TextView ) NanoActivity.this.findViewById( R.id.textView5 ) ).setText( Double.toString( NanoSqlDatabase.truncateDecimal(  dna_data.OD280, 3 ).doubleValue() ) );
     			break;
     			
     		case UPDATE_PROTEIN_RESULT_UI:
@@ -2621,7 +2642,8 @@ public class NanoActivity extends Activity {
     		    table.gvReadyTable("select * from " + NanoSqlDatabase.PROTEIN_VALUE_TABLE_NAME, nano_database.get_database());
     		    table.refresh_last_table();
     		    Protein_measure_data protein_data = ( Protein_measure_data ) msg.obj;
-    		    ( ( TextView ) NanoActivity.this.findViewById( R.id.textView1 ) ).setText( Double.toString( NanoSqlDatabase.truncateDecimal(  protein_data.A280, 3 ).doubleValue() ) );
+    		    //( ( TextView ) NanoActivity.this.findViewById( R.id.textView1 ) ).setText( Double.toString( NanoSqlDatabase.truncateDecimal(  protein_data.A280, 3 ).doubleValue() ) );
+    		    ( ( TextView ) NanoActivity.this.findViewById( R.id.textView1 ) ).setText( Double.toString( NanoSqlDatabase.truncateDecimal(  protein_data.OD280, 3 ).doubleValue() ) );
     			break;
     		}
     	}
@@ -3139,11 +3161,13 @@ public class NanoActivity extends Activity {
     	int index;
     	double A260, A230, A280, A320, Conc;
     	boolean include_A320;
+    	double OD260, OD230, OD280, OD320;
     }
 
     class Protein_measure_data {
     	int index;
     	double A280, coefficient, Conc;
+    	double OD280;
     }
     
     LinkedList<DNA_measure_data> dna_data_list = new LinkedList <DNA_measure_data>();
@@ -3179,7 +3203,8 @@ public class NanoActivity extends Activity {
     			dna_data.A260 = -1;
     		if ( 0.063 <= Transmission_rate && Transmission_rate <= 0.944 ) {
     			//conc=25~1200, linear equation
-    			dna_data.Conc = coeff_k1 * dna_data.A260 + coeff_k2;
+    			dna_data.OD260 = 20 * ( coeff_k1 * dna_data.A260 + coeff_k2 );
+    			//dna_data.Conc = coeff_k1 * dna_data.A260 + coeff_k2;
     			//if ( measure_mode == MEASURE_MODE_dsDNA )
     				//dna_data.Conc = 1047.2 * dna_data.A260 - 11.606;
     				//dna_data.Conc = 1278 * dna_data.A260 - 8.957;
@@ -3201,7 +3226,8 @@ public class NanoActivity extends Activity {
 					//conc more than 1200, non-linear
     				//dna_data.Conc = -13903 * dna_data.A260 * dna_data.A260 + 37750 * dna_data.A260 - 23585;
     				//dna_data.Conc = 3821 * dna_data.A260 * dna_data.A260 - 5209 * dna_data.A260 + 2965;
-    				dna_data.Conc = coeff_k3 * dna_data.A260 * dna_data.A260 + coeff_k4 * dna_data.A260 + coeff_k5;
+    				//dna_data.Conc = coeff_k3 * dna_data.A260 * dna_data.A260 + coeff_k4 * dna_data.A260 + coeff_k5;
+    				dna_data.OD260 = 20 * ( coeff_k3 * dna_data.A260 * dna_data.A260 + coeff_k4 * dna_data.A260 + coeff_k5 );
     			}
     			else
     				if ( 0.944 < Transmission_rate ) {
@@ -3210,22 +3236,31 @@ public class NanoActivity extends Activity {
         				I_blank1 = ( double ) mNano_dev.Get_Min_Voltage_Intensity();
         				if ( I_sample1 != 0) {
         	    			//dna_data.A260 = ( Math.abs( dna_data.A260 ) + Math.abs( Math.log( I_blank1 / I_sample1 ) / Math.log(10) ) ) / 2;
-        					dna_data.Conc = coeff_k1 * Math.abs( dna_data.A260 );
+        					/*dna_data.Conc = coeff_k1 * Math.abs( dna_data.A260 );
         					dna_data.Conc += coeff_k1 * Math.abs( Math.log( I_blank1 / I_sample1 ) / Math.log(10));
-        					dna_data.Conc = dna_data.Conc / 2;
+        					dna_data.Conc = dna_data.Conc / 2;*/
+        					dna_data.OD260 = 20 * coeff_k1 * Math.abs( dna_data.A260 );
+        					dna_data.OD260 += 20 * coeff_k1 * Math.abs( Math.log( I_blank1 / I_sample1 ) / Math.log(10));
+        					dna_data.OD260 = dna_data.OD260 / 2;        					
         	    			//dna_data.Conc = 1000 * dna_data.A260;
         				}
     				}
 			if ( measure_mode == MEASURE_MODE_ssDNA )
-				dna_data.Conc = dna_data.Conc * ( 33 / 50 );
+				dna_data.Conc = dna_data.OD260 * ( 33 );
+				//dna_data.OD260 = dna_data.OD260 * ( 33 / 50 );
 			else
 				if ( measure_mode == MEASURE_MODE_RNA )
-					dna_data.Conc = dna_data.Conc * ( 4 / 5 );
+					dna_data.Conc = dna_data.OD260 * ( 40 );
+					//dna_data.OD260 = dna_data.OD260 * ( 4 / 5 );
+				else
+					if ( measure_mode == MEASURE_MODE_dsDNA )
+						dna_data.Conc = dna_data.OD260 * 50;
     					
     		I_blank = channel_blank.ch1_xenon_mean - channel_blank.ch1_no_xenon_mean;
     		I_sample = channel_sample.ch1_xenon_mean - channel_sample.ch1_no_xenon_mean;
     		if ( I_sample != 0) {
     			dna_data.A280 = Math.log( I_blank / I_sample ) / Math.log(10);
+    			dna_data.OD280 = 20 * dna_data.A280 * this.coeff_p2;
     			if ( dna_data.A280 == 0)
     				dna_data.A280 = -1;
     		}
@@ -3236,6 +3271,7 @@ public class NanoActivity extends Activity {
     		I_sample = channel_sample.ch3_xenon_mean - channel_sample.ch3_no_xenon_mean;
     		if ( I_sample != 0) {
     			dna_data.A230 = Math.log( I_blank / I_sample )  / Math.log(10);
+    			dna_data.OD230 = 20 * dna_data.A230 * this.coeff_p1;
     			if ( dna_data.A230 == 0)
     				dna_data.A230 = -1;
     		}
@@ -3275,8 +3311,11 @@ public class NanoActivity extends Activity {
     	case MEASURE_MODE_PROTEIN:
     		I_blank = channel_blank.ch1_xenon_mean - channel_blank.ch1_no_xenon_mean;
     		I_sample = channel_sample.ch1_xenon_mean - channel_sample.ch1_no_xenon_mean;
-    		if ( I_sample != 0)
-    			protein_data.A280 = 24.38 * Math.log( I_blank / I_sample )  / Math.log(10);
+    		if ( I_sample != 0) {
+    			//protein_data.A280 = 24.38 * Math.log( I_blank / I_sample )  / Math.log(10);
+    			protein_data.A280 = Math.log( I_blank / I_sample )  / Math.log(10);
+    			protein_data.OD280 = 20 * protein_data.A280 * this.coeff_p2; 
+    		}
     		else
     			protein_data.A280 = 0;
     		protein_data.index = protein_data_list.size();
@@ -3286,7 +3325,8 @@ public class NanoActivity extends Activity {
     		else
     			if ( Protein_quantity_mode > 0 ) {
     				protein_data.coefficient = Protein_quantity_coefficient [ Protein_quantity_mode -1 ];
-    				protein_data.Conc = protein_data.A280 * protein_data.coefficient; 
+    				//protein_data.Conc = protein_data.A280 * protein_data.coefficient;
+    				protein_data.Conc = protein_data.OD280 * protein_data.coefficient;
     			}
     		protein_data_list.add( protein_data );
     		nano_database.InsertPROTEINDataToDB( protein_data );

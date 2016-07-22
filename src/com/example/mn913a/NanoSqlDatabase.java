@@ -73,24 +73,32 @@ public class NanoSqlDatabase {
 	public void InsertDNADataToDB ( DNA_measure_data dna_data ) {
 		String index = Integer.toString( dna_data.index );
 		String concentration = Double.toString( truncateDecimal ( dna_data.Conc, 3 ).doubleValue() );
-		String[] dna_od_array = new String [ 3 ];
+		String[] dna_od_array = new String [ 5 ];
 		if ( dna_data.include_A320 == false ) {
 			//dna_od_array [ 0 ] = Double.toString( truncateDecimal ( dna_data.A260 * 25.56, 3 ).doubleValue() );
-			dna_od_array [ 0 ] = Double.toString( truncateDecimal ( dna_data.Conc / 50, 3 ).doubleValue() );
+			/*dna_od_array [ 0 ] = Double.toString( truncateDecimal ( dna_data.Conc / 50, 3 ).doubleValue() );
             dna_od_array [ 1 ] = Double.toString( truncateDecimal ( ( dna_data.A260 * 210 ) / ( dna_data.A230 * 167 ), 3 ).doubleValue() ); 
-            dna_od_array [ 2 ] = Double.toString( truncateDecimal ( ( dna_data.A260 * 19 ) / ( dna_data.A280 * 23 ), 3 ).doubleValue() );
+            dna_od_array [ 2 ] = Double.toString( truncateDecimal ( ( dna_data.A260 * 19 ) / ( dna_data.A280 * 23 ), 3 ).doubleValue() );*/
+			dna_od_array [ 0 ] = Double.toString( truncateDecimal ( dna_data.OD260, 3 ).doubleValue() );
+            dna_od_array [ 1 ] = Double.toString( truncateDecimal ( ( dna_data.OD260 ) / ( dna_data.OD230 ), 3 ).doubleValue() ); 
+            dna_od_array [ 2 ] = Double.toString( truncateDecimal ( ( dna_data.OD260 ) / ( dna_data.OD280 ), 3 ).doubleValue() );
         }
 		else {
 			//dna_od_array [ 0 ] = Double.toString( truncateDecimal ( dna_data.A260 * 25.56, 3 ).doubleValue() );
-			dna_od_array [ 0 ] = Double.toString( truncateDecimal ( dna_data.Conc / 50, 3 ).doubleValue() );
+			/*dna_od_array [ 0 ] = Double.toString( truncateDecimal ( dna_data.Conc / 50, 3 ).doubleValue() );
             dna_od_array [ 1 ] = Double.toString( truncateDecimal ( ( dna_data.A260 * 210 - dna_data.A320 ) / ( dna_data.A230 * 167 - dna_data.A320 ), 3 ).doubleValue() ); 
-            dna_od_array [ 2 ] = Double.toString( truncateDecimal ( ( dna_data.A260 * 19 - dna_data.A320 ) / ( dna_data.A280 * 23 - dna_data.A320 ), 3 ).doubleValue() );
+            dna_od_array [ 2 ] = Double.toString( truncateDecimal ( ( dna_data.A260 * 19 - dna_data.A320 ) / ( dna_data.A280 * 23 - dna_data.A320 ), 3 ).doubleValue() );*/
+			dna_od_array [ 0 ] = Double.toString( truncateDecimal ( dna_data.OD260, 3 ).doubleValue() );
+            dna_od_array [ 1 ] = Double.toString( truncateDecimal ( ( dna_data.OD260 - dna_data.A320 ) / ( dna_data.OD230 - dna_data.A320 ), 3 ).doubleValue() ); 
+            dna_od_array [ 2 ] = Double.toString( truncateDecimal ( ( dna_data.OD260 - dna_data.A320 ) / ( dna_data.OD280 - dna_data.A320 ), 3 ).doubleValue() );
 		}
+		dna_od_array [ 3 ] = Double.toString( truncateDecimal ( dna_data.OD230, 3 ).doubleValue() );
+		dna_od_array [ 4 ] = Double.toString( truncateDecimal ( dna_data.OD280, 3 ).doubleValue() );
 		String space = "";
 
 		String sql_dna_value = "insert into " + DNA_VALUE_TABLE_NAME + " ("
 				+ INDEX + ", " + CONC + ", " + A260 + ", " + A230 + ", " + A280 + ", " + A260_A230 + ", " + A260_A280 + ") values('" + index + "', '" + concentration
-				+ "','" + dna_od_array[0] + "','" + space + "','" + space + "','" + dna_od_array[1] + "','" + dna_od_array[2] + "');";
+				+ "','" + dna_od_array[0] + "','" + dna_od_array [ 3 ] + "','" + dna_od_array [ 4 ] + "','" + dna_od_array[1] + "','" + dna_od_array[2] + "');";
 				//+ INDEX + ", " + CONC + ", " + A260 + ", " + A260_A230 + ", " + A260_A280 + ") values('" + index + "', '" + concentration
 				//+ "','" + dna_od_array[0]  + "','" + dna_od_array[1] + "','" + dna_od_array[2] + "');";
 
@@ -106,7 +114,8 @@ public class NanoSqlDatabase {
 	
 	public void InsertPROTEINDataToDB( Protein_measure_data protein_data ) {
 		String index = Integer.toString( protein_data.index );
-		String A280_value = Double.toString( truncateDecimal ( protein_data.A280, 3 ).doubleValue() );
+		//String A280_value = Double.toString( truncateDecimal ( protein_data.A280, 3 ).doubleValue() );
+		String A280_value = Double.toString( truncateDecimal ( protein_data.OD280, 3 ).doubleValue() );
 		String coefficient, concentration;
 		if ( protein_data.coefficient < 0 ) {
 			coefficient = "";
