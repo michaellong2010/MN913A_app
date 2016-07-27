@@ -34,10 +34,10 @@ public class MN913A_Properties extends Properties {
 	public static final String prop_k5 = "2nd_order_polynomial_3rd_term";
 	public static final double def_prop_k5 = 0.0d;
 	
-	public static final String prop_p1 = "A230 transfer factor";
+	public static final String prop_p1 = "A230_transfer_factor";
 	public static final double def_prop_p1 = ( double ) 0.05;
 	
-	public static final String prop_p2 = "A280 transfer factor";
+	public static final String prop_p2 = "A280_transfer_factor";
 	public static final double def_prop_p2 = ( double ) 0.05;
 	
 	MN913A_Properties() {

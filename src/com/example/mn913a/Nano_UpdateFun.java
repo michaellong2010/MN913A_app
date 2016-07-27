@@ -319,7 +319,7 @@ public class Nano_UpdateFun extends Activity {
  				about_dialog_layout = (LinearLayout) LayoutInflater.from(Nano_UpdateFun.this.getApplicationContext()).inflate(R.layout.dialog_about, null);//dialog_about xml
  			about_dialog.getWindow().setGravity(Gravity.TOP);
  			about_dialog.setContentView(about_dialog_layout);
- 			about_dialog.setTitle("About");
+ 			about_dialog.setTitle("Update FW/APP");
  			about_dialog.setCancelable(true);
  			about_dialog.setCancelMessage(mHandler.obtainMessage(Msg_Cancel_Dlg));
  		}
@@ -526,7 +526,7 @@ public class Nano_UpdateFun extends Activity {
 				if (isValidMD5(local_app_md5)) {
 					if (isValidMD5(server_app_md5)) {
 						if (server_app_md5.equalsIgnoreCase(local_app_md5)) {
-							iTrack_app_ver_desc.setText("iTrack App ver.:  " + getAppDesc() + "(up-to-date)");
+							iTrack_app_ver_desc.setText("Nano Pro App ver.:  " + getAppDesc() + "(up-to-date)");
 							if (force_upgrade && is_internet_available()) {
 								//dlgbtn_update.setEnabled(true);//jan mark
 								//Log.d ( Tag, "upgrade button enable 2" );
@@ -535,7 +535,7 @@ public class Nano_UpdateFun extends Activity {
 							//	dlgbtn_update.setEnabled(false);
 						}
 						else {
-							iTrack_app_ver_desc.setText("iTrack App ver.:  " + getAppDesc() + "(out-of-date)");
+							iTrack_app_ver_desc.setText("Nano Pro App ver.:  " + getAppDesc() + "(out-of-date)");
 							if (is_internet_available() && url_list.isEmpty() ) {
 								//dlgbtn_update.setEnabled(true);//jan mark
 								//Log.d ( Tag, "upgrade button enable 3" );
@@ -544,12 +544,12 @@ public class Nano_UpdateFun extends Activity {
 						}										
 					}
 					else{
-						Log.d ( Tag, "#@##  iTrack App ver.:  NO " );
-						iTrack_app_ver_desc.setText("iTrack App ver.:  " + getAppDesc());
+						Log.d ( Tag, "#@##  Nano Pro ver.:  NO " );
+						iTrack_app_ver_desc.setText("Nano Pro App ver.:  " + getAppDesc());
 					}
 				}
 				else {
-					iTrack_app_ver_desc.setText("iTrack App ver.:  ");
+					iTrack_app_ver_desc.setText("Nano Pro App ver.:  ");
 				}
 					
 				Log.d(Tag, "##firmware= " + server_firmware_md5);
@@ -581,13 +581,13 @@ public class Nano_UpdateFun extends Activity {
 					}
 					else {
 						Log.d ( Tag, "MN913 Firmware ver.: ###########" );
-						iTrack_firmware_ver_desc.setText("iTrack Firmware ver.:  " + getFirmwareDesc());
+						iTrack_firmware_ver_desc.setText("Nano Pro Firmware ver.:  " + getFirmwareDesc());
 					}
 				}
 				else {
 					//MN_913A_Device.MN913A_IOCTL(CMD_T.HID_CMD_MN913_FW_HEADER, 0, 1, dataBytes, 1);
 					//Log.d ( Tag, "MN913 Firmware ver.:  " + getFirmwareDesc() + "(up-to-date)");
-					iTrack_firmware_ver_desc.setText("iTrack Firmware ver.:  " + getFirmwareDesc() + "fail");
+					iTrack_firmware_ver_desc.setText("Nano Pro Firmware ver.:  " + getFirmwareDesc() + "fail");
 				}	 //jan mark
 
 				if ( isValidMD5( local_usermanual_md5 ) ) {

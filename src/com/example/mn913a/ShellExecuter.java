@@ -40,57 +40,29 @@ public String Executer(String command) {
 
 private final String Msg_Shell_Command_Error = "shell command error";
 	public String exec_shell_command_mn913a( String shell_cmd ) {
-		// TODO Auto-generated method stub
-		String result, line;
-		java.lang.Process p;
-		java.lang.Runtime rt;
-		byte[] buff;
-		int readed;
+        StringBuffer output = new StringBuffer();
+        String result=null;
+        Process p;
+        
+        try {
+            p = Runtime.getRuntime().exec(shell_cmd);
+            p.waitFor();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
 
-		result = Msg_Shell_Command_Error;
-		buff = new byte[100];
-		/*try {
-				 Thread.sleep(3000);
-				 Log.d(Tag, "?????  ###################  exec_shell_command: " );
-	     } catch (Exception ex) {
-	     }*/
-		try {
-			
-			rt = Runtime.getRuntime();
-			p = rt.exec(new String[] { "su" });///system/xbin/
-			DataOutputStream os = new DataOutputStream(p.getOutputStream());
+            String line = "";
+            if ( p.exitValue() == 0 ) {
+            while ((line = reader.readLine())!= null) {
+                output.append(line + "n");
+            }
+            result ="COPY FILES PASS";
+            }else{
+            	result = Msg_Shell_Command_Error;
+            }
 
-			InputStreamReader is_reader = new InputStreamReader ( p.getInputStream() );
-			BufferedReader buf_is_reader = new BufferedReader ( is_reader );
-			os.writeBytes( shell_cmd );
-			os.writeBytes( "exit\n" );
-			os.flush();
-			p.waitFor();
-			if ( p.exitValue() == 0 ) {
-				result = "";
-				while ( ( line = buf_is_reader.readLine() ) != null ) {
-					result += line;
-				}
-				Log.d(Tag, "???  ###################  exitValue : " );
-			}
-			else
-				result = Msg_Shell_Command_Error;
-			os.flush();
-			os.close();
-			is_reader.close();
-			buf_is_reader.close();
-			p.waitFor();
-			p.destroy();
-		} catch (IOException e) {
-			Log.d(Tag, "???  ###################  exec_shell_command error: " );
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (Exception ex) {
-			Log.d(Tag, "???  ###################  exec_shell_command Exception: " );
-		}
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 		
 		return result;
 	}
 }
-
-

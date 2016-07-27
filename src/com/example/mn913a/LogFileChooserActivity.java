@@ -31,6 +31,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.StateListDrawable;
@@ -40,6 +41,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.support.v7.widget.ActionBarOverlayLayout;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.ActionMode;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -68,6 +70,7 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
 import ar.com.daidalos.afiledialog.FileChooserActivity;
 import ar.com.daidalos.afiledialog.FileChooserCore;
 import ar.com.daidalos.afiledialog.view.FileItem;
@@ -195,6 +198,40 @@ public class LogFileChooserActivity extends FileChooserActivity {
             btn_rename = ( ImageButton ) customActionView.findViewById( R.id.imageButton1 );
             btn_delete_files = ( ImageButton ) customActionView.findViewById( R.id.imageButton2 );
             btn_storage = ( ImageButton ) customActionView.findViewById( R.id.imageButton3 );
+
+            btn_storage.setOnClickListener( new View.OnClickListener() {
+                /*20160727 Jan*/
+				@Override
+				public void onClick(View v) {
+					// TODO Auto-generated method stub
+					ShellExecuter exe = new ShellExecuter();
+					Iterator<FileItem> it;
+					FileItem iterator_item;
+					it = selected_file_items.iterator();
+					String outputPath = "/mnt/media_rw/udisk" ;
+					String result=null;
+					String inputfile1=null;
+					while (it.hasNext()) {
+						iterator_item = it.next();
+						inputfile1 =iterator_item.getFile().getAbsolutePath();
+					    try {
+                             String cmd_str = "/system/xbin/su & cp " + inputfile1 + " " + outputPath;
+                             result =  exe.exec_shell_command_mn913a(cmd_str);
+                             Log.d(Tag, "copy : " + result);
+					        }  
+					        catch (Exception e) {
+					        Log.e("tag", e.getMessage());
+					    }
+					}
+					if(result == "COPY FILES PASS"){
+						Show_Toast_Msg("COPY  " + inputfile1 + " Files Success");
+					}else{
+						
+					}
+					update_actionbar_optiomenu();
+				}
+            	
+            } );
             
             btn_delete_files.setOnClickListener( new View.OnClickListener() {
 
@@ -812,10 +849,14 @@ public class LogFileChooserActivity extends FileChooserActivity {
 		int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
 		              | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
 		decorView.setSystemUiVisibility(uiOptions);
+		
+		if ( activity_use_for.equals( ACTIVITY_USE_FOR_MANAGEMENT ) )
+			mNano_dev.MN913A_IOCTL ( CMD_T.HID_CMD_PRINTER_POWER_ON, 0, 0, null, 0 );
     }
     
 	@Override
     protected void onDestroy() {
+		//mNano_dev.MN913A_IOCTL ( CMD_T.HID_CMD_PRINTER_POWER_ON, 0, 0, null, 0 );
 		super.onDestroy();
 		unregisterReceiver(mReceiver);
 	}
@@ -1707,6 +1748,7 @@ public class LogFileChooserActivity extends FileChooserActivity {
 							if ( LogFileChooserActivity.this.getIntent().getExtras().containsKey( "target vol." ) )
 								intent.putExtra( "target vol.", LogFileChooserActivity.this.getIntent().getExtras().getDouble( "target vol." ) );
 							intent.putExtra( NormalizationActivity.INPUT_ACTIVITY_USE_NEW_UI, true );
+							intent.setAction( LogFileChooserActivity.this.getIntent().getAction() );
 							if ( LogFileChooserActivity.this.getIntent().getAction().equals( UsbManager.ACTION_USB_DEVICE_ATTACHED ) ) {
 								UsbDevice device = (UsbDevice) LogFileChooserActivity.this.getIntent().getParcelableExtra(UsbManager.EXTRA_DEVICE);
 								Log.d ( "NanoActivity debug device", device.toString() );
@@ -1978,4 +2020,31 @@ public class LogFileChooserActivity extends FileChooserActivity {
       }  
       return true;  
     }
+    
+    @Override
+    protected void onStart() {
+    	super.onStart();
+    	EnumerationDevice(getIntent());
+    	
+    	if ( activity_use_for.equals( ACTIVITY_USE_FOR_ANALYSIS ) )
+    		mNano_dev.MN913A_IOCTL ( CMD_T.HID_CMD_PRINTER_POWER_OFF, 0, 0, null, 0 );
+    }
+    
+    public void Show_Toast_Msg(String msg ) {
+ 		Toast mToastMsg;
+ 		
+ 		if (msg.contains("flush log file: "))
+ 			mToastMsg = Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_LONG);
+ 		else
+ 			mToastMsg = Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT);
+     	TextView v = (TextView) mToastMsg.getView().findViewById(android.R.id.message);
+     	v.setTextColor(Color.WHITE);
+     	v.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20);
+
+    // 	if (msg.equals(I_Tracker_Device_Conn) || msg.equals(I_Tracker_Device_DisCon))
+     //	  mToastMsg.setGravity(Gravity.CENTER_HORIZONTAL | Gravity.TOP, 0, 250);
+     //	else
+     		mToastMsg.setGravity(Gravity.CENTER_HORIZONTAL | Gravity.TOP, 0, 125);
+ 		mToastMsg.show();
+     }
 }

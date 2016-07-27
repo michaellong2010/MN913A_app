@@ -474,6 +474,8 @@ public class MN_913A_Device {
 	    public static final int HID_CMD_PRINT_META_DATA = 0xC1;
 	    public static final int HID_CMD_MN913_FW_UPGRADE = 0xA0 ;  //20160705 Jan
 	    public static final int HID_CMD_MN913_FW_HEADER =  0xA1 ;  //20160705 Jan
+	    public static final int HID_CMD_PRINTER_POWER_ON =  0xA2 ;
+	    public static final int HID_CMD_PRINTER_POWER_OFF =  0xA3 ;
 	    
 	    public CMD_T() {
 	        mMessageBuffer = ByteBuffer.allocate(SZ_CMD_T);
@@ -731,6 +733,18 @@ public class MN_913A_Device {
 				mDataBuffer.clear();
 				mDataBuffer.limit(arg2*PAGE_SIZE);
 				mDataBuffer.put(data, 0, arg2*PAGE_SIZE);
+				break;
+			case HID_CMD_PRINTER_POWER_ON:
+				if (debug != 0)
+					Log.d(Tag, ">>> MN913A turn on printer power\n");
+				arg1 = 0;
+				arg2 = 0;
+				break;
+			case HID_CMD_PRINTER_POWER_OFF:
+				if (debug != 0)
+					Log.d(Tag, ">>> MN913A turn off printer power\n");
+				arg1 = 0;
+				arg2 = 0;
 				break;
 			}
 			len = CMD_T.SZ_CMD_T - 4; /* Not include checksum */

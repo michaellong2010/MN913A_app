@@ -77,6 +77,7 @@ import android.view.View;
 import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
+import android.view.Window;
 import android.view.WindowManager;
 import android.view.View.OnClickListener;
 import android.view.inputmethod.EditorInfo;
@@ -127,7 +128,7 @@ public class NanoActivity extends Activity {
 	double xenon_voltage;
 	DisplayMetrics metrics;
 	FrameLayout mLayout_Content;
-	LinearLayout mLayout_DNA_MeasurePage, mLayout_MainPage, mLayout_SettingPage, gridlayout, mLayout_Protein_MeasurePage, calibration_layout;
+	LinearLayout mLayout_about, mLayout_DNA_MeasurePage, mLayout_MainPage, mLayout_SettingPage, gridlayout, mLayout_Protein_MeasurePage, calibration_layout;
 	Thread timerThread = null;
 	SimpleDateFormat df = new SimpleDateFormat("yyyy.MM.dd a HH:mm");
 	SimpleDateFormat df1 = new SimpleDateFormat("yyyy.MM.dd a HH:mm:ss");
@@ -184,6 +185,7 @@ public class NanoActivity extends Activity {
 	private String versionName;
 	byte[] dataBytes = new byte[1024];
 	byte[] dataBytes1 = new byte[1024];
+	int activity_result_code = 0;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -349,6 +351,15 @@ public class NanoActivity extends Activity {
 		params.verticalWeight = ( float ) 1.0;
 		//alert_dlg1.getWindow().setAttributes( params );
 		alert_dlg1.setContentView( calibration_layout );
+		alert_dlg1.setOnDismissListener( new DialogInterface.OnDismissListener () {
+
+			@Override
+			public void onDismiss(DialogInterface dialog) {
+				// TODO Auto-generated method stub
+				mNano_dev.MN913A_IOCTL ( CMD_T.HID_CMD_PRINTER_POWER_OFF, 0, 0, null, 0 );
+			}
+			
+		} );
 		
 		Button btn_cali_print = ( Button ) calibration_layout.findViewById( R.id.button1 );
 		btn_cali_print.setOnClickListener( new View.OnClickListener() {
@@ -1210,10 +1221,10 @@ public class NanoActivity extends Activity {
 
             public void onClick(View v) {
         		mLayout_Content.removeAllViews ( );
-        		if ( mLayout_DNA_MeasurePage == null) {
-        			mLayout_DNA_MeasurePage = ( LinearLayout ) inflater.inflate( R.layout.about, null );
+        		if ( mLayout_about == null) {
+        			mLayout_about = ( LinearLayout ) inflater.inflate( R.layout.about, null );
         		}
-        		mLayout_Content.addView( mLayout_DNA_MeasurePage );
+        		mLayout_Content.addView( mLayout_about );
         		mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_MN913_FW_HEADER, 0, 1, dataBytes, 1);
         		iTrack_app_ver_desc = (TextView)findViewById(R.id.AppInfoText);
         		FW_ver_desc = (TextView)findViewById(R.id.FwInfoText);
@@ -1564,6 +1575,14 @@ public class NanoActivity extends Activity {
 		write_file.flush_close_file();
 		
 		//write_file.create_file(filename);
+	}
+
+	public void switch_to_main_page_about(View v){
+		/*20160725 Jan*/
+		mLayout_Content.removeAllViews ( );
+		if ( mLayout_MainPage == null )
+			mLayout_MainPage = ( LinearLayout ) inflater.inflate( R.layout.activity_main1, null );
+		mLayout_Content.addView( mLayout_MainPage );
 	}
 	
 	public void switch_to_main_page ( View v ) {
@@ -2374,6 +2393,11 @@ public class NanoActivity extends Activity {
 		int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
 		              | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
 		decorView.setSystemUiVisibility(uiOptions);
+		
+		if ( activity_result_code == 1023 ) {
+			mNano_dev.MN913A_IOCTL ( CMD_T.HID_CMD_PRINTER_POWER_OFF, 0, 0, null, 0 );
+			activity_result_code = 0;
+		}
     }
     
 	@Override
@@ -2830,6 +2854,7 @@ public class NanoActivity extends Activity {
             								alert_dlg1.setTitle( "Calibration Result" );
             								alert_dlg1.show();
             								alert_dlg1.getWindow().setLayout( LayoutParams.MATCH_PARENT, 600 );
+            								mNano_dev.MN913A_IOCTL ( CMD_T.HID_CMD_PRINTER_POWER_ON, 0, 0, null, 0 );
             							}
                           		  });
                         		  
@@ -3346,6 +3371,7 @@ public class NanoActivity extends Activity {
                 // The Intent's data Uri identifies which contact was selected.
 
                 // Do something with the contact here (bigger example below)
+            	activity_result_code = 1023;
             	Log.d ( Tag, "onActivityResult" );
             }
         }
@@ -3623,6 +3649,9 @@ public class NanoActivity extends Activity {
 				    WifiInfo myWifiInfo = myWifiManager.getConnectionInfo();
 				    int myIp = myWifiInfo.getIpAddress();
 				
+				    if ( myIp==0 ){
+				    	Wifi_connect_fail();				
+				    } else{
 				    ipAddress = Formatter.formatIpAddress(myIp);
 			
 	                ShellExecuter exe = new ShellExecuter();
@@ -3678,6 +3707,7 @@ public class NanoActivity extends Activity {
    	          popupWindow.showAtLocation( btn_share, Gravity.TOP | Gravity.RIGHT,400, 79 ); //600 139
               popupWindow.showAsDropDown( btn_share, 1, 1);
               btn_share.setImageDrawable(getResources().getDrawable ( R.drawable.share_on ) );
+              }
             }         
 
         });   
@@ -3708,5 +3738,28 @@ public class NanoActivity extends Activity {
     public String getAppDesc() { //20160629 Jan
     	//return "versionCode=" + Integer.toString(versionCode) + "  " + "versionName=" + versionName;
     	return Integer.toString(versionCode) + "---"  + versionName;
+    }
+    
+	LinearLayout end_dialog_layout;
+	Button okbtn_end,cancel_end;
+    private void Wifi_connect_fail() {
+         final AlertDialog End_dialog= new AlertDialog.Builder(this).create(); 
+         end_dialog_layout = (LinearLayout) LayoutInflater.from(NanoActivity.this.getApplicationContext()).inflate(R.layout.wifi_dialog_end, null);
+         End_dialog.setView(end_dialog_layout);
+         End_dialog.setTitle("MaestroNano");
+
+	     Window window = End_dialog.getWindow(); 
+	     window.setGravity(Gravity.CENTER);
+	     End_dialog.setCancelable(false);
+	     End_dialog.show();
+	      
+ 	  
+	     okbtn_end = (Button) end_dialog_layout.findViewById(R.id.dialog_dismiss);
+	           okbtn_end.setOnClickListener(new View.OnClickListener() {
+	     	    public void onClick(View v) {
+					End_dialog.dismiss(); 
+	     		}
+	     });
+	     
     }
 }

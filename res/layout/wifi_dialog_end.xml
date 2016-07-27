@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    
+   <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" >
+
+      
+  </RelativeLayout>
+  
+  <RelativeLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" >
+
+            <TextView
+		            android:id="@+id/MESSAGE"
+		            android:layout_width="wrap_content"
+		            android:layout_height="wrap_content"
+		            android:layout_marginTop="25dp"
+				    android:layout_marginLeft="210dp"
+				    android:text="  Wifi is turn off "
+				    android:textColor="#FF000000"
+		            android:textSize="36dp"/>
+             
+            <Button
+		            android:id="@+id/dialog_dismiss"
+		            android:layout_width="wrap_content"
+		            android:layout_height="wrap_content"
+		            android:layout_marginTop="85dp"  
+		            android:layout_marginLeft="290dp"
+		            android:textSize="36dp"
+		            android:text="Close" 
+		            android:textColor="#FF000000"
+		            android:background="#FFCCCCCC" />
+
+  </RelativeLayout>
+</LinearLayout>

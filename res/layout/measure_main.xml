@@ -79,7 +79,7 @@
                 android:id="@+id/textView1"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="118dp"
+                android:layout_marginLeft="60dp"
                 android:layout_marginTop="90dp"
                 android:gravity="center"
                 android:fontFamily="Calibri"

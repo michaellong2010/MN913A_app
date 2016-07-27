@@ -158,12 +158,16 @@ public class NormalizationActivity extends Activity {
 				if ( allow_checked == true ) {
 					checkbox1.toggle();
 					if ( checkbox1.isChecked() ) {
+						if ( selected_fillMaps.get( position ).get( dst_from [2] ).equals( "NA" ) == false ) {
 						selected_fillMaps.get( position ).put( "isSelected", "true" );
 						( ( ListView ) parent ).setItemChecked( position, true );
+						}
 					}
 					else {
+						if ( selected_fillMaps.get( position ).get( dst_from [2] ).equals( "NA" ) == false ) {
 						selected_fillMaps.get( position ).put( "isSelected", "false" );
 						( ( ListView ) parent ).setItemChecked( position, false );
+						}
 					}
 					
 					//selection_count = 0;
@@ -303,6 +307,8 @@ public class NormalizationActivity extends Activity {
     	mNano_dev = new MN_913A_Device ( this );
     	mRequest_USB_permission = false;
     	EnumerationDevice(getIntent());
+    	
+    	mNano_dev.MN913A_IOCTL ( CMD_T.HID_CMD_PRINTER_POWER_ON, 0, 0, null, 0 );
 	}
 	
 	@Override
@@ -572,7 +578,13 @@ public class NormalizationActivity extends Activity {
 				while ( data_count > 0 ) {
 				  byte_offset = 4;
 				  
-				  bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt( 10 ).array();
+				  packed_data_count = 0;
+				  if ( data_count > 10)
+					  total_packed_data_count = 10;
+				  else
+					  total_packed_data_count = data_count;
+
+				  bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt( total_packed_data_count ).array();
 				  System.arraycopy ( bytes, 0, meta_print_data, byte_offset, bytes.length );
 				  byte_offset = byte_offset + bytes.length;
 				  
@@ -584,11 +596,6 @@ public class NormalizationActivity extends Activity {
 				  System.arraycopy ( bytes, 0, meta_print_data, byte_offset, bytes.length );
 				  byte_offset = byte_offset + bytes.length;
 
-				  packed_data_count = 0;
-				  if ( data_count > 10)
-					  total_packed_data_count = 10;
-				  else
-					  total_packed_data_count = data_count;
 				  while ( packed_data_count < total_packed_data_count ) {
 					  map1 = it.next();
 					  if ( map1.get( "isSelected" ) != null && map1.get( "isSelected" ).equals( "true" ) ) {
