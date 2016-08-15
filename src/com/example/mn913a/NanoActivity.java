@@ -4,14 +4,19 @@ package com.example.mn913a;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.IntBuffer;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -85,8 +90,10 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.AdapterView;
+import android.widget.CheckBox;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.FrameLayout;
@@ -131,7 +138,7 @@ public class NanoActivity extends Activity {
 	LinearLayout mLayout_about, mLayout_DNA_MeasurePage, mLayout_MainPage, mLayout_SettingPage, gridlayout, mLayout_Protein_MeasurePage, calibration_layout;
 	Thread timerThread = null;
 	SimpleDateFormat df = new SimpleDateFormat("yyyy.MM.dd a HH:mm");
-	SimpleDateFormat df1 = new SimpleDateFormat("yyyy.MM.dd a HH:mm:ss");
+	SimpleDateFormat df1 = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss");
 	SimpleDateFormat dateformat = new SimpleDateFormat("yyyyMMdd.HHmmss");
 	LayoutInflater inflater;
 	
@@ -150,7 +157,7 @@ public class NanoActivity extends Activity {
 	File sdcard = Environment.getExternalStorageDirectory();
 	final String Nano_Data_Dir = sdcard.getPath() + "/MaestroNano/Measure/";
 	
-	AlertDialog alert_dlg, alert_dlg2;
+	AlertDialog alert_dlg, alert_dlg2, alert_dlg3;
 	Dialog alert_dlg1;
 	RadioGroup protein_quantity_layout;
 	AlertDialog.Builder alert_dlg_builder;
@@ -161,6 +168,7 @@ public class NanoActivity extends Activity {
 	Thread_sync Thread_Sync_By_Obj;
 	
 	ImageButton btn_update_check, btn_user_manual, main_page_btn_dsDNA, main_page_btn_calibration, dsDNA_page_home, dsDNA_page_btn_blank, dsDNA_page_btn_sample, btn_share;
+	static ImageButton setting_page_btn_calibration;
 	int Cur_Protein_quantity_mode, Protein_quantity_mode = -1;
 	Double Protein_quantity_coefficient [] = { 6.67, 13.7, 26.4, 1.0 };
 	EditText ed_protein_quantity;
@@ -171,21 +179,28 @@ public class NanoActivity extends Activity {
 	HashMap<String, String> cali_data = new HashMap<String, String>();
 	boolean is_store_cali_data = false;
 	ListView calibration_list;
-	SimpleAdapter cali_list_adapter;
+	//SimpleAdapter cali_list_adapter;
+	calibration_result_adapter cali_list_adapter;
 	String[] calibration_from = new String[] { "datetime", "before", "after", "situation" };
 	FileOperateObject cali_write_file, cali_read_file;
 	Calendar calendar = Calendar.getInstance();
 	int Lcd_Brightness_Level = -1, Cur_Lcd_Brightness_Level = -1;
 	MN913A_Properties app_properties;
-	Double coeff_k1, coeff_k2, coeff_k3, coeff_k4, coeff_k5, coeff_p1, coeff_p2;
+	Double coeff_k1, coeff_k2, coeff_k3, coeff_k4, coeff_k5, coeff_p1, coeff_s1, coeff_T1, coeff_T2, coeff_p3, coeff_p4, coeff_p5, coeff_s3, coeff_s4, coeff_s5;
 	
-	String ipAddress = null, command, lighttpd, fcgiserver, testcmd;
+	String ipAddress = null, command, lighttpd, fcgiserver, testcmd,lncmd,tarcmd,rmcmd;
 	static Bitmap bitmap = null;
 	private int versionCode;
 	private String versionName;
 	byte[] dataBytes = new byte[1024];
 	byte[] dataBytes1 = new byte[1024];
 	int activity_result_code = 0;
+	int calibration_prompt_id = 0;
+	public static String[] arr1 = new String[10];
+	static String serial_line = " ";
+	int set_time=0;
+	int [] datetime_data_int = new int [ 256 / 4 ];
+	int mCali_Selected_count = 0;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -317,6 +332,22 @@ public class NanoActivity extends Activity {
 		alert_dlg2.setCanceledOnTouchOutside( false );
 		alert_dlg2.setCancelable( false );
 		
+		alert_dlg3 = alert_dlg_builder.create();
+		alert_dlg3.setTitle( "Message" );
+		alert_dlg3.setCanceledOnTouchOutside( false );
+		alert_dlg3.setCancelable( false );
+
+		preference = this.getSharedPreferences ( PREFS_NAME, 0 );
+        if (preference.getBoolean("firstrun", true)) {
+            // Do first run stuff here then set 'firstrun' as false
+            // using the following line to edit/commit prefs
+        	preference.edit().putBoolean("firstrun", false).commit();
+        	ShellExecuter exe = new ShellExecuter();
+        	exe.Executer( "/system/xbin/su & rm /mnt/sdcard/MaestroNano/misc/calibration_result.ojt" );
+        	exe.Executer( "/system/xbin/su & rm -rf /mnt/sdcard/MaestroNano/Measure/*" );
+        	exe.Executer( "/system/xbin/su & mkdir -p /mnt/sdcard/MaestroNano/Measure" );
+        }
+
 		cali_read_file = new FileOperateObject ( "misc", "calibration_result" );
 	    try {
 	    	cali_read_file.open_read_file(cali_read_file.generate_filename_no_date());
@@ -345,8 +376,65 @@ public class NanoActivity extends Activity {
 	    params = alert_dlg1.getWindow().getAttributes();
 		calibration_layout = ( LinearLayout ) LayoutInflater.from ( alert_dlg1.findViewById( android.R.id.content ).getContext() ).inflate( R.layout.calibration_layout, null );
 		calibration_list = ( ListView ) calibration_layout.findViewById( R.id.calibration_list );
-		cali_list_adapter = new SimpleAdapter ( this, Calibration_Data_List, R.layout.calibration_listview_item, calibration_from, new int[] { R.id.ItemText1, R.id.ItemText2, R.id.ItemText3, R.id.ItemText4 } );
+		cali_list_adapter = new calibration_result_adapter ( this, Calibration_Data_List );
+		//cali_list_adapter = new SimpleAdapter ( this, Calibration_Data_List, R.layout.calibration_listview_item, calibration_from, new int[] { R.id.ItemText1, R.id.ItemText2, R.id.ItemText3, R.id.ItemText4 } );
 		calibration_list.setAdapter( cali_list_adapter );
+		calibration_list.setOnItemClickListener(new OnItemClickListener () {
+
+			@Override
+			public void onItemClick(AdapterView<?> parent, View view,
+					int position, long id) {
+				CheckBox checkbox1, checkbox2;
+				// TODO Auto-generated method stub
+				checkbox1 = ( CheckBox ) view.findViewById( R.id.checkbox2 );
+				if ( position == 0 ) {
+					checkbox1.toggle();
+					for ( HashMap <String, String> map : Calibration_Data_List ) {
+						if ( checkbox1.isChecked() ) {
+							map.put( "isSelected", "true" );
+						}
+						else {
+							map.put( "isSelected", "false" );
+						}	
+					}
+					cali_list_adapter.notifyDataSetChanged();
+					
+					if ( checkbox1.isChecked() )
+						mCali_Selected_count = Calibration_Data_List.size() - 1;
+					else
+						mCali_Selected_count = 0;
+				}
+				else {
+					checkbox1.toggle();
+					if ( checkbox1.isChecked() ) {
+						Calibration_Data_List.get( position ).put( "isSelected", "true" );
+						( ( ListView ) parent ).setItemChecked( position, true );
+						mCali_Selected_count++;
+					}
+					else {
+						Calibration_Data_List.get( position ).put( "isSelected", "false" );
+						( ( ListView ) parent ).setItemChecked( position, false );
+						mCali_Selected_count--;
+					}
+				}
+				
+				checkbox2 = ( CheckBox ) ( ( ListView ) parent ).getChildAt( 0 ).findViewById( R.id.checkbox2 );
+				Button btn_cali_print = ( Button ) ( ( ListView ) parent ).getRootView().findViewById( R.id.button1 );
+				if ( mCali_Selected_count > 0 ) {
+					 if ( ( mCali_Selected_count == ( Calibration_Data_List.size() - 1 ) ) )
+						 checkbox2.setChecked( true );
+					 btn_cali_print.setEnabled( true );
+				}
+				else
+					if ( mCali_Selected_count < ( Calibration_Data_List.size() - 1 ) ) {
+						checkbox2.setChecked( false );
+						if ( mCali_Selected_count == 0 )
+							btn_cali_print.setEnabled( false );
+					}
+					
+			}
+			
+		});
 		params.horizontalWeight = ( float ) 2.0;
 		params.verticalWeight = ( float ) 1.0;
 		//alert_dlg1.getWindow().setAttributes( params );
@@ -357,6 +445,7 @@ public class NanoActivity extends Activity {
 			public void onDismiss(DialogInterface dialog) {
 				// TODO Auto-generated method stub
 				mNano_dev.MN913A_IOCTL ( CMD_T.HID_CMD_PRINTER_POWER_OFF, 0, 0, null, 0 );
+				calibration_prompt_id = 0;
 			}
 			
 		} );
@@ -367,18 +456,110 @@ public class NanoActivity extends Activity {
 			@Override
 			public void onClick(View v) {
 				// TODO Auto-generated method stub
-				HashMap<String, String> map = Calibration_Data_List.getLast();
+				new Thread () {
+					@Override
+					public void run() {
+						HashMap<String, String> map = Calibration_Data_List.getLast();
+						String [] str_arry;
+						byte [] datetime_data = new byte [ 24 ], meta_print_data = new byte [ 1024 ];
+						byte [] bytes;
+						int byte_offset = 0, hour_offset = 0, byte_offset1 = 0;
+						boolean is_next_setting_hour = false;
+						
+		                for ( HashMap<String, String> map1 : Calibration_Data_List ) {
+		                if ( map1.get( "isSelected" ) != null && map1.get( "isSelected" ).equals( "true" ) == true  && map1.get( "situation" ).equals( "situation" ) == false )
+			              map = map1;
+		                else
+		                	continue;
+
+		                byte_offset = 0;
+						bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt( 1 ).array();
+						System.arraycopy ( bytes, 0, meta_print_data, byte_offset, bytes.length );
+					    byte_offset = byte_offset + bytes.length;
+						str_arry = map.get( "datetime" ).split( "\\.|\\ |:" );
+						byte_offset1 = 0;
+						for ( String s: str_arry ) {
+							if ( s.equalsIgnoreCase( "AM" ) ) {
+								is_next_setting_hour = true;
+								hour_offset = 0;
+							}
+							else
+								if ( s.equalsIgnoreCase( "PM" ) ) {
+									is_next_setting_hour = true;
+									hour_offset = 12;
+								}
+								else {
+									if ( is_next_setting_hour == true ) {
+										bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt( Integer.parseInt( s ) + hour_offset ).array();
+										is_next_setting_hour = false;
+									}
+									else
+										bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt( Integer.parseInt( s ) ).array();
+									System.arraycopy ( bytes, 0, datetime_data, byte_offset1, bytes.length );
+									byte_offset1 = byte_offset1 + bytes.length;
+								}
+						}
+						System.arraycopy ( datetime_data, 0, meta_print_data, byte_offset, datetime_data.length );
+					    byte_offset = byte_offset + datetime_data.length;
+
+					    //alignment stuff
+						bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt( 1 ).array();
+						System.arraycopy ( bytes, 0, meta_print_data, byte_offset, bytes.length );
+					    byte_offset = byte_offset + bytes.length;
+					    
+						bytes = ByteBuffer.allocate(8).order( ByteOrder.LITTLE_ENDIAN ).putDouble( Double.parseDouble( map.get( "before" ) ) ).array();
+						System.arraycopy ( bytes, 0, meta_print_data, byte_offset, bytes.length );
+						byte_offset = byte_offset + bytes.length;
+						
+						bytes = ByteBuffer.allocate(8).order( ByteOrder.LITTLE_ENDIAN ).putDouble( Double.parseDouble( map.get( "after" ) ) ).array();
+						System.arraycopy ( bytes, 0, meta_print_data, byte_offset, bytes.length );
+						byte_offset = byte_offset + bytes.length;
+						
+						if ( map.get( "situation" ).equals( "pass" ) ) {
+							bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt( 1 ).array();
+						}
+						else
+							if ( map.get( "situation" ).equals( "fail" ) ) {
+								bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt( 0 ).array();
+							}
+						System.arraycopy ( bytes, 0, meta_print_data, byte_offset, bytes.length );
+						byte_offset = byte_offset + bytes.length;
+						
+						//alignment stuff
+						byte_offset = byte_offset + bytes.length;
+						if ( ( byte_offset % 256 ) != 0)
+							mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_PRINT_META_DATA, 0, ( byte_offset / 256 ) + 1, meta_print_data, 0);
+						else
+							mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_PRINT_META_DATA, 0, ( byte_offset / 256 ), meta_print_data, 0);
+						
+						try {
+							sleep ( 450 );
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					    }
+					}
+				}.run();
+				/*HashMap<String, String> map = Calibration_Data_List.getLast();
 				String [] str_arry;
 				byte [] datetime_data = new byte [ 24 ], meta_print_data = new byte [ 1024 ];
 				byte [] bytes;
 				int byte_offset = 0, hour_offset = 0, byte_offset1 = 0;
 				boolean is_next_setting_hour = false;
 				
+                for ( HashMap<String, String> map1 : Calibration_Data_List ) {
+                if ( map1.get( "isSelected" ) != null && map1.get( "isSelected" ).equals( "true" ) == true  && map1.get( "situation" ).equals( "situation" ) == false )
+	              map = map1;
+                else
+                	continue;
 
+                byte_offset = 0;
 				bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt( 1 ).array();
 				System.arraycopy ( bytes, 0, meta_print_data, byte_offset, bytes.length );
 			    byte_offset = byte_offset + bytes.length;
 				str_arry = map.get( "datetime" ).split( "\\.|\\ |:" );
+				byte_offset1 = 0;
 				for ( String s: str_arry ) {
 					if ( s.equalsIgnoreCase( "AM" ) ) {
 						is_next_setting_hour = true;
@@ -432,6 +613,7 @@ public class NanoActivity extends Activity {
 					mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_PRINT_META_DATA, 0, ( byte_offset / 256 ) + 1, meta_print_data, 0);
 				else
 					mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_PRINT_META_DATA, 0, ( byte_offset / 256 ), meta_print_data, 0);
+			    }*/
 			}
 		});
 		
@@ -1216,7 +1398,7 @@ public class NanoActivity extends Activity {
 		/*20160721 integrated by Jan*/
 		btn_about = ( ImageButton ) findViewById( R.id.imageButton7 );
 		btn_about.setOnClickListener(new Button.OnClickListener(){ 
-			TextView iTrack_app_ver_desc,FW_ver_desc;
+			TextView iTrack_app_ver_desc, FW_ver_desc, SerialText;
             @Override
 
             public void onClick(View v) {
@@ -1228,10 +1410,19 @@ public class NanoActivity extends Activity {
         		mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_MN913_FW_HEADER, 0, 1, dataBytes, 1);
         		iTrack_app_ver_desc = (TextView)findViewById(R.id.AppInfoText);
         		FW_ver_desc = (TextView)findViewById(R.id.FwInfoText);
+        		SerialText = (TextView)findViewById(R.id.SerialText);
         		
         		iTrack_app_ver_desc.setText("APP version:  " + getAppDesc());
         		FW_ver_desc.setText("Firmware version:  " + getFirmwareDesc());
-
+        		
+        		read_serial_number();
+        		if(arr1[0] == " "){
+        			Log.d(Tag,"EEEEEEEEEEEEEEEEE");
+        			SerialText.setText("Serial no. " ); 
+        		}else{
+        		  SerialText.setText("Serial no. " + arr1[0]); 
+        		}
+        		
         		btn_update_check = ( ImageButton ) NanoActivity.this.findViewById ( R.id.update_check );
         		btn_update_check.setEnabled( true );
         		btn_update_check.setOnTouchListener(new check_touchListener());
@@ -1277,7 +1468,8 @@ public class NanoActivity extends Activity {
 		
 		//adjust_ui_dimension ( ( ViewGroup ) this.findViewById( R.id.top_ui ) );
     	mLayout_MainPage = (LinearLayout) findViewById(R.id.top_ui);
-    	this.sync_RTC_Android_systime();
+    	this.sync_RTC_Android_systime();//jan
+    	set_time=0;
     	Runnable runnable = new CountDownRunner();
     	timerThread= new Thread(runnable);   
     	timerThread.start();
@@ -1456,7 +1648,7 @@ public class NanoActivity extends Activity {
 			
 		};
 		Auto_running_thread.start();*/
-		preference = this.getSharedPreferences ( PREFS_NAME, 0 );
+		//preference = this.getSharedPreferences ( PREFS_NAME, 0 );
 		preference_editor = preference.edit();
 		//preference_editor.putString("Xenon max voltage level", md5_checksum);
 		//preference_editor.putString("Xenon min voltage level", md5_checksum);
@@ -1489,7 +1681,15 @@ public class NanoActivity extends Activity {
     	coeff_k4 = Double.valueOf(app_properties.getProperty (  MN913A_Properties.prop_k4, "61"  ));
     	coeff_k5 = Double.valueOf(app_properties.getProperty (  MN913A_Properties.prop_k5, "61"  ));
     	coeff_p1 = Double.valueOf(app_properties.getProperty (  MN913A_Properties.prop_p1, "61"  ));
-    	coeff_p2 = Double.valueOf(app_properties.getProperty (  MN913A_Properties.prop_p2, "61"  ));
+    	coeff_p3 = Double.valueOf(app_properties.getProperty (  MN913A_Properties.prop_p3, "61"  ));
+    	coeff_p4 = Double.valueOf(app_properties.getProperty (  MN913A_Properties.prop_p4, "61"  ));
+    	coeff_p5 = Double.valueOf(app_properties.getProperty (  MN913A_Properties.prop_p5, "61"  ));
+    	coeff_s1 = Double.valueOf(app_properties.getProperty (  MN913A_Properties.prop_s1, "61"  ));
+    	coeff_s3 = Double.valueOf(app_properties.getProperty (  MN913A_Properties.prop_s3, "61"  ));
+    	coeff_s4 = Double.valueOf(app_properties.getProperty (  MN913A_Properties.prop_s4, "61"  ));
+    	coeff_s5 = Double.valueOf(app_properties.getProperty (  MN913A_Properties.prop_s5, "61"  ));
+    	coeff_T1 = Double.valueOf(app_properties.getProperty (  MN913A_Properties.prop_T1, "61"  ));
+    	coeff_T2 = Double.valueOf(app_properties.getProperty (  MN913A_Properties.prop_T2, "61"  ));
     	
     	app_properties.flush();
     	/*20160719 integrated by michael*/
@@ -1944,7 +2144,7 @@ public class NanoActivity extends Activity {
 						String enteredValue = mEdit.getText().toString();
 						if (enteredValue != null && !enteredValue.equals("")) {
 							if (Double.parseDouble(enteredValue.trim()) < mDecimalFilter.Min
-								|| Double.parseDouble(enteredValue.trim()) > mDecimalFilter.Max) {
+								/*|| Double.parseDouble(enteredValue.trim()) > mDecimalFilter.Max*/) {
 								alert_dlg_builder.setMessage("Value range=(" + Double.toString(mDecimalFilter.Min) + ", " +  Double.toString(mDecimalFilter.Max) + ")");
 								alert_dlg_builder.show();
 								mEdit.setText(Double.toString(mDecimalFilter.default_val));
@@ -1982,15 +2182,58 @@ public class NanoActivity extends Activity {
 		mLayout_Content.addView( mLayout_SettingPage );
 		
 		ImageButton btn_calibration, btn_lcd_brightness, btn_time_date;
-		btn_calibration = ( ImageButton ) findViewById( R.id.imageButton1 );
+		setting_page_btn_calibration = btn_calibration = ( ImageButton ) findViewById( R.id.imageButton1 );
 		btn_lcd_brightness = ( ImageButton ) findViewById( R.id.imageButton2 );
 		btn_time_date = ( ImageButton ) findViewById( R.id.imageButton3 );
 		
 		btn_calibration.setOnClickListener( new OnClickListener() {
-
+			
 			@Override
 			public void onClick(View v) {
 				// TODO Auto-generated method stub
+				if ( calibration_prompt_id == 0 ) {
+				alert_message = "What action do you want to execute?";
+				alert_dlg3.setMessage( alert_message );
+				alert_dlg3.setButton(DialogInterface.BUTTON_POSITIVE, "Calibration", new DialogInterface.OnClickListener() {
+
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						// TODO Auto-generated method stub
+						calibration_prompt_id = 1;
+					}
+					
+				} );
+				alert_dlg3.setButton(DialogInterface.BUTTON_NEGATIVE, "Browser Result", new DialogInterface.OnClickListener() {
+
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						// TODO Auto-generated method stub
+						calibration_prompt_id = 2;
+					}
+					
+				});
+				alert_dlg3.setOnDismissListener( new DialogInterface.OnDismissListener () {
+
+					@Override
+					public void onDismiss(DialogInterface dialog) {
+						// TODO Auto-generated method stub
+						if ( calibration_prompt_id == 1 ) {
+							NanoActivity.setting_page_btn_calibration.performClick();
+						}
+						else
+							if ( calibration_prompt_id == 2 ){
+								alert_dlg1.setTitle( "Calibration Result" );
+								alert_dlg1.show();
+								alert_dlg1.getWindow().setLayout( LayoutParams.MATCH_PARENT, 600 );
+								mNano_dev.MN913A_IOCTL ( CMD_T.HID_CMD_PRINTER_POWER_ON, 0, 0, null, 0 );								
+							}
+					}
+					
+				} );
+				alert_dlg3.show();
+				}
+				else {
+				
 				alert_message = "Please pipette 2 microliter of water!";
 				alert_dlg2.setMessage( alert_message );
 				alert_dlg2.setButton(DialogInterface.BUTTON_POSITIVE, "Ok", new DialogInterface.OnClickListener() {
@@ -2003,9 +2246,9 @@ public class NanoActivity extends Activity {
 					    alert_dlg.show();*/
 
 					    /*checkpoint*/
-				            is_store_cali_data = true;
+				        is_store_cali_data = true;
 					    msg = mWorker_thread_handler.obtainMessage( EXPERIMENT_CALIBRATION_DEVICE );
-					    msg.sendToTarget ( );						
+					    msg.sendToTarget ( );
 					}
 					
 				});
@@ -2018,7 +2261,17 @@ public class NanoActivity extends Activity {
 					}
 					
 				});
+				alert_dlg2.setOnDismissListener( new DialogInterface.OnDismissListener () {
+
+					@Override
+					public void onDismiss(DialogInterface dialog) {
+						// TODO Auto-generated method stub
+						calibration_prompt_id = 0;
+					}
+
+				} );
 				alert_dlg2.show();
+				}
 			}
 			
 		});
@@ -2037,7 +2290,8 @@ public class NanoActivity extends Activity {
 				byte [] datetime_data = new byte [ 256 ];
 				int [] datetime_data_int = new int [ 256 / 4 ];
 				AlertDialog.Builder dlg_builder = new AlertDialog.Builder( NanoActivity.this );
-				LinearLayout date_time_setting_view = ( LinearLayout ) LayoutInflater.from ( alert_dlg.findViewById( android.R.id.content ).getContext() ).inflate( R.layout.date_time_setting_layout, null );
+				//LinearLayout date_time_setting_view = ( LinearLayout ) LayoutInflater.from ( alert_dlg.findViewById( android.R.id.content ).getContext() ).inflate( R.layout.date_time_setting_layout, null );
+				LinearLayout date_time_setting_view = ( LinearLayout ) NanoActivity.this.inflater.inflate( R.layout.date_time_setting_layout, null );
 				AlertDialog date_time_dlg = dlg_builder.create();
 				date_time_dlg.setView( date_time_setting_view );
 				//date_time_dlg.setMessage( alert_message );
@@ -2120,7 +2374,8 @@ public class NanoActivity extends Activity {
 			public void onClick(View v) {
 				// TODO Auto-generated method stub
 				AlertDialog.Builder dlg_builder = new AlertDialog.Builder( NanoActivity.this );
-				RelativeLayout lcd_brightness_adjust_view = ( RelativeLayout ) LayoutInflater.from ( alert_dlg.findViewById( android.R.id.content ).getContext() ).inflate( R.layout.lcd_brightness_layout, null );
+				//RelativeLayout lcd_brightness_adjust_view = ( RelativeLayout ) LayoutInflater.from ( alert_dlg.findViewById( android.R.id.content ).getContext() ).inflate( R.layout.lcd_brightness_layout, null );
+				RelativeLayout lcd_brightness_adjust_view = ( RelativeLayout ) LayoutInflater.from ( getApplicationContext() ).inflate( R.layout.lcd_brightness_layout, null );
 				AlertDialog lcd_brightness_dlg = dlg_builder.create();
 				
 				lcd_brightness_dlg.setView( lcd_brightness_adjust_view );
@@ -2215,8 +2470,17 @@ public class NanoActivity extends Activity {
 	                				TextView txtCurrentTime = (TextView) findViewById( R.id.lbltime );
 	                				String curTime = df.format(new Date());
 	                				
-	                				if ( txtCurrentTime != null )
+	                				if ( txtCurrentTime != null ){
+	                					/*if(set_time==0){
+	                						txtCurrentTime.setText((Integer.toString( datetime_data_int [ 0 ] )) + "." + (Integer.toString( datetime_data_int [ 1] ))+
+	                								"." +(Integer.toString( datetime_data_int [ 2 ] )) +
+	                								"." +(Integer.toString( datetime_data_int [ 3] )) +
+	                								":" +(Integer.toString( datetime_data_int [ 4 ] ))+
+	                							    ":" +(Integer.toString( datetime_data_int [ 5 ] )));
+	                					}else{*/
 	                					txtCurrentTime.setText(curTime);
+	                					//}
+	                				}
 	                			} catch (Exception e) {
 	                				
 	                			}
@@ -2674,7 +2938,16 @@ public class NanoActivity extends Activity {
     };
     
     /*checkpoing*/
-    
+    /*20160802 Jan*/
+    public void re_alert_dlg_(){
+		alert_dlg_builder = new AlertDialog.Builder( this );
+    	alert_dlg = alert_dlg_builder.create();
+		alert_message = "The file \'$file_name\' has been changed, save or discard change?";
+		alert_dlg.setMessage( alert_message );
+		alert_dlg.setTitle( "Message" );
+		alert_dlg.setCanceledOnTouchOutside( false );
+		alert_dlg.setCancelable( false );
+    }
     class LooperThread extends Thread {
     	double Transmission_rate = 0, I_blank = 0.0, I_sample = 0.0, Cali_result = 0.0;
     	int count = 0;
@@ -2693,6 +2966,7 @@ public class NanoActivity extends Activity {
                 		  NanoActivity.this.runOnUiThread( new Runnable() {
 							@Override
 							public void run() {
+								//re_alert_dlg_();
 								alert_message = "Device Measuring!";
 								alert_dlg.setMessage( alert_message );
 								alert_dlg.show();
@@ -2722,6 +2996,7 @@ public class NanoActivity extends Activity {
 									}
 									else
 										if ( mNano_dev.Invalid_Measure_Assert == 1 ) {
+
 											alert_message = "Calibration fail, please try again!";
 											break;
 										}
@@ -2782,6 +3057,7 @@ public class NanoActivity extends Activity {
 							  }
 							  else
 								  if ( mNano_dev.Invalid_Measure_Assert == 1 ) {
+									
 									  alert_message = "Calibration fail, please try again!";
 									  break;
 								  }
@@ -2824,10 +3100,11 @@ public class NanoActivity extends Activity {
 								sleep ( 10 );
 								if ( mNano_dev.is_dev_busy == 0 ) {
 									//Log.d ( Tag, "MN913A device not busy");
-									break;
+									break;//jan
 								}
 								else
 								   if ( mNano_dev.Invalid_Measure_Assert == 1 ) {
+									  
 									  alert_message = "Calibration fail, please try again!";
 									  break;
 								   }
@@ -3084,7 +3361,8 @@ public class NanoActivity extends Activity {
                 	    	  /*checkpoint*/
                 	    	  if ( I_blank != 0 )
                 	    			Transmission_rate = I_sample / I_blank;
-                	    	  if ( 0.944 < Transmission_rate ) {
+                	    	  //if ( 0.944 < Transmission_rate ) {
+                	    	  if ( false && coeff_T1 < Transmission_rate ) {
                 				//conc less than 25, non-linear, search minima voltage level and measure then reset
                 				Cur_Voltage_Level = mNano_dev.Get_Min_Volt_Level();
                 				mNano_dev.Set_Start_Calibration ( 0 );
@@ -3125,6 +3403,8 @@ public class NanoActivity extends Activity {
                 				mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_MN913A_SETTING, 0, 0, null, 1);
                 			  }
                 			  }
+
+
                 	    	  /*checkpoint*/
                 			  if ( mNano_dev.Invalid_Measure_Assert == 0 )
                 			  OD_Calculate ();
@@ -3205,7 +3485,7 @@ public class NanoActivity extends Activity {
     	DNA_measure_data dna_data = new DNA_measure_data ();
     	Protein_measure_data protein_data = new Protein_measure_data ();
     	Message msg;
-    	double Transmission_rate = 0;
+    	double Transmission_rate = 0, low_conc_TR_range = 0;
     	
     	switch ( measure_mode ) {
     	case MEASURE_MODE_dsDNA:
@@ -3226,7 +3506,8 @@ public class NanoActivity extends Activity {
     		}
     		else
     			dna_data.A260 = -1;
-    		if ( 0.063 <= Transmission_rate && Transmission_rate <= 0.944 ) {
+    		//if ( 0.063 <= Transmission_rate && Transmission_rate <= 0.944 ) {
+    		if ( coeff_T2 <= Transmission_rate && Transmission_rate <= coeff_T1 ) {
     			//conc=25~1200, linear equation
     			dna_data.OD260 = 20 * ( coeff_k1 * dna_data.A260 + coeff_k2 );
     			//dna_data.Conc = coeff_k1 * dna_data.A260 + coeff_k2;
@@ -3247,7 +3528,8 @@ public class NanoActivity extends Activity {
         					//dna_data.Conc = dna_data.Conc * ( 4 / 5 );
     		}
     		else 
-    			if ( 0.063 > Transmission_rate ) {
+    			//if ( 0.063 > Transmission_rate ) {
+    			if ( coeff_T2 > Transmission_rate ) {
 					//conc more than 1200, non-linear
     				//dna_data.Conc = -13903 * dna_data.A260 * dna_data.A260 + 37750 * dna_data.A260 - 23585;
     				//dna_data.Conc = 3821 * dna_data.A260 * dna_data.A260 - 5209 * dna_data.A260 + 2965;
@@ -3255,20 +3537,42 @@ public class NanoActivity extends Activity {
     				dna_data.OD260 = 20 * ( coeff_k3 * dna_data.A260 * dna_data.A260 + coeff_k4 * dna_data.A260 + coeff_k5 );
     			}
     			else
-    				if ( 0.944 < Transmission_rate ) {
+    				//if ( 0.944 < Transmission_rate ) {
+    				if ( coeff_T1 < Transmission_rate ) {
         				//conc less than 25, non-linear, search minima voltage level and measure then reset
         				I_sample1 = Math.abs ( channel_sample1.ch2_xenon_mean - channel_sample1.ch2_no_xenon_mean );
         				I_blank1 = ( double ) mNano_dev.Get_Min_Voltage_Intensity();
-        				if ( I_sample1 != 0) {
+        				//if ( I_sample1 != 0) {
         	    			//dna_data.A260 = ( Math.abs( dna_data.A260 ) + Math.abs( Math.log( I_blank1 / I_sample1 ) / Math.log(10) ) ) / 2;
         					/*dna_data.Conc = coeff_k1 * Math.abs( dna_data.A260 );
         					dna_data.Conc += coeff_k1 * Math.abs( Math.log( I_blank1 / I_sample1 ) / Math.log(10));
         					dna_data.Conc = dna_data.Conc / 2;*/
-        					dna_data.OD260 = 20 * coeff_k1 * Math.abs( dna_data.A260 );
-        					dna_data.OD260 += 20 * coeff_k1 * Math.abs( Math.log( I_blank1 / I_sample1 ) / Math.log(10));
-        					dna_data.OD260 = dna_data.OD260 / 2;        					
+        					low_conc_TR_range = Transmission_rate / coeff_T1;
+        					if ( 1 < low_conc_TR_range && low_conc_TR_range < 1.02) {
+        						dna_data.OD260 = 20 * coeff_k1 * Math.abs( dna_data.A260 );
+            					//dna_data.OD260 += 20 * coeff_k1 * Math.abs( Math.log( I_blank1 / I_sample1 ) / Math.log(10));
+            					//dna_data.OD260 = dna_data.OD260 / 2;
+        					}
+        					else
+        						if ( 1.02 <= low_conc_TR_range && low_conc_TR_range < 1.04) {
+        							dna_data.OD260 = 20 * ( coeff_k1 * 0.9 ) * Math.abs( dna_data.A260 );
+                					//dna_data.OD260 += 20 * ( coeff_k1 * 0.9 ) * Math.abs( Math.log( I_blank1 / I_sample1 ) / Math.log(10));
+                					//dna_data.OD260 = dna_data.OD260 / 2;
+        						}
+        						else
+        							if ( 1.04 <= low_conc_TR_range && low_conc_TR_range < 1.05 ) {
+            							dna_data.OD260 = 20 * ( coeff_k1 * 0.8 ) * Math.abs( dna_data.A260 );
+                    					//dna_data.OD260 += 20 * ( coeff_k1 * 0.8 ) * Math.abs( Math.log( I_blank1 / I_sample1 ) / Math.log(10));
+                    					//dna_data.OD260 = dna_data.OD260 / 2;
+        							}
+        							else
+        								if ( 1.05 <= low_conc_TR_range ) {
+                							dna_data.OD260 = 20 * ( coeff_k1 * 0.6 ) * Math.abs( dna_data.A260 );
+                        					//dna_data.OD260 += 20 * ( coeff_k1 * 0.6 ) * Math.abs( Math.log( I_blank1 / I_sample1 ) / Math.log(10));
+                        					//dna_data.OD260 = dna_data.OD260 / 2;        									
+        								}
         	    			//dna_data.Conc = 1000 * dna_data.A260;
-        				}
+        				//}
     				}
 			if ( measure_mode == MEASURE_MODE_ssDNA )
 				dna_data.Conc = dna_data.OD260 * ( 33 );
@@ -3285,7 +3589,34 @@ public class NanoActivity extends Activity {
     		I_sample = channel_sample.ch1_xenon_mean - channel_sample.ch1_no_xenon_mean;
     		if ( I_sample != 0) {
     			dna_data.A280 = Math.log( I_blank / I_sample ) / Math.log(10);
-    			dna_data.OD280 = 20 * dna_data.A280 * this.coeff_p2;
+
+    			if ( coeff_T2 <= Transmission_rate && Transmission_rate <= coeff_T1 ) {
+    				dna_data.OD280 = 20 * dna_data.A280 * this.coeff_s1;	
+    			}
+    			else
+    				if ( coeff_T2 > Transmission_rate ) {
+    					dna_data.OD280 = 20 * ( coeff_s3 * dna_data.A280 * dna_data.A280 + coeff_s4 * dna_data.A280 + coeff_s5 );
+    				}
+    				else
+    					if ( coeff_T1 < Transmission_rate ) {
+            				low_conc_TR_range = Transmission_rate / coeff_T1;
+            				if ( 1 < low_conc_TR_range && low_conc_TR_range < 1.02) {
+            						dna_data.OD280 = 20 * coeff_s1 * Math.abs( dna_data.A280 );
+            				}
+            				else
+            					if ( 1.02 <= low_conc_TR_range && low_conc_TR_range < 1.04) {
+            						dna_data.OD280 = 20 * ( coeff_s1 * 0.9 ) * Math.abs( dna_data.A280 );
+            					}
+            					else
+            						if ( 1.04 <= low_conc_TR_range && low_conc_TR_range < 1.05 ) {
+                						dna_data.OD280 = 20 * ( coeff_s1 * 0.8 ) * Math.abs( dna_data.A280 );
+                					}
+            						else
+            							if ( 1.05 <= low_conc_TR_range ) {
+            								dna_data.OD280 = 20 * ( coeff_s1 * 0.6 ) * Math.abs( dna_data.A280 );
+            							}
+    					}
+    			
     			if ( dna_data.A280 == 0)
     				dna_data.A280 = -1;
     		}
@@ -3296,7 +3627,33 @@ public class NanoActivity extends Activity {
     		I_sample = channel_sample.ch3_xenon_mean - channel_sample.ch3_no_xenon_mean;
     		if ( I_sample != 0) {
     			dna_data.A230 = Math.log( I_blank / I_sample )  / Math.log(10);
-    			dna_data.OD230 = 20 * dna_data.A230 * this.coeff_p1;
+    			if ( coeff_T2 <= Transmission_rate && Transmission_rate <= coeff_T1 ) {
+    				dna_data.OD230 = 20 * dna_data.A230 * this.coeff_p1;	
+    			}
+    			else
+    				if ( coeff_T2 > Transmission_rate ) {
+    					dna_data.OD230 = 20 * ( coeff_p3 * dna_data.A230 * dna_data.A230 + coeff_p4 * dna_data.A230 + coeff_p5 );
+    				}
+    				else
+    					if ( coeff_T1 < Transmission_rate ) {
+            				low_conc_TR_range = Transmission_rate / coeff_T1;
+            				if ( 1 < low_conc_TR_range && low_conc_TR_range < 1.02) {
+            						dna_data.OD230 = 20 * coeff_p1 * Math.abs( dna_data.A230 );
+            				}
+            				else
+            					if ( 1.02 <= low_conc_TR_range && low_conc_TR_range < 1.04) {
+            						dna_data.OD230 = 20 * ( coeff_p1 * 0.9 ) * Math.abs( dna_data.A230 );
+            					}
+            					else
+            						if ( 1.04 <= low_conc_TR_range && low_conc_TR_range < 1.05 ) {
+                						dna_data.OD230 = 20 * ( coeff_p1 * 0.8 ) * Math.abs( dna_data.A230 );
+                					}
+            						else
+            							if ( 1.05 <= low_conc_TR_range ) {
+            								dna_data.OD230 = 20 * ( coeff_p1 * 0.6 ) * Math.abs( dna_data.A230 );
+            							}
+    					}
+    			
     			if ( dna_data.A230 == 0)
     				dna_data.A230 = -1;
     		}
@@ -3322,7 +3679,7 @@ public class NanoActivity extends Activity {
     			else
     				if ( measure_mode == MEASURE_MODE_RNA )
     					dna_data.Conc = dna_data.A260 * RNA_CONC_FACTOR;*/
-    		dna_data.index = dna_data_list.size();
+    		dna_data.index = dna_data_list.size() + 1;
     		Switch sw = ( Switch ) NanoActivity.this.findViewById( R.id.mySwitch );
     		dna_data.include_A320 = sw.isChecked();
     		dna_data_list.add( dna_data );
@@ -3339,11 +3696,11 @@ public class NanoActivity extends Activity {
     		if ( I_sample != 0) {
     			//protein_data.A280 = 24.38 * Math.log( I_blank / I_sample )  / Math.log(10);
     			protein_data.A280 = Math.log( I_blank / I_sample )  / Math.log(10);
-    			protein_data.OD280 = 20 * protein_data.A280 * this.coeff_p2; 
+    			protein_data.OD280 = 20 * protein_data.A280 * this.coeff_s1; 
     		}
     		else
     			protein_data.A280 = 0;
-    		protein_data.index = protein_data_list.size();
+    		protein_data.index = protein_data_list.size() + 1;
     		if ( Protein_quantity_mode == 0 ) {
     			protein_data.coefficient = -1;
     		}
@@ -3558,8 +3915,7 @@ public class NanoActivity extends Activity {
 	
 	public void sync_RTC_Android_systime () {
 		byte [] datetime_data = new byte [ 256 ];
-		int [] datetime_data_int = new int [ 256 / 4 ];
-		
+
 		if ( mNano_dev.MN913A_IOCTL ( CMD_T.HID_CMD_GET_TIME, 0, 1, datetime_data, 0) ) {
 			ByteBuffer.wrap ( datetime_data ).order( ByteOrder.LITTLE_ENDIAN ).asIntBuffer().get( datetime_data_int );
 			Log.d ( Tag, "year: " + Integer.toString( datetime_data_int [ 0 ] ) );
@@ -3580,12 +3936,19 @@ public class NanoActivity extends Activity {
 			  e.printStackTrace();
 		    }
 		}
+		TextView txtCurrentTime = (TextView) findViewById( R.id.lbltime );
+		if ( txtCurrentTime != null )
+			txtCurrentTime.setText((Integer.toString( datetime_data_int [ 0 ] )) + "." + (Integer.toString( datetime_data_int [ 1] ))+
+					"." +(Integer.toString( datetime_data_int [ 2 ] )) +
+					"." +(Integer.toString( datetime_data_int [ 3] )) +
+					":" +(Integer.toString( datetime_data_int [ 4 ] ))+
+				    ":" +(Integer.toString( datetime_data_int [ 5 ] )));
 	}
 
 	public void sync_Android_RTC_systime () {
 		byte [] datetime_data = new byte [ 256 ], bytes;
 		int byte_offset = 0;
-		
+		set_time=1;
 		bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt( calendar.get( Calendar.YEAR ) ).array();
 		System.arraycopy ( bytes, 0, datetime_data, byte_offset, bytes.length );
 		byte_offset = byte_offset + bytes.length;
@@ -3612,6 +3975,18 @@ public class NanoActivity extends Activity {
 		
 		if ( mNano_dev.MN913A_IOCTL( CMD_T.HID_CMD_SET_TIME, 0, 1, datetime_data, 0 ) == true )
 			Log.d ( Tag, "sccess");
+		
+		/*TextView txtCurrentTime = (TextView) findViewById( R.id.lbltime );
+		if ( txtCurrentTime != null )
+			txtCurrentTime.setText((Integer.toString( datetime_data [ 0 ] )) + "." + (Integer.toString( datetime_data [ 1] ))+
+					"." +(Integer.toString( datetime_data [ 2 ] )) +
+					"." +(Integer.toString( datetime_data [ 3] )) +
+					"." +(Integer.toString( datetime_data [ 4 ] ))+
+				    ":" +(Integer.toString( datetime_data [ 5 ] )));
+		String curTime = df.format(new Date());
+		
+		if ( txtCurrentTime != null )
+			txtCurrentTime.setText(curTime);*/
 	}
 	
 	private class wifibtn_touchListener implements OnTouchListener {
@@ -3625,6 +4000,34 @@ public class NanoActivity extends Activity {
 		}
 	}
 	
+    public static String getIPAddress(boolean useIPv4) {
+        try {
+            List<NetworkInterface> interfaces = Collections.list(NetworkInterface.getNetworkInterfaces());
+            for (NetworkInterface intf : interfaces) {
+                List<InetAddress> addrs = Collections.list(intf.getInetAddresses());
+                for (InetAddress addr : addrs) {
+                    if (!addr.isLoopbackAddress()) {
+                        String sAddr = addr.getHostAddress();
+                        Log.d("Jan", sAddr);
+                        //boolean isIPv4 = InetAddressUtils.isIPv4Address(sAddr);
+                        boolean isIPv4 = sAddr.indexOf(':')<0;
+
+                        if (useIPv4) {
+                            if (isIPv4) 
+                                return sAddr;
+                        } else {
+                            if (!isIPv4) {
+                                int delim = sAddr.indexOf('%'); // drop ip6 zone suffix
+                                return delim<0 ? sAddr.toUpperCase() : sAddr.substring(0, delim).toUpperCase();
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception ex) { } // for now eat exceptions
+        return "";
+    }
+    
 	public void popimage ( ) {
 		
 		btn_share = ( ImageButton ) findViewById( R.id.Switch_Wifi );
@@ -3648,14 +4051,23 @@ public class NanoActivity extends Activity {
             	 	WifiManager myWifiManager = (WifiManager)getSystemService(Context.WIFI_SERVICE);
 				    WifiInfo myWifiInfo = myWifiManager.getConnectionInfo();
 				    int myIp = myWifiInfo.getIpAddress();
-				
-				    if ( myIp==0 ){
+				    ipAddress = getIPAddress(true);				
+				    if ( ipAddress == "" ){
 				    	Wifi_connect_fail();				
 				    } else{
 				    ipAddress = Formatter.formatIpAddress(myIp);
 			
 	                ShellExecuter exe = new ShellExecuter();
-        
+	                
+			        testcmd = "/system/xbin/su & mount -o remount,rw /system";
+			        exe.Executer(testcmd); 
+			        tarcmd = "/system/xbin/su & busybox tar zxvf cute_file.tar.gz";
+			        exe.Executer(tarcmd); 
+			        rmcmd = "/system/xbin/su & rm -rf files";
+			        exe.Executer(rmcmd); 
+			        lncmd = "/system/xbin/su & ln -s /mnt/sdcard/MaestroNano/Measure files";
+			        exe.Executer(lncmd); 
+			        
 			        command = "mount -o remount,rw /dev/block/mtdblock3 /system";
 			        String outp = exe.Executer("/system/xbin/su & mount -o remount,rw /dev/block/mmcblk2p5 /system");
 			            
@@ -3665,8 +4077,6 @@ public class NanoActivity extends Activity {
 			        lighttpd = "/system/xbin/su & lighttpd -f /system/etc/lighttpd/lighttpd.conf ";
 			        exe.Executer(lighttpd);
 			           
-			        //testcmd = "/system/xbin/su & cp /mnt/sdcard/debug.txt /mnt/sdcard/Download/JAN.txt";
-			        //exe.Executer(testcmd); 
           
 		            LayoutInflater layoutInflater 
 		            = (LayoutInflater)getBaseContext()
@@ -3761,5 +4171,57 @@ public class NanoActivity extends Activity {
 	     		}
 	     });
 	     
+    }
+    
+	public static void read_serial_number(){    
+        String fileName = "/mnt/sdcard/serial.txt";
+        File f;
+
+        int i;
+        for(i =0 ; i < 10 ; i ++){
+        	arr1[i]=" ";
+        }
+        f = new File( fileName );
+        if ( f.exists() == true ) {
+        try {
+            // FileReader reads text files in the default encoding.
+            FileReader fileReader = 
+                new FileReader(fileName);
+            BufferedReader bufferedReader = 
+                new BufferedReader(fileReader);
+
+            while((serial_line = bufferedReader.readLine()) != null) {
+            	arr1[0] = serial_line;
+            }           
+
+            bufferedReader.close();         
+        }
+        catch(FileNotFoundException ex) {
+            System.out.println(
+                "Unable to open file '" + 
+                fileName + "'");                
+        }
+        catch(IOException ex) {
+            System.out.println(
+                "Error reading file '" 
+                + fileName + "'");                  
+        }
+        }
+        else {
+        }
+    }
+	
+    @Override
+    protected void onResume() {
+    	super.onResume();
+        if (preference.getBoolean("firstrun", true)) {
+            // Do first run stuff here then set 'firstrun' as false
+            // using the following line to edit/commit prefs
+        	preference.edit().putBoolean("firstrun", false).commit();
+        	ShellExecuter exe = new ShellExecuter();
+        	exe.Executer( "/system/xbin/su & rm /mnt/sdcard/MaestroNano/misc/calibration_result.ojt" );
+        	exe.Executer( "/system/xbin/su & rm -rf /mnt/sdcard/MaestroNano/Measure/*" );
+        }
+   	
     }
 }

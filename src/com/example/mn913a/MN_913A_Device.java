@@ -20,8 +20,25 @@ import android.hardware.usb.UsbManager;
 import android.hardware.usb.UsbRequest;
 import android.util.Log;
 
+// Added for fixing exception in UsbManager.openDevice
+import android.widget.Toast;
+import android.content.IntentFilter;
+import android.app.PendingIntent;
+import android.content.Intent;
+import android.os.SystemClock;
+// End of added
+
+
 public class MN_913A_Device {
 	public final String Tag = "Nano_Device";
+	// Added for fixing exception in UsbManager.openDevice
+	private static final String ACTION_USB_PERMISSION = "com.example.mn913a.USB_PERMISSION";
+	private final boolean DEBUG = false;
+	private boolean mReceiverRegistered = false;
+	private boolean mGotUsbPermission = false;
+	private boolean mReceiverReceived = false; 
+	//private BroadcastReceiver mUsbReceiver = null;
+	// End of added
 	public FileOutputStream fos;
 	private UsbManager mManager;
 	private Context mContext;
@@ -184,7 +201,18 @@ public class MN_913A_Device {
 		}
 		
 		//mDeviceConnection
-		UsbDeviceConnection connection = mManager.openDevice(device);
+		// Modified for fixing exception in UsbManager.openDevice
+		// UsbDeviceConnection connection = mManager.openDevice(device);
+		do {
+			if (openUsbDevice(device))
+				break;
+		} while(true);	
+			
+		if (DEBUG)
+		   Log.d(Tag, "setInterface() mDeviceConnection=" + mDeviceConnection);
+		UsbDeviceConnection connection = mDeviceConnection;
+		// End of modified
+		
         if (connection==null) {
     	  show_debug(Tag+"The line number is " + new Exception().getStackTrace()[0].getLineNumber()+"\n");
           Log.d(Tag, "open connection failed");
@@ -786,4 +814,106 @@ public class MN_913A_Device {
 			}
 	    }
 	}
+
+	// Added for fixing exception in UsbManager.openDevice
+	private boolean openUsbDevice(UsbDevice device){
+        //before open usb device
+        //should try to get usb permission
+        return tryGetUsbPermission(device);
+    }
+     
+    private boolean tryGetUsbPermission(UsbDevice usb_device){
+        mManager = (UsbManager) mContext.getSystemService(Context.USB_SERVICE);
+
+		if (false == mReceiverRegistered)
+		{
+		    if (DEBUG)
+			    Log.d(Tag, "tryGetUsbPermission() register receiver");
+            IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
+            //mContext.registerReceiver(mUsbPermissionActionReceiver, filter);
+            mContext.getApplicationContext().registerReceiver(mUsbPermissionActionReceiver, filter);
+			mReceiverRegistered = true;
+		}
+		
+        PendingIntent mPermissionIntent = PendingIntent.getBroadcast(mContext, 0, new Intent(ACTION_USB_PERMISSION), 0);
+
+        if (mManager.hasPermission(usb_device)) {
+			if (DEBUG)
+			    Log.d(Tag, "tryGetUsbPermission() usb_device has permission 1");
+			afterGetUsbPermission(usb_device);
+			return true;
+        }
+		else
+		{
+            //if (DEBUG)
+			//    Log.d(Tag, "tryGetUsbPermission() ask user whether to allow permission");
+			mManager.requestPermission(usb_device, mPermissionIntent);
+			//if (DEBUG)
+			//    Log.d(Tag, "tryGetUsbPermission() after mManager.requestPermission()");
+			int count = 0;
+			while(count < 100) {
+				 if (DEBUG)
+				    Log.d(Tag, "tryGetUsbPermission() ask user whether to allow permission");
+				//mManager.requestPermission(usb_device, mPermissionIntent);
+				if (DEBUG)
+				    Log.d(Tag, "tryGetUsbPermission() after mManager.requestPermission()");
+				SystemClock.sleep(500);
+				 count++;
+				 if (mManager.hasPermission(usb_device)) {
+			        if (DEBUG)
+			            Log.d(Tag, "tryGetUsbPermission() usb_device has permission 2");
+			        afterGetUsbPermission(usb_device);
+					return true;
+				 }
+				 else
+				 {
+					 if (DEBUG)
+				            Log.d(Tag, "tryGetUsbPermission() doesn't get permission");
+				 }
+			}	
+			return false;		    
+        }
+    }
+     
+     
+    private void afterGetUsbPermission(UsbDevice usb_device){
+        //call method to set up device communication
+        doYourOpenUsbDevice(usb_device);
+    }
+     
+    private void doYourOpenUsbDevice(UsbDevice usb_device){
+        //now follow line will NOT show: User has not given permission to device UsbDevice
+        mDeviceConnection = mManager.openDevice(usb_device);
+		if (DEBUG)
+		    Log.d(Tag, "doYourOpenUsbDevice() mDeviceConnection=" + mDeviceConnection);
+        //add your operation code here
+    }
+ 
+    private final BroadcastReceiver mUsbPermissionActionReceiver = new BroadcastReceiver() {
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+			if (DEBUG)
+			    Log.d(Tag, "onReceive() enter");
+            if (ACTION_USB_PERMISSION.equals(action)) {
+                synchronized (this) {
+                    UsbDevice usbDevice = (UsbDevice)intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
+                    if (intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
+                        //user choose YES for your previously popup window asking for grant perssion for this usb device
+                        if(null != usbDevice){
+							mGotUsbPermission = true;
+                            afterGetUsbPermission(usbDevice);
+                       }
+                    }
+                    else {
+                        //user choose NO for your previously popup window asking for grant perssion for this usb device
+                        mGotUsbPermission = false;
+						Toast.makeText(context, String.valueOf("Permission denied for device" + usbDevice), Toast.LENGTH_LONG).show();
+                    }
+					mReceiverReceived = true;
+                }
+            }
+        }
+    };
+
+	// End of added
 }

@@ -29,7 +29,9 @@
         android:layout_marginTop="20dp"
         android:layout_marginLeft="5dp"
         android:text=""
-        android:textAppearance="?android:attr/textAppearanceMedium" />
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:textSize="24sp"
+        android:textColor="@android:color/holo_red_light" />
 
     <TextView
         android:id="@+id/app_info"
@@ -39,15 +41,17 @@
         android:layout_marginTop="20dp"
         android:layout_marginLeft="5dp"
         android:text=""
-        android:textAppearance="?android:attr/textAppearanceMedium" />
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:textSize="24sp"
+        android:textColor="@android:color/holo_red_light" />
 
-    <CheckBox
+    <!-- <CheckBox
         android:id="@+id/force_upgrade_checkBox1"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
         android:layout_marginLeft="5dp"
-        android:text="force upgrade app and firmware" />
+        android:text="force upgrade app and firmware" /> -->
 
     <TextView
         android:id="@+id/status"
@@ -55,6 +59,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
         android:layout_marginLeft="5dp"
+        android:textSize="20sp"
         android:text="" />
 
      <TextView

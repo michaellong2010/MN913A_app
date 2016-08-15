@@ -562,7 +562,91 @@ public class NormalizationActivity extends Activity {
 			
 			@Override
 			public void onClick(View v) {
-				byte[] bytes;
+				new Thread() {
+					@Override
+					public void run() {
+						byte[] bytes;
+						int byte_offset = 0, data_count = 0, packed_data_count = 0, total_packed_data_count = 0;
+						byte [] meta_print_data = new byte [ 1024 ];
+						Log.d ( "btn_print_result", "click" );
+						//selected_fillMaps
+						data_count = selection_count;
+						bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt( 2 ).array();
+						System.arraycopy ( bytes, 0, meta_print_data, byte_offset, bytes.length );
+						byte_offset = byte_offset + bytes.length;
+
+						Iterator<HashMap<String, String>> it;
+						HashMap <String, String> map1;
+						it = selected_fillMaps.iterator();
+						while ( data_count > 0 ) {
+						  byte_offset = 4;
+						  
+						  packed_data_count = 0;
+						  if ( data_count > 10)
+							  total_packed_data_count = 10;
+						  else
+							  total_packed_data_count = data_count;
+
+						  bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt( total_packed_data_count ).array();
+						  System.arraycopy ( bytes, 0, meta_print_data, byte_offset, bytes.length );
+						  byte_offset = byte_offset + bytes.length;
+						  
+						  bytes = ByteBuffer.allocate(8).order( ByteOrder.LITTLE_ENDIAN ).putDouble( last_target_volume ).array();
+						  System.arraycopy ( bytes, 0, meta_print_data, byte_offset, bytes.length );
+						  byte_offset = byte_offset + bytes.length;
+						  
+						  bytes = ByteBuffer.allocate(8).order( ByteOrder.LITTLE_ENDIAN ).putDouble( last_target_conc ).array();
+						  System.arraycopy ( bytes, 0, meta_print_data, byte_offset, bytes.length );
+						  byte_offset = byte_offset + bytes.length;
+
+						  while ( packed_data_count < total_packed_data_count ) {
+							  map1 = it.next();
+							  if ( map1.get( "isSelected" ) != null && map1.get( "isSelected" ).equals( "true" ) ) {
+								  bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt( Integer.parseInt( map1.get( dst_from[0] ) ) ).array();
+								  System.arraycopy ( bytes, 0, meta_print_data, byte_offset, bytes.length );
+								  byte_offset = byte_offset + bytes.length;
+
+								  //word alignment stuffing
+								  bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt( Integer.parseInt( map1.get( dst_from[0] ) ) ).array();
+								  System.arraycopy ( bytes, 0, meta_print_data, byte_offset, bytes.length );
+								  byte_offset = byte_offset + bytes.length;
+								  
+								  bytes = ByteBuffer.allocate(8).order( ByteOrder.LITTLE_ENDIAN ).putDouble( Double.parseDouble( map1.get( dst_from[1] ) ) ).array();
+								  System.arraycopy ( bytes, 0, meta_print_data, byte_offset, bytes.length );
+								  byte_offset = byte_offset + bytes.length;
+								  
+								  bytes = ByteBuffer.allocate(8).order( ByteOrder.LITTLE_ENDIAN ).putDouble( Double.parseDouble( map1.get( dst_from[2] ) ) ).array();
+								  System.arraycopy ( bytes, 0, meta_print_data, byte_offset, bytes.length );
+								  byte_offset = byte_offset + bytes.length;
+								  
+								  bytes = ByteBuffer.allocate(8).order( ByteOrder.LITTLE_ENDIAN ).putDouble( Double.parseDouble( map1.get( dst_from[3] ) ) ).array();
+								  System.arraycopy ( bytes, 0, meta_print_data, byte_offset, bytes.length );
+								  byte_offset = byte_offset + bytes.length;
+								  packed_data_count++;
+							  }
+						  }
+						  if ( ( byte_offset % 256 ) != 0)
+							  mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_PRINT_META_DATA, 0, ( byte_offset / 256 ) + 1, meta_print_data, 0);
+						  else
+							  mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_PRINT_META_DATA, 0, ( byte_offset / 256 ), meta_print_data, 0);
+						  
+						  if ( data_count > 10) {
+							  data_count -= 10;
+						  }
+						  else {
+							  data_count -= data_count;
+						  }
+						  
+						  try {
+							  sleep ( 450 );
+						  } catch (InterruptedException e) {
+								// TODO Auto-generated catch block
+							  e.printStackTrace();
+						  }
+						}
+					}
+				}.run();
+				/*byte[] bytes;
 				int byte_offset = 0, data_count = 0, packed_data_count = 0, total_packed_data_count = 0;
 				byte [] meta_print_data = new byte [ 1024 ];
 				Log.d ( "btn_print_result", "click" );
@@ -633,7 +717,7 @@ public class NormalizationActivity extends Activity {
 				  else {
 					  data_count -= data_count;
 				  }
-				}
+				}*/
 			}
 	    } );
 		return true;

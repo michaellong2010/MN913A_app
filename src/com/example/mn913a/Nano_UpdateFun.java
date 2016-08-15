@@ -52,6 +52,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.view.WindowManager;
 import android.webkit.MimeTypeMap;
 import android.webkit.URLUtil;
@@ -102,7 +103,7 @@ public class Nano_UpdateFun extends Activity {
 	public String DL_fileExtenstion, DL_filename;
 	public String iTrack_Cache_Dir;
 	final String Http_Repo_Host1 = "http://www.maestrogen.com/ftp/";//"https://www.google.com.tw/?gfe_rd=cr&ei=XJ-FV4_MLZSg8wWu_JqICA";
-	final String Http_Repo_Host = "https://googledrive.com/host/0ByxRe22Uei-JdHloZm56Rng2QVk/";
+	final String Http_Repo_Host = "http://www.maestrogen.com/ftp/";//"https://googledrive.com/host/0ByxRe22Uei-JdHloZm56Rng2QVk/";
 	private String MD5_list_filename = "iTrack_md5_list.txt"; 
 	public String files_MD5_list = Http_Repo_Host + MD5_list_filename;
 	public String files_MD5_list1 = Http_Repo_Host1 + MD5_list_filename;//add jan
@@ -217,7 +218,7 @@ public class Nano_UpdateFun extends Activity {
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
 				// TODO Auto-generated method stub
-      		  turn_off_wifi();
+      		  //turn_off_wifi();  //20160811 Jan
       		  if ( progress_dialog.isShowing() ) {
       			  progress_dialog.dismiss();
       		  }
@@ -315,6 +316,9 @@ public class Nano_UpdateFun extends Activity {
  		TextView iTrack_firmware_ver_desc = null, iTrack_app_ver_desc = null, textView2 = null;
  		if (about_dialog==null) {
  			about_dialog = new Dialog(Nano_UpdateFun.this, R.style.CenterDialog);
+ 			Window dialogWindow = about_dialog.getWindow();
+ 			WindowManager.LayoutParams lp = dialogWindow.getAttributes();
+ 		    lp.y = 180;
  			if (about_dialog_layout == null) 
  				about_dialog_layout = (LinearLayout) LayoutInflater.from(Nano_UpdateFun.this.getApplicationContext()).inflate(R.layout.dialog_about, null);//dialog_about xml
  			about_dialog.getWindow().setGravity(Gravity.TOP);
@@ -333,7 +337,8 @@ public class Nano_UpdateFun extends Activity {
  			//checkbox1.setOnCheckedChangeListener(force_upgrade_listener);
  			//checkbox1.setVisibility(View.INVISIBLE);
  			about_status_msg = (TextView)about_dialog_layout.findViewById(R.id.status);
- 			about_status_msg.setTextColor(Color.YELLOW);
+ 			//about_status_msg.setTextColor(Color.YELLOW);
+ 			about_status_msg.setTextColor(Color.RED);//20160811 Jan
 
  			inderterminate_progressbar = (ProgressBar) about_dialog_layout.findViewById(R.id.progressBar1);
  			inderterminate_progressbar.setVisibility(View.INVISIBLE);
@@ -351,7 +356,7 @@ public class Nano_UpdateFun extends Activity {
  					url_list.add(url);
  				}
     			
- 			textView2 = (TextView) about_dialog_layout.findViewById(R.id.user_manual_httplink);
+ 			/*textView2 = (TextView) about_dialog_layout.findViewById(R.id.user_manual_httplink);
  			
  			textView2.setText( "user manual: http://www.maestrogen.com/ftp/i-track/user_manual.html" );
 
@@ -361,7 +366,7 @@ public class Nano_UpdateFun extends Activity {
  			
  			ssb.setSpan(new URLSpan("#"), 0, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
  			
- 			textView2.setText(ssb, TextView.BufferType.SPANNABLE);
+ 			textView2.setText(ssb, TextView.BufferType.SPANNABLE);*/ //20160811 Jan
  			about_dialog.show();
  		}
 
@@ -496,8 +501,8 @@ public class Nano_UpdateFun extends Activity {
     	if (about_dialog!=null && about_dialog.isShowing()) {
 			iTrack_firmware_ver_desc = (TextView)about_dialog_layout.findViewById(R.id.firmware_info);
 			iTrack_app_ver_desc = (TextView)about_dialog_layout.findViewById(R.id.app_info);
-			checkbox1 = (CheckBox) about_dialog_layout.findViewById(R.id.force_upgrade_checkBox1);
-			force_upgrade = checkbox1.isChecked();
+			//checkbox1 = (CheckBox) about_dialog_layout.findViewById(R.id.force_upgrade_checkBox1);
+			//force_upgrade = checkbox1.isChecked();
 			//dlgbtn_update = (Button)about_dialog_layout.findViewById(R.id.update_btn);//jan mark
 			//dlgbtn_update.setEnabled(false);//jan mark
 			
@@ -526,7 +531,7 @@ public class Nano_UpdateFun extends Activity {
 				if (isValidMD5(local_app_md5)) {
 					if (isValidMD5(server_app_md5)) {
 						if (server_app_md5.equalsIgnoreCase(local_app_md5)) {
-							iTrack_app_ver_desc.setText("Nano Pro App ver.:  " + getAppDesc() + "(up-to-date)");
+							iTrack_app_ver_desc.setText("Nano Pro App ver.:  " + getAppDesc() + "  (up-to-date)");
 							if (force_upgrade && is_internet_available()) {
 								//dlgbtn_update.setEnabled(true);//jan mark
 								//Log.d ( Tag, "upgrade button enable 2" );
@@ -535,7 +540,7 @@ public class Nano_UpdateFun extends Activity {
 							//	dlgbtn_update.setEnabled(false);
 						}
 						else {
-							iTrack_app_ver_desc.setText("Nano Pro App ver.:  " + getAppDesc() + "(out-of-date)");
+							iTrack_app_ver_desc.setText("Nano Pro App ver.:  " + getAppDesc() + "  (out-of-date)");
 							if (is_internet_available() && url_list.isEmpty() ) {
 								//dlgbtn_update.setEnabled(true);//jan mark
 								//Log.d ( Tag, "upgrade button enable 3" );
@@ -560,7 +565,7 @@ public class Nano_UpdateFun extends Activity {
 					if (isValidMD5(server_firmware_md5)) {
 						if (server_firmware_md5.equalsIgnoreCase(local_firmware_md5)) {
 							Log.d ( Tag, "MN913 Firmware ver.:  " + getFirmwareDesc() + "(up-to-date)");
-							iTrack_firmware_ver_desc.setText("iTrack Firmware ver.:  " + getFirmwareDesc() + "(up-to-date)");
+							iTrack_firmware_ver_desc.setText("Nano Pro Firmware ver.:  " + getFirmwareDesc() + "  (up-to-date)");
 							if (force_upgrade && is_internet_available()) {
 							//	dlgbtn_update.setEnabled(true);//jan mark
 								//Log.d ( Tag, "upgrade button enable 4" );
@@ -571,7 +576,7 @@ public class Nano_UpdateFun extends Activity {
 						}
 						else {
 							Log.d ( Tag, "MN913 Firmware ver.:  " + getFirmwareDesc() + "(out-to-date)");
-							iTrack_firmware_ver_desc.setText("iTrack Firmware ver.:  " + getFirmwareDesc() + "(out-of-date)");
+							iTrack_firmware_ver_desc.setText("Nano Pro Firmware ver.:  " + getFirmwareDesc() + "  (out-of-date)");
 							if (is_internet_available() && url_list.isEmpty() ) {
 							//	dlgbtn_update.setEnabled(true); //jan mark
 								//Log.d ( Tag, "upgrade button enable 5" );
@@ -723,9 +728,9 @@ public class Nano_UpdateFun extends Activity {
 			CheckBox checkbox1;
 			
 			v.setEnabled(false);
-			checkbox1 = (CheckBox) about_dialog_layout.findViewById(R.id.force_upgrade_checkBox1);
+			//checkbox1 = (CheckBox) about_dialog_layout.findViewById(R.id.force_upgrade_checkBox1);
 			
-			checkbox1.setEnabled(false);
+			//checkbox1.setEnabled(false);
 			
 			Upgrade_System(v);
 			about_dialog.setCancelable(false);
@@ -1041,8 +1046,8 @@ public class Nano_UpdateFun extends Activity {
         		  CheckBox checkbox1 = null;
         		  if ( url_list.size() > 0 )
         			  url_list.remove(url_list.get(0));
-        		  checkbox1 = (CheckBox) about_dialog_layout.findViewById(R.id.force_upgrade_checkBox1);
-        		  checkbox1.setEnabled( true );
+        		  //checkbox1 = (CheckBox) about_dialog_layout.findViewById(R.id.force_upgrade_checkBox1);
+        		  //checkbox1.setEnabled( true );
         		  Refresh_About_Dialog();
         		  inderterminate_progressbar.setVisibility(View.INVISIBLE);
         		  about_dialog.setCancelable(true);  				
@@ -1066,7 +1071,7 @@ public class Nano_UpdateFun extends Activity {
         		  Log.d ( "usermanual", "upgrade usermanual" );
         		  if ( url_list.size() > 0 )
         			  url_list.remove(url_list.get(0));
-        		  turn_off_wifi();
+        		  //turn_off_wifi();
         		  upgrade_usermanual ();
         		  if ( progress_dialog.isShowing() )
         			  progress_dialog.dismiss();        		  

@@ -57,11 +57,11 @@
             
              <TextView
                 android:id="@+id/SerialText"
-                android:layout_width="370dp"
+                android:layout_width="700dp"
                 android:layout_height="170dp"
                 android:layout_marginLeft="148dp"
                 android:layout_marginTop="190dp"
-                android:text="Serial no. 12345678"
+                android:text="Serial No.  "
                 android:textColor="#FFFF0000"
                 android:textSize="14pt" />
   

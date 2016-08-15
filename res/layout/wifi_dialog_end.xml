@@ -23,7 +23,7 @@
 		            android:layout_height="wrap_content"
 		            android:layout_marginTop="25dp"
 				    android:layout_marginLeft="210dp"
-				    android:text="  Wifi is turn off "
+				    android:text="  Network offline "
 				    android:textColor="#FF000000"
 		            android:textSize="36dp"/>
              

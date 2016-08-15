@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     android:orientation="horizontal"
-    android:weightSum="1" >
+    android:weightSum="1.2" >
 
     <TextView
         android:id="@+id/ItemText1"
@@ -17,7 +17,11 @@
         android:layout_height="wrap_content"
         android:text="kkkkk"
         android:textSize="15pt"
-        android:layout_weight="0.4" >
+        android:layout_weight="0.4125"
+        
+        android:clickable="false"
+        android:focusable="false"
+        android:focusableInTouchMode="false" >
     </TextView>
 
 
@@ -33,7 +37,11 @@
         android:layout_height="wrap_content"
         android:text="kkkkk"
         android:textSize="15pt"
-        android:layout_weight="0.2" >
+        android:layout_weight="0.2125"
+        
+        android:clickable="false"
+        android:focusable="false"
+        android:focusableInTouchMode="false" >
     </TextView>
     
     <TextView
@@ -48,7 +56,11 @@
         android:layout_height="wrap_content"
         android:text="kkkkk"
         android:textSize="15pt"
-        android:layout_weight="0.2" >
+        android:layout_weight="0.2125"
+        
+        android:clickable="false"
+        android:focusable="false"
+        android:focusableInTouchMode="false" >
     </TextView>
 
     <TextView
@@ -63,6 +75,22 @@
         android:layout_height="wrap_content"
         android:text="kkkkk"
         android:textSize="15pt"
-        android:layout_weight="0.2" >
+        android:layout_weight="0.2125"
+        
+        android:clickable="false"
+        android:focusable="false"
+        android:focusableInTouchMode="false" >
     </TextView>
+    
+    <CheckBox
+        android:id="@+id/checkbox2"
+        android:layout_width="0dp"
+        android:layout_height="54dp"
+        android:layout_weight="0.15"
+        android:clickable="false"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
+        android:gravity="center"
+        android:text=""
+        android:textSize="9pt" />
 </LinearLayout>
