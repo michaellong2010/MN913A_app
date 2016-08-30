@@ -132,6 +132,7 @@ public class LogFileChooserActivity extends FileChooserActivity {
 	Iterator<FileItem> selected_file_items_it;
 	LinearLayout result_view_header, result_content_view;
 	String first_line;
+	View.OnClickListener selection_clicklistener;
 	
     @Override
     public void onCreate(Bundle savedInstanceState) { 
@@ -545,11 +546,25 @@ public class LogFileChooserActivity extends FileChooserActivity {
 				public void onClick(View v) {
 					// TODO Auto-generated method stub
 					FileItem file_item;
+					File new_file;
+					//List<FileItem> fileitems = LogFileChooserActivity.this.getFileChooserCore().getFileItems();
 					file_item = selected_file_items.get( 0 );
 					TextView text_new_filename = ( TextView ) file_item.findViewById( ar.com.daidalos.afiledialog.R.id.textViewLabel );
 					text_new_filename.setText( edit_new_filename.getText() );					
 					Log.d ( Tag, file_item.getFile().getParent() + "//" + text_new_filename.getText() );
-					file_item.getFile().renameTo( new File ( file_item.getFile().getParent() + "//" + text_new_filename.getText() ) );
+					new_file = new File ( file_item.getFile().getParent() + "//" + text_new_filename.getText() );
+					file_item.getFile().renameTo( new_file );
+					file_item.setFile( new_file );
+					selected_file_items.set( 0, file_item );
+					/*for ( FileItem fileitem : fileitems ) {
+						if ( file_item.getFile().getName().equals( fileitem.getFile().getName() ) ) {
+							file_item.getFile().renameTo( new File ( file_item.getFile().getParent() + "//" + text_new_filename.getText() ) );
+							selected_file_items.set( 0, file_item );
+							//fileitems.set ( fileitems.indexOf( fileitem ), file_item );
+							//fileitem.setFile( file_item.getFile() );
+						}
+					}*/
+						
 					file_rename_dialog.dismiss();
 				}
     			
@@ -587,7 +602,31 @@ public class LogFileChooserActivity extends FileChooserActivity {
     	for ( FileItem fileitem : fileitems ) {
     		icon = (ImageView) fileitem.findViewById(R.id.imageViewIcon);
     		
-    		if ( fileitem.getFile().getName().contains( "dsDNA" ) == true ) {
+			FileOperation read_file = new FileOperation ( "Measure", null, false );
+			try {
+				read_file.open_read_file( fileitem.getFile().getName() );
+				first_line = measure_result = read_file.read_file();
+				
+				if ( first_line.contains( "dsDNA" ) == true ) {
+					icon.setImageDrawable(getResources().getDrawable( com.example.mn913a.R.drawable.file_dsdna ));
+				}
+				else
+					if ( first_line.contains( "ssDNA" ) == true ) {
+						icon.setImageDrawable(getResources().getDrawable( com.example.mn913a.R.drawable.file_ssdna ));
+					}
+					else
+		    			if ( first_line.contains( "RNA" ) == true ) {
+		    				icon.setImageDrawable(getResources().getDrawable( com.example.mn913a.R.drawable.file_rna ));
+		    			}
+		    			else
+		        			if ( first_line.contains( "PROTEIN" ) == true ) {
+		        				icon.setImageDrawable(getResources().getDrawable( com.example.mn913a.R.drawable.file_protein ));
+		        			}
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+    		/*if ( fileitem.getFile().getName().contains( "dsDNA" ) == true ) {
     			icon.setImageDrawable(getResources().getDrawable( com.example.mn913a.R.drawable.file_dsdna ));
     		}
     		else
@@ -601,8 +640,9 @@ public class LogFileChooserActivity extends FileChooserActivity {
         			else
             			if ( fileitem.getFile().getName().contains( "PROTEIN" ) == true ) {
             				icon.setImageDrawable(getResources().getDrawable( com.example.mn913a.R.drawable.file_protein ));
-            			}
+            			}*/
     	}
+    	first_line = null;
     	
 
     	mCallback = new ActionMode.Callback() {
@@ -1091,12 +1131,26 @@ public class LogFileChooserActivity extends FileChooserActivity {
 			if ( this.activity_use_new_ui == false )
 				measure_root_layout.removeAllViews();
 			FileOperation read_file = new FileOperation ( "Measure", mActiveFile.getName(), false );
+			try {
+				read_file.open_read_file( mActiveFile.getName() );
+				first_line = measure_result = read_file.read_file();
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
 			fillMaps.clear();
+			item_selection_result.setActionView( R.layout.actionview_item_selection );
+			btn_selection_result = ( ImageButton )item_selection_result.getActionView();
+			btn_selection_result.setOnClickListener( selection_clicklistener );
+			item_print_result.setVisible( false );
+			item_delete_result.setVisible( false );
 			result_listview.setDividerHeight( 3 );
 			mIsFileDirty = false;
-			if ( selected_file_items.get(0).getFile().getName().contains( "dsDNA" ) == true ||
+			/*if ( selected_file_items.get(0).getFile().getName().contains( "dsDNA" ) == true ||
 				 selected_file_items.get(0).getFile().getName().contains( "ssDNA" ) == true ||
-				 selected_file_items.get(0).getFile().getName().contains( "RNA" ) == true ) {
+				 selected_file_items.get(0).getFile().getName().contains( "RNA" ) == true ) {*/
+			if ( first_line != null && ( first_line.contains( "dsDNA" ) == true ||
+					first_line.contains( "ssDNA" ) == true || first_line.contains( "RNA" ) == true ) ) {
 				if ( this.activity_use_new_ui == false )
 					inflater.inflate ( R.layout.dna_result_listview_header, listview_header, true );
 				else {
@@ -1116,8 +1170,8 @@ public class LogFileChooserActivity extends FileChooserActivity {
 				fillMaps.add( map );
 				}*/
 				try {
-					read_file.open_read_file( mActiveFile.getName() );
-					first_line = measure_result = read_file.read_file();
+					//read_file.open_read_file( mActiveFile.getName() );
+					//first_line = measure_result = read_file.read_file();
 					//measure_result = "";
 					if ( measure_result != null && measure_result != "") {
 						//"yyyy/MM/dd HH:mm:ss"
@@ -1157,13 +1211,19 @@ public class LogFileChooserActivity extends FileChooserActivity {
 						}
 						//return builder.toString();
 					}
+					
 					while ( ( measure_result = read_file.read_file() ) != null ) {
 					  Log.d ( "Tag", measure_result);
+					  if ( measure_result.contains( "No." ) )
+						  continue;
 					  measure_result_array = measure_result.split( ", " );
 					  if ( measure_result_array.length == dna_from.length || ( measure_result_array.length == ( dna_from.length - 2 ) ) ) {
 							HashMap<String, String> map = new HashMap<String, String>();
 							for (int j = 0; j < measure_result_array.length; j++) {
-								map.put(dna_from[j], measure_result_array[j]);
+								if ( j == 0 )
+									map.put( dna_from[j],measure_result_array[j] );
+								else
+									map.put( dna_from[j], NanoSqlDatabase.truncateDecimal ( Double.valueOf( measure_result_array[j] ), 3 ).toString() );
 								//map.put( "isSelected", "false" );
 							}
 							fillMaps.add(map);
@@ -1291,6 +1351,11 @@ public class LogFileChooserActivity extends FileChooserActivity {
 									if ( item_delete_result.isVisible() == false )
 										item_delete_result.setVisible( true );
 									mSelected_items_count = selection_count;
+									
+									if ( mSelected_items_count == fillMaps.size() )
+										btn_selection_result.setImageDrawable( LogFileChooserActivity.this.getResources().getDrawable( R.drawable.files_select_all ) );
+									else
+										btn_selection_result.setImageDrawable( LogFileChooserActivity.this.getResources().getDrawable( R.drawable.files_unselect_all ) );
 								}
 								else {
 									if ( item_print_result.isVisible() == true )
@@ -1337,7 +1402,8 @@ public class LogFileChooserActivity extends FileChooserActivity {
 				//result_listview.addHeaderView ( header );
         	}
 			else
-				if ( selected_file_items.get(0).getFile().getName().contains( "PROTEIN" ) == true ) {
+				//if ( selected_file_items.get(0).getFile().getName().contains( "PROTEIN" ) == true ) {
+				if ( first_line != null && first_line.contains( "PROTEIN" ) == true ) {
 					if ( this.activity_use_new_ui == false )
 						inflater.inflate ( R.layout.protein_result_listview_header, listview_header, true );
 					else {
@@ -1354,9 +1420,9 @@ public class LogFileChooserActivity extends FileChooserActivity {
 					fillMaps.add( map );
 					}*/
 					try {
-						read_file.open_read_file( mActiveFile.getName() );
+						//read_file.open_read_file( mActiveFile.getName() );
 						
-						first_line = measure_result = read_file.read_file();
+						//first_line = measure_result = read_file.read_file();
 						//measure_result = "";
 						if ( measure_result != null && measure_result != "") {
 							//"yyyy/MM/dd HH:mm:ss"
@@ -1380,11 +1446,16 @@ public class LogFileChooserActivity extends FileChooserActivity {
 						
 						while ( ( measure_result = read_file.read_file() ) != null ) {
 						  Log.d ( "Tag", measure_result);
+						  if ( measure_result.contains( "No." ) )
+							  continue;
 						  measure_result_array = measure_result.split( ", " );
 						  if ( measure_result_array.length == protein_from.length ) {
 								HashMap<String, String> map = new HashMap<String, String>();
 								for (int j = 0; j < measure_result_array.length; j++) {
-									map.put(protein_from[j], measure_result_array[j]);
+									if ( j == 0 )
+										map.put( protein_from[j],measure_result_array[j] );
+									else
+										map.put( protein_from[j], NanoSqlDatabase.truncateDecimal ( Double.valueOf( measure_result_array[j] ), 3 ).toString() );
 									//map.put( "isSelected", "false" );
 								}
 								fillMaps.add(map);
@@ -1445,6 +1516,11 @@ public class LogFileChooserActivity extends FileChooserActivity {
 										if ( item_delete_result.isVisible() == false )
 											item_delete_result.setVisible( true );
 										mSelected_items_count = selection_count;
+										
+										if ( mSelected_items_count == fillMaps.size() )
+											btn_selection_result.setImageDrawable( LogFileChooserActivity.this.getResources().getDrawable( R.drawable.files_select_all ) );
+										else
+											btn_selection_result.setImageDrawable( LogFileChooserActivity.this.getResources().getDrawable( R.drawable.files_unselect_all ) );
 									}
 									else {
 										if ( item_print_result.isVisible() == true )
@@ -1466,6 +1542,9 @@ public class LogFileChooserActivity extends FileChooserActivity {
 						}
 						
 					});
+				}
+				else {
+					read_file.flush_close_file();
 				}
 			//adapter.notifyDataSetChanged();
 			if ( this.activity_use_new_ui == false )
@@ -1578,9 +1657,9 @@ public class LogFileChooserActivity extends FileChooserActivity {
 	}
 	
 	MenuItem item_open_file, item_delete_file, item_rename_file, item_select_all_file, item_unselect_all_file;
-	MenuItem item_print_result, item_delete_result, item_home, item_normalization, Dummy_menu_item;
+	MenuItem item_selection_result, item_print_result, item_delete_result, item_home, item_normalization, Dummy_menu_item;
 	Menu main_menu;
-	ImageButton btn_home, btn_delete_result, btn_print_result, btn_normalization;
+	ImageButton btn_selection_result, btn_home, btn_delete_result, btn_print_result, btn_normalization;
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 	    MenuInflater inflater = getMenuInflater();
@@ -1589,6 +1668,9 @@ public class LogFileChooserActivity extends FileChooserActivity {
 			    inflater.inflate(R.menu.management_right_side_menu, menu);
 			    
 			    main_menu = menu;
+			    item_selection_result = menu.findItem( R.id.item_selection );
+			    item_selection_result.setActionView( R.layout.actionview_item_selection );
+			    btn_selection_result = ( ImageButton )item_selection_result.getActionView();
 			    item_print_result = menu.findItem(R.id.item_print);
 			    item_print_result.setActionView( R.layout.actionview_item_print );
 			    btn_print_result = ( ImageButton ) item_print_result.getActionView();
@@ -1769,6 +1851,42 @@ public class LogFileChooserActivity extends FileChooserActivity {
 					}
 			    	
 			    } );
+			    
+			    selection_clicklistener = new View.OnClickListener( ) {
+			    	@Override
+					public void onClick(View v) {
+						ImageButton btn_img = null;
+						if ( v instanceof ImageButton ) {
+							btn_img = ( ImageButton ) v;
+						}
+						
+						if ( btn_img != null && btn_img.isSelected() == false) {
+							btn_img.setSelected( true );
+							btn_img.setImageDrawable( LogFileChooserActivity.this.getResources().getDrawable( R.drawable.files_select_all ) );
+							
+							for ( HashMap <String, String> map : fillMaps )
+								map.put( "isSelected", "true" );
+							if ( result_listview.getAdapter() instanceof dna_result_adapter )
+								( ( dna_result_adapter ) result_listview.getAdapter() ).notifyDataSetChanged();
+							else
+								if ( result_listview.getAdapter() instanceof protein_result_adapter )
+									( ( protein_result_adapter ) result_listview.getAdapter() ).notifyDataSetChanged();
+						}
+						else 
+							if ( btn_img != null && btn_img.isSelected() == true) {
+								btn_img.setSelected( false );
+								btn_img.setImageDrawable( LogFileChooserActivity.this.getResources().getDrawable( R.drawable.files_unselect_all ) );
+								
+								for ( HashMap <String, String> map : fillMaps )
+									map.put( "isSelected", "false" );
+								if ( result_listview.getAdapter() instanceof dna_result_adapter )
+									( ( dna_result_adapter ) result_listview.getAdapter() ).notifyDataSetChanged();
+								else
+									if ( result_listview.getAdapter() instanceof protein_result_adapter )
+										( ( protein_result_adapter ) result_listview.getAdapter() ).notifyDataSetChanged();
+							}
+			    	}
+			    };
 		    }
 		    else 
 		    	if ( activity_use_for.equals( ACTIVITY_USE_FOR_ANALYSIS ) ) {

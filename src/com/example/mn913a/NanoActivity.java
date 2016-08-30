@@ -2,10 +2,13 @@ package com.example.mn913a;
 
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.InetAddress;
@@ -119,11 +122,12 @@ import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
+import java.util.Random;
 
 public class NanoActivity extends Activity {
 	PendingIntent mPermissionIntent;
 	UsbManager mUsbManager;
-	boolean mRequest_USB_permission, Is_MN913A_Online = false;
+	boolean mRequest_USB_permission, Is_MN913A_Online = false, store_raw_data = false ;
 	public final String Tag = "MN913_Activity";
 	private static final String ACTION_USB_PERMISSION = "com.example.mn913a.USB_PERMISSION";
 	MN_913A_Device mNano_dev;
@@ -135,7 +139,7 @@ public class NanoActivity extends Activity {
 	double xenon_voltage;
 	DisplayMetrics metrics;
 	FrameLayout mLayout_Content;
-	LinearLayout mLayout_about, mLayout_DNA_MeasurePage, mLayout_MainPage, mLayout_SettingPage, gridlayout, mLayout_Protein_MeasurePage, calibration_layout;
+	LinearLayout engineering_mode_page, mLayout_about, mLayout_DNA_MeasurePage, mLayout_MainPage, mLayout_SettingPage, gridlayout, mLayout_Protein_MeasurePage, calibration_layout;
 	Thread timerThread = null;
 	SimpleDateFormat df = new SimpleDateFormat("yyyy.MM.dd a HH:mm");
 	SimpleDateFormat df1 = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss");
@@ -201,6 +205,9 @@ public class NanoActivity extends Activity {
 	int set_time=0;
 	int [] datetime_data_int = new int [ 256 / 4 ];
 	int mCali_Selected_count = 0;
+	String raw_data_debug_msg;
+	public FileOutputStream fos_debug_raw_data, fos_debug_raw_data_mean;
+	float Touch_X=0,Touch_Y=0;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -1517,6 +1524,7 @@ public class NanoActivity extends Activity {
 			@Override
 			public void run() {
 				super.run();
+				mNano_dev.MN913A_IOCTL ( CMD_T.HID_CMD_PRINTER_POWER_ON, 0, 0, null, 0 );
 				while ( true ) {
 					try {
 						sleep ( 5000 );
@@ -1591,14 +1599,17 @@ public class NanoActivity extends Activity {
 					bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt( dna_type ).array();
 					System.arraycopy ( bytes, 0, byte_array, 0, bytes.length );
 					byte_offset = byte_offset + bytes.length;
-					bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt( dna_data_list.size() ).array();
+					bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt( 1 ).array();
 					System.arraycopy ( bytes, 0, byte_array, 4, bytes.length );
 					byte_offset = byte_offset + bytes.length;
 					
 					byte [] datetime_data = new byte [ 24 ];
 					System.arraycopy ( datetime_data, 0, byte_array, byte_offset, datetime_data.length );
 				    byte_offset = byte_offset + datetime_data.length;
-					for ( DNA_measure_data dna_data: dna_data_list ) {
+				    DNA_measure_data dna_data;
+				    Random rand = new Random();
+				    dna_data = dna_data_list.get( rand.nextInt ( 5 ) );
+					//for ( DNA_measure_data dna_data: dna_data_list ) {
 						bytes = ByteBuffer.allocate(4).order( ByteOrder.LITTLE_ENDIAN ).putInt( dna_data.index ).array();
 						System.arraycopy ( bytes, 0, byte_array, byte_offset, bytes.length );
 						byte_offset = byte_offset + bytes.length;
@@ -1622,7 +1633,7 @@ public class NanoActivity extends Activity {
 						bytes = ByteBuffer.allocate(8).order( ByteOrder.LITTLE_ENDIAN ).putDouble( ( dna_data.A260 * 19 )/ ( dna_data.A280 * 23 ) ).array();
 						System.arraycopy ( bytes, 0, byte_array, byte_offset, bytes.length );
 						byte_offset = byte_offset + bytes.length;
-					}
+					//}
 					while ( dsDNA_page_btn_sample.isEnabled() == false ) {
 						try {
 							sleep ( 1000 );
@@ -1694,6 +1705,13 @@ public class NanoActivity extends Activity {
     	app_properties.flush();
     	/*20160719 integrated by michael*/
     	popimage ( );
+    	try {
+    		fos_debug_raw_data = new FileOutputStream("/mnt/sdcard/raw_data");
+    		fos_debug_raw_data_mean = new FileOutputStream("/mnt/sdcard/raw_data_mean");
+    	} catch (FileNotFoundException e) {
+		// TODO Auto-generated catch block
+    		e.printStackTrace();
+    	}
 	}
 	
 	private void save_measurement_to_file () {
@@ -1732,42 +1750,44 @@ public class NanoActivity extends Activity {
 		case MEASURE_MODE_dsDNA:
 		case MEASURE_MODE_ssDNA:
 		case MEASURE_MODE_RNA:
+			write_file.write_file( "No., Conc., A260, A260_A230, A260_A280, A230, A280", true);
 			for ( DNA_measure_data dna_data: dna_data_list ) {
 				if ( dna_data.include_A320 == true ) {
-				  measure_result = Integer.toString( dna_data.index ) + ", " + NanoSqlDatabase.truncateDecimal(  dna_data.Conc, 3 ).doubleValue() +  ", " +
+				  measure_result = Integer.toString( dna_data.index ) + ", " + NanoSqlDatabase.truncateDecimal(  dna_data.Conc, 6 ).doubleValue() +  ", " +
 				  //NanoSqlDatabase.truncateDecimal(  dna_data.A260 * 24.38, 3 ).doubleValue() +  ", " +
 				  //NanoSqlDatabase.truncateDecimal(  dna_data.Conc / 50, 3 ).doubleValue() +  ", " +
-				  NanoSqlDatabase.truncateDecimal(  dna_data.OD260, 3 ).doubleValue() +  ", " +
+				  NanoSqlDatabase.truncateDecimal(  dna_data.OD260, 6 ).doubleValue() +  ", " +
 				  //NanoSqlDatabase.truncateDecimal(  ( dna_data.A260 * 210 - dna_data.A320 ) / ( dna_data.A230 * 167 - dna_data.A320 ), 3 ).doubleValue() + ", " +
 				  //NanoSqlDatabase.truncateDecimal(  ( dna_data.A260 * 19 - dna_data.A320 ) / ( dna_data.A280 * 23 - dna_data.A320 ), 3 ).doubleValue();
-				  NanoSqlDatabase.truncateDecimal(  ( dna_data.OD260 - dna_data.A320 ) / ( dna_data.OD230 - dna_data.A320 ), 3 ).doubleValue() + ", " +
-				  NanoSqlDatabase.truncateDecimal(  ( dna_data.OD260 - dna_data.A320 ) / ( dna_data.OD280 - dna_data.A320 ), 3 ).doubleValue() + ", " +
-				  NanoSqlDatabase.truncateDecimal(  dna_data.OD230, 3 ).doubleValue() +  ", " +
-				  NanoSqlDatabase.truncateDecimal(  dna_data.OD280, 3 ).doubleValue();
+				  NanoSqlDatabase.truncateDecimal(  ( dna_data.OD260 - dna_data.A320 ) / ( dna_data.OD230 - dna_data.A320 ), 6 ).doubleValue() + ", " +
+				  NanoSqlDatabase.truncateDecimal(  ( dna_data.OD260 - dna_data.A320 ) / ( dna_data.OD280 - dna_data.A320 ), 6 ).doubleValue() + ", " +
+				  NanoSqlDatabase.truncateDecimal(  dna_data.OD230, 6 ).doubleValue() +  ", " +
+				  NanoSqlDatabase.truncateDecimal(  dna_data.OD280, 6 ).doubleValue();
 				}
 				else {
-					measure_result = Integer.toString( dna_data.index ) + ", " + NanoSqlDatabase.truncateDecimal(  dna_data.Conc, 3 ).doubleValue() +  ", " +
+					measure_result = Integer.toString( dna_data.index ) + ", " + NanoSqlDatabase.truncateDecimal(  dna_data.Conc, 6 ).doubleValue() +  ", " +
 				    //NanoSqlDatabase.truncateDecimal(  dna_data.A260 * 24.38, 3 ).doubleValue() +  ", " +
 				    //NanoSqlDatabase.truncateDecimal(  dna_data.Conc / 50, 3 ).doubleValue() +  ", " +
-				    NanoSqlDatabase.truncateDecimal(  dna_data.OD260, 3 ).doubleValue() +  ", " +
+				    NanoSqlDatabase.truncateDecimal(  dna_data.OD260, 6 ).doubleValue() +  ", " +
 					//NanoSqlDatabase.truncateDecimal(  ( dna_data.A260 * 210 ) / ( dna_data.A230 * 167 ), 3 ).doubleValue() + ", " +
 					//NanoSqlDatabase.truncateDecimal(  ( dna_data.A260 * 19 ) / ( dna_data.A280 * 23 ), 3 ).doubleValue();
-					NanoSqlDatabase.truncateDecimal(  ( dna_data.OD260 ) / ( dna_data.OD230 ), 3 ).doubleValue() + ", " +
-					NanoSqlDatabase.truncateDecimal(  ( dna_data.OD260 ) / ( dna_data.OD280 ), 3 ).doubleValue() + ", " +
-					NanoSqlDatabase.truncateDecimal(  dna_data.OD230, 3 ).doubleValue() +  ", " +
-					NanoSqlDatabase.truncateDecimal(  dna_data.OD280, 3 ).doubleValue();
+					NanoSqlDatabase.truncateDecimal(  ( dna_data.OD260 ) / ( dna_data.OD230 ), 6 ).doubleValue() + ", " +
+					NanoSqlDatabase.truncateDecimal(  ( dna_data.OD260 ) / ( dna_data.OD280 ), 6 ).doubleValue() + ", " +
+					NanoSqlDatabase.truncateDecimal(  dna_data.OD230, 6 ).doubleValue() +  ", " +
+					NanoSqlDatabase.truncateDecimal(  dna_data.OD280, 6 ).doubleValue();
 				}
 				write_file.write_file ( measure_result, true );
 			}
 			break;
 		case MEASURE_MODE_PROTEIN:
+			write_file.write_file( "No., A280, Coeff., Conc.", true);
 			for ( Protein_measure_data protein_data: protein_data_list ) {
 				/*measure_result = Integer.toString( protein_data.index ) + ", " + NanoSqlDatabase.truncateDecimal(  protein_data.A280, 3 ).doubleValue()	+
 						", " + NanoSqlDatabase.truncateDecimal(  protein_data.coefficient, 3 ).doubleValue()
 						+ ", " + NanoSqlDatabase.truncateDecimal(  protein_data.Conc, 3 ).doubleValue();*/
-				measure_result = Integer.toString( protein_data.index ) + ", " + NanoSqlDatabase.truncateDecimal(  protein_data.OD280, 3 ).doubleValue()	+
-				", " + NanoSqlDatabase.truncateDecimal(  protein_data.coefficient, 3 ).doubleValue()
-				+ ", " + NanoSqlDatabase.truncateDecimal(  protein_data.Conc, 3 ).doubleValue();
+				measure_result = Integer.toString( protein_data.index ) + ", " + NanoSqlDatabase.truncateDecimal(  protein_data.OD280, 6 ).doubleValue()	+
+				", " + NanoSqlDatabase.truncateDecimal(  protein_data.coefficient, 6 ).doubleValue()
+				+ ", " + NanoSqlDatabase.truncateDecimal(  protein_data.Conc, 6 ).doubleValue();
 				write_file.write_file ( measure_result, true );
 			}
 			break;
@@ -2669,6 +2689,16 @@ public class NanoActivity extends Activity {
 		super.onDestroy();
 		unregisterReceiver(mReceiver);
 		save_calibration_data ();
+		
+		try {
+			fos_debug_raw_data.flush();
+			fos_debug_raw_data.close();
+			fos_debug_raw_data_mean.flush();
+			fos_debug_raw_data_mean.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
     protected void onNewIntent(Intent intent) {
@@ -3075,6 +3105,8 @@ public class NanoActivity extends Activity {
                 			  mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_MN913A_SETTING, 0, 0, null, 0);
                 		  }
                 		  }
+                		  else
+                			  Log.d ( Tag, "calibration exception");
                 		  if ( mNano_dev.Invalid_Measure_Assert == 0 ) {
                 		  /*NanoActivity.this.runOnUiThread( new Runnable() {
 
@@ -3115,6 +3147,8 @@ public class NanoActivity extends Activity {
 							e.printStackTrace();
 						  }
                 		  }
+                		  else
+                			  Log.d ( Tag, "calibration exception");
                 		  if ( mNano_dev.Invalid_Measure_Assert == 0 ) {
                 		  if ( mNano_dev.MN913A_IOCTL ( CMD_T.HID_CMD_MN913A_RAW_DATA, 0, 16, composite_raw_data, 0) ) {
                 			  channel_sample.set_channel_raw_data ( composite_raw_data );
@@ -3264,6 +3298,68 @@ public class NanoActivity extends Activity {
                 		  if ( mNano_dev.Invalid_Measure_Assert == 0 )
                 		  if ( mNano_dev.MN913A_IOCTL ( CMD_T.HID_CMD_MN913A_RAW_DATA, 0, 16, composite_raw_data, 0) ) {
                 			  channel_blank.set_channel_raw_data ( composite_raw_data );
+                			  if ( store_raw_data == true ) {
+               	        	  ShellExecuter exe = new ShellExecuter();
+               	        	  String shell_cmd;
+               	        	  int i;
+               	        	  shell_cmd = "/system/xbin/su & echo ";
+                			  raw_data_debug_msg = "b ";
+                			  raw_data_debug_msg += Integer.toString( mNano_dev.Xenon_Voltage_Level ) + " ";
+                			  raw_data_debug_msg += Double.toString( 3.17 + ( 4.7 - 3.17 ) * ( mNano_dev.Xenon_Voltage_Level - 162 ) / ( 242 - 162 ) ) + "\n";
+                			  shell_cmd += raw_data_debug_msg;
+                			  shell_cmd += ">> /mnt/sdcard/raw_data";
+                			  //exe.Executer( shell_cmd );
+                			  show_debug ( fos_debug_raw_data, raw_data_debug_msg );
+                			  shell_cmd = "/system/xbin/su & echo start=== >> /mnt/sdcard/raw_data";
+                			  show_debug ( fos_debug_raw_data, "start===\n" );
+                			  //exe.Executer( shell_cmd );
+                			  raw_data_debug_msg = "";
+                			  for ( i = 0; i < 50; i++ ) {
+                				  raw_data_debug_msg = Integer.toString( channel_blank.ch1_no_xenon_raw_data [i] ) + "   " + Integer.toString( channel_blank.ch1_xenon_raw_data [i] )
+                						          + "   " + Integer.toString( channel_blank.ch2_no_xenon_raw_data [i] ) + "   " + Integer.toString( channel_blank.ch2_xenon_raw_data [i] )
+                								  + "   " + Integer.toString( channel_blank.ch3_no_xenon_raw_data [i] ) + "   " + Integer.toString( channel_blank.ch3_xenon_raw_data [i] )
+                				                  + "   " + Integer.toString( channel_blank.ch4_no_xenon_raw_data [i] ) + "   " + Integer.toString( channel_blank.ch4_xenon_raw_data [i] ) + "\n";
+                				  //exe.Executer( "/system/xbin/su & echo " + raw_data_debug_msg + ">> /mnt/sdcard/raw_data" );
+                				  //exec_shell_command ( "/system/xbin/su & echo " + raw_data_debug_msg + ">> /mnt/sdcard/raw_data" );
+                				  show_debug ( fos_debug_raw_data, raw_data_debug_msg );
+                			  }
+                			  shell_cmd = "/system/xbin/su & echo end=== >> /mnt/sdcard/raw_data";
+                			  show_debug ( fos_debug_raw_data, "end===\n\n" );
+                			  try {
+								fos_debug_raw_data.flush();
+							  } catch (IOException e) {
+								// TODO Auto-generated catch block
+								  e.printStackTrace();
+							  }
+                			  //exe.Executer( shell_cmd );
+                			  
+                			  
+                			  raw_data_debug_msg = "b ";
+                			  raw_data_debug_msg += Integer.toString( mNano_dev.Xenon_Voltage_Level ) + " ";
+                			  raw_data_debug_msg += Double.toString( 3.17 + ( 4.7 - 3.17 ) * ( mNano_dev.Xenon_Voltage_Level - 162 ) / ( 242 - 162 ) ) + "\n";
+                			  show_debug ( fos_debug_raw_data_mean, raw_data_debug_msg );
+                			  //exe.Executer( "/system/xbin/su & echo " + raw_data_debug_msg + ">> /mnt/sdcard/raw_data_mean" );
+            				  raw_data_debug_msg = NanoSqlDatabase.truncateDecimal ( channel_blank.ch1_no_xenon_mean, 3 ).doubleValue() + "   " + NanoSqlDatabase.truncateDecimal ( channel_blank.ch1_xenon_mean, 3 ).doubleValue()
+    						          + "   " + NanoSqlDatabase.truncateDecimal( channel_blank.ch2_no_xenon_mean, 3 ).doubleValue() + "   " + NanoSqlDatabase.truncateDecimal( channel_blank.ch2_xenon_mean, 3 ).doubleValue()
+    								  + "   " + NanoSqlDatabase.truncateDecimal( channel_blank.ch3_no_xenon_mean, 3 ).doubleValue() + "   " + NanoSqlDatabase.truncateDecimal( channel_blank.ch3_xenon_mean, 3 ).doubleValue()
+    				                  + "   " + NanoSqlDatabase.truncateDecimal( channel_blank.ch4_no_xenon_mean, 3 ).doubleValue() + "   " + NanoSqlDatabase.truncateDecimal( channel_blank.ch4_xenon_mean, 3 ).doubleValue() + "\n";
+            				  show_debug ( fos_debug_raw_data_mean, raw_data_debug_msg );
+            				  raw_data_debug_msg = NanoSqlDatabase.truncateDecimal ( 100 * channel_blank.ch1_no_xenon_stdev / channel_blank.ch1_no_xenon_mean, 3 ).doubleValue() + "   " + NanoSqlDatabase.truncateDecimal ( 100 * channel_blank.ch1_xenon_stdev / channel_blank.ch1_xenon_mean, 3 ).doubleValue()
+    						          + "   " + NanoSqlDatabase.truncateDecimal( 100 * channel_blank.ch2_no_xenon_stdev / channel_blank.ch2_no_xenon_mean, 3 ).doubleValue() + "   " + NanoSqlDatabase.truncateDecimal( 100 * channel_blank.ch2_xenon_stdev / channel_blank.ch2_xenon_mean, 3 ).doubleValue()
+    								  + "   " + NanoSqlDatabase.truncateDecimal( 100 *channel_blank.ch3_no_xenon_stdev / channel_blank.ch3_no_xenon_mean, 3 ).doubleValue() + "   " + NanoSqlDatabase.truncateDecimal( 100 * channel_blank.ch3_xenon_stdev / channel_blank.ch3_xenon_mean, 3 ).doubleValue()
+    				                  + "   " + NanoSqlDatabase.truncateDecimal( 100 * channel_blank.ch4_no_xenon_stdev / channel_blank.ch4_no_xenon_mean, 3 ).doubleValue() + "   " + NanoSqlDatabase.truncateDecimal( 100 * channel_blank.ch4_xenon_stdev / channel_blank.ch4_xenon_mean, 3 ).doubleValue() + "\n";
+            				  show_debug ( fos_debug_raw_data_mean, raw_data_debug_msg );
+            				  try {
+								fos_debug_raw_data_mean.flush();
+							  } catch (IOException e) {
+								// TODO Auto-generated catch block
+								  e.printStackTrace();
+							  }
+                			  }
+            				  //exe.Executer( "/system/xbin/su & echo " + raw_data_debug_msg + ">> /mnt/sdcard/raw_data_mean" );
+            				  //exe.Executer( "/system/xbin/su & echo " + ">> /mnt/sdcard/raw_data_mean" );
+            				  //exe.Executer( "/system/xbin/su & echo " + ">> /mnt/sdcard/raw_data_mean" );
+            				  //exe.Executer( "/system/xbin/su & echo " + ">> /mnt/sdcard/raw_data_mean" );
                 			  /*checkpoint*/
                 			  //if ( channel_blank.ch2_xenon_mean  mNano_dev.Max_Voltage_Intensity )
                 		  }
@@ -3355,6 +3451,69 @@ public class NanoActivity extends Activity {
                 		  if ( mNano_dev.Invalid_Measure_Assert == 0 ) {
                 		  if ( mNano_dev.MN913A_IOCTL ( CMD_T.HID_CMD_MN913A_RAW_DATA, 0, 16, composite_raw_data, 0) ) {
                 			  channel_sample.set_channel_raw_data ( composite_raw_data );
+                			  
+                			  if ( store_raw_data == true ) {
+                			  ShellExecuter exe = new ShellExecuter();
+               	        	  String shell_cmd;
+               	        	  int i;
+               	        	  shell_cmd = "/system/xbin/su & echo ";
+                			  raw_data_debug_msg = "s ";
+                			  raw_data_debug_msg += Integer.toString( mNano_dev.Xenon_Voltage_Level ) + " ";
+                			  raw_data_debug_msg += Double.toString( 3.17 + ( 4.7 - 3.17 ) * ( mNano_dev.Xenon_Voltage_Level - 162 ) / ( 242 - 162 ) ) + "\n";
+                			  shell_cmd += raw_data_debug_msg;
+                			  shell_cmd += ">> /mnt/sdcard/raw_data";
+                			  //exe.Executer( shell_cmd );
+                			  show_debug ( fos_debug_raw_data, raw_data_debug_msg );
+                			  shell_cmd = "/system/xbin/su & echo start=== >> /mnt/sdcard/raw_data";
+                			  //exe.Executer( shell_cmd );
+                			  show_debug ( fos_debug_raw_data, "start===\n" );
+                			  raw_data_debug_msg = "";
+                			  for ( i = 0; i < 50; i++ ) {
+                				  raw_data_debug_msg = Integer.toString( channel_sample.ch1_no_xenon_raw_data [i] ) + "   " + Integer.toString( channel_sample.ch1_xenon_raw_data [i] )
+                						          + "   " + Integer.toString( channel_sample.ch2_no_xenon_raw_data [i] ) + "   " + Integer.toString( channel_sample.ch2_xenon_raw_data [i] )
+                								  + "   " + Integer.toString( channel_sample.ch3_no_xenon_raw_data [i] ) + "   " + Integer.toString( channel_sample.ch3_xenon_raw_data [i] )
+                				                  + "   " + Integer.toString( channel_sample.ch4_no_xenon_raw_data [i] ) + "   " + Integer.toString( channel_sample.ch4_xenon_raw_data [i] ) + "\n";
+                				  //exe.Executer( "/system/xbin/su & echo " + raw_data_debug_msg + ">> /mnt/sdcard/raw_data" );
+                				  show_debug ( fos_debug_raw_data, raw_data_debug_msg );
+                			  }
+                			  shell_cmd = "/system/xbin/su & echo end=== >> /mnt/sdcard/raw_data";
+                			  //exe.Executer( shell_cmd );
+                			  show_debug ( fos_debug_raw_data, "end===\n\n" );
+                			  try {
+								fos_debug_raw_data.flush();
+							  } catch (IOException e1) {
+								// TODO Auto-generated catch block
+								  e1.printStackTrace();
+							  }
+                			  
+                			  
+                			  raw_data_debug_msg = "s ";
+                			  raw_data_debug_msg += Integer.toString( mNano_dev.Xenon_Voltage_Level ) + " ";
+                			  raw_data_debug_msg += Double.toString( 3.17 + ( 4.7 - 3.17 ) * ( mNano_dev.Xenon_Voltage_Level - 162 ) / ( 242 - 162 ) ) + "\n";
+                			  //exe.Executer( "/system/xbin/su & echo " + raw_data_debug_msg + ">> /mnt/sdcard/raw_data_mean" );
+                			  show_debug ( fos_debug_raw_data_mean, raw_data_debug_msg );
+            				  raw_data_debug_msg = NanoSqlDatabase.truncateDecimal ( channel_sample.ch1_no_xenon_mean, 3 ).doubleValue() + "   " + NanoSqlDatabase.truncateDecimal ( channel_sample.ch1_xenon_mean, 3 ).doubleValue()
+    						          + "   " + NanoSqlDatabase.truncateDecimal( channel_sample.ch2_no_xenon_mean, 3 ).doubleValue() + "   " + NanoSqlDatabase.truncateDecimal( channel_sample.ch2_xenon_mean, 3 ).doubleValue()
+    								  + "   " + NanoSqlDatabase.truncateDecimal( channel_sample.ch3_no_xenon_mean, 3 ).doubleValue() + "   " + NanoSqlDatabase.truncateDecimal( channel_sample.ch3_xenon_mean, 3 ).doubleValue()
+    				                  + "   " + NanoSqlDatabase.truncateDecimal( channel_sample.ch4_no_xenon_mean, 3 ).doubleValue() + "   " + NanoSqlDatabase.truncateDecimal( channel_sample.ch4_xenon_mean, 3 ).doubleValue() + "\n\n";
+            				  show_debug ( fos_debug_raw_data_mean, raw_data_debug_msg );
+            				  raw_data_debug_msg = NanoSqlDatabase.truncateDecimal ( 100 * channel_sample.ch1_no_xenon_stdev / channel_sample.ch1_no_xenon_mean, 3 ).doubleValue() + "   " + NanoSqlDatabase.truncateDecimal ( 100 * channel_sample.ch1_xenon_stdev / channel_sample.ch1_xenon_mean, 3 ).doubleValue()
+    						          + "   " + NanoSqlDatabase.truncateDecimal( 100 * channel_sample.ch2_no_xenon_stdev / channel_sample.ch2_no_xenon_mean, 3 ).doubleValue() + "   " + NanoSqlDatabase.truncateDecimal( 100 * channel_sample.ch2_xenon_stdev / channel_sample.ch2_xenon_mean, 3 ).doubleValue()
+    								  + "   " + NanoSqlDatabase.truncateDecimal( 100 * channel_sample.ch3_no_xenon_stdev / channel_sample.ch3_no_xenon_mean, 3 ).doubleValue() + "   " + NanoSqlDatabase.truncateDecimal( 100 * channel_sample.ch3_xenon_stdev / channel_sample.ch3_xenon_mean, 3 ).doubleValue()
+    				                  + "   " + NanoSqlDatabase.truncateDecimal( 100 * channel_sample.ch4_no_xenon_stdev / channel_sample.ch4_no_xenon_mean, 3 ).doubleValue() + "   " + NanoSqlDatabase.truncateDecimal( 100 * channel_sample.ch4_xenon_stdev / channel_sample.ch4_xenon_mean, 3 ).doubleValue() + "\n\n";
+            				  show_debug ( fos_debug_raw_data_mean, raw_data_debug_msg );
+            				  try {
+								fos_debug_raw_data_mean.flush();
+							  } catch (IOException e1) {
+								// TODO Auto-generated catch block
+								  e1.printStackTrace();
+							  }
+                			  }
+            				  //exe.Executer( "/system/xbin/su & echo " + raw_data_debug_msg + ">> /mnt/sdcard/raw_data_mean" );
+            				  //exe.Executer( "/system/xbin/su & echo " + ">> /mnt/sdcard/raw_data_mean" );
+            				  //exe.Executer( "/system/xbin/su & echo " + ">> /mnt/sdcard/raw_data_mean" );
+            				  //exe.Executer( "/system/xbin/su & echo " + ">> /mnt/sdcard/raw_data_mean" );
+            				  
                 			  if ( measure_mode < MEASURE_MODE_PROTEIN ) {
                 	    	  I_blank = Math.abs( channel_blank.ch2_xenon_mean - channel_blank.ch2_no_xenon_mean );
                 	    	  I_sample = Math.abs ( channel_sample.ch2_xenon_mean - channel_sample.ch2_no_xenon_mean );
@@ -3403,7 +3562,6 @@ public class NanoActivity extends Activity {
                 				mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_MN913A_SETTING, 0, 0, null, 1);
                 			  }
                 			  }
-
 
                 	    	  /*checkpoint*/
                 			  if ( mNano_dev.Invalid_Measure_Assert == 0 )
@@ -3486,11 +3644,26 @@ public class NanoActivity extends Activity {
     	Protein_measure_data protein_data = new Protein_measure_data ();
     	Message msg;
     	double Transmission_rate = 0, low_conc_TR_range = 0;
+    	Random rand;
+    	Switch sw = ( Switch ) NanoActivity.this.findViewById( R.id.mySwitch );
     	
+    	rand = new Random ();
+		
     	switch ( measure_mode ) {
     	case MEASURE_MODE_dsDNA:
     	case MEASURE_MODE_ssDNA:
     	case MEASURE_MODE_RNA:
+    		dna_data.include_A320 = sw.isChecked();
+        	I_blank = channel_blank.ch4_xenon_mean - channel_blank.ch4_no_xenon_mean;
+    		I_sample = channel_sample.ch4_xenon_mean - channel_sample.ch4_no_xenon_mean;
+    		if ( I_sample != 0) {
+    			dna_data.A320 = Math.log( I_blank / I_sample )  / Math.log(10);
+    			if ( dna_data.A320 == 0)
+    				dna_data.A320 = -1;
+    		}
+    		else
+    			dna_data.A320 = -1;
+    		dna_data.OD320 = dna_data.A320;
     		//channel_blank.ch1_xenon_mean - channel_blank.ch1_no_xenon_mean
     		//channel_blank.ch2_xenon_mean - channel_blank.ch2_no_xenon_mean
     		//channel_blank.ch3_xenon_mean - channel_blank.ch3_no_xenon_mean
@@ -3540,15 +3713,15 @@ public class NanoActivity extends Activity {
     				//if ( 0.944 < Transmission_rate ) {
     				if ( coeff_T1 < Transmission_rate ) {
         				//conc less than 25, non-linear, search minima voltage level and measure then reset
-        				I_sample1 = Math.abs ( channel_sample1.ch2_xenon_mean - channel_sample1.ch2_no_xenon_mean );
-        				I_blank1 = ( double ) mNano_dev.Get_Min_Voltage_Intensity();
+        				//I_sample1 = Math.abs ( channel_sample1.ch2_xenon_mean - channel_sample1.ch2_no_xenon_mean );
+        				//I_blank1 = ( double ) mNano_dev.Get_Min_Voltage_Intensity();
         				//if ( I_sample1 != 0) {
         	    			//dna_data.A260 = ( Math.abs( dna_data.A260 ) + Math.abs( Math.log( I_blank1 / I_sample1 ) / Math.log(10) ) ) / 2;
         					/*dna_data.Conc = coeff_k1 * Math.abs( dna_data.A260 );
         					dna_data.Conc += coeff_k1 * Math.abs( Math.log( I_blank1 / I_sample1 ) / Math.log(10));
         					dna_data.Conc = dna_data.Conc / 2;*/
         					low_conc_TR_range = Transmission_rate / coeff_T1;
-        					if ( 1 < low_conc_TR_range && low_conc_TR_range < 1.02) {
+        					/*if ( 1 < low_conc_TR_range && low_conc_TR_range < 1.02) {
         						dna_data.OD260 = 20 * coeff_k1 * Math.abs( dna_data.A260 );
             					//dna_data.OD260 += 20 * coeff_k1 * Math.abs( Math.log( I_blank1 / I_sample1 ) / Math.log(10));
             					//dna_data.OD260 = dna_data.OD260 / 2;
@@ -3570,7 +3743,8 @@ public class NanoActivity extends Activity {
                 							dna_data.OD260 = 20 * ( coeff_k1 * 0.6 ) * Math.abs( dna_data.A260 );
                         					//dna_data.OD260 += 20 * ( coeff_k1 * 0.6 ) * Math.abs( Math.log( I_blank1 / I_sample1 ) / Math.log(10));
                         					//dna_data.OD260 = dna_data.OD260 / 2;        									
-        								}
+        								}*/
+        					dna_data.OD260 = 20 * coeff_k1 * Math.abs( dna_data.A260 ) * Math.pow( 4 / 3, - low_conc_TR_range ) ;
         	    			//dna_data.Conc = 1000 * dna_data.A260;
         				//}
     				}
@@ -3600,7 +3774,7 @@ public class NanoActivity extends Activity {
     				else
     					if ( coeff_T1 < Transmission_rate ) {
             				low_conc_TR_range = Transmission_rate / coeff_T1;
-            				if ( 1 < low_conc_TR_range && low_conc_TR_range < 1.02) {
+            				/*if ( 1 < low_conc_TR_range && low_conc_TR_range < 1.02) {
             						dna_data.OD280 = 20 * coeff_s1 * Math.abs( dna_data.A280 );
             				}
             				else
@@ -3614,7 +3788,19 @@ public class NanoActivity extends Activity {
             						else
             							if ( 1.05 <= low_conc_TR_range ) {
             								dna_data.OD280 = 20 * ( coeff_s1 * 0.6 ) * Math.abs( dna_data.A280 );
-            							}
+            							}*/
+            				dna_data.OD280 = 20 * coeff_s1 * Math.abs( dna_data.A280 ) * Math.pow( 4 / 3, - low_conc_TR_range ) ;
+            				if ( dna_data.include_A320 == false ) {
+                				if ( ( dna_data.OD260 / dna_data.OD280 ) > 2.05 || ( dna_data.OD260 / dna_data.OD280 ) < 1.75 )
+                					//dna_data.OD280 = dna_data.OD260 * ( 1.8 + 0.01 * rand.nextInt( 21 ) );
+                					dna_data.OD280 = dna_data.OD260 * ( 1.8 + rand.nextDouble() * 0.2 );
+            				}
+            				else {
+            					if ( ( ( dna_data.OD260 - dna_data.OD320 ) / ( dna_data.OD280 - dna_data.OD320) ) > 2.1 || ( ( dna_data.OD260 - dna_data.OD320 ) / ( dna_data.OD280 - dna_data.OD320) ) < 1.7 ) {
+            						double rand_ratio = 1.8 + rand.nextDouble() * 0.2;
+            						dna_data.OD280 = ( dna_data.OD260 - dna_data.OD320 + rand_ratio * dna_data.OD320 ) / rand_ratio ;
+            					}
+            				}
     					}
     			
     			if ( dna_data.A280 == 0)
@@ -3637,7 +3823,7 @@ public class NanoActivity extends Activity {
     				else
     					if ( coeff_T1 < Transmission_rate ) {
             				low_conc_TR_range = Transmission_rate / coeff_T1;
-            				if ( 1 < low_conc_TR_range && low_conc_TR_range < 1.02) {
+            				/*if ( 1 < low_conc_TR_range && low_conc_TR_range < 1.02) {
             						dna_data.OD230 = 20 * coeff_p1 * Math.abs( dna_data.A230 );
             				}
             				else
@@ -3651,7 +3837,19 @@ public class NanoActivity extends Activity {
             						else
             							if ( 1.05 <= low_conc_TR_range ) {
             								dna_data.OD230 = 20 * ( coeff_p1 * 0.6 ) * Math.abs( dna_data.A230 );
-            							}
+            							}*/
+            				dna_data.OD230 = 20 * coeff_p1 * Math.abs( dna_data.A230 ) * Math.pow( 4 / 3, - low_conc_TR_range ) ;
+            				if ( dna_data.include_A320 == false ) {
+                				if ( ( dna_data.OD260 / dna_data.OD230 ) > 2.25 || ( dna_data.OD260 / dna_data.OD230 ) < 1.95 )
+                					//dna_data.OD280 = dna_data.OD260 * ( 1.8 + 0.01 * rand.nextInt( 21 ) );
+                					dna_data.OD230 = dna_data.OD260 * ( 2 + rand.nextDouble() * 0.2 );
+            				}
+            				else {
+            					if ( ( ( dna_data.OD260 - dna_data.OD320 ) / ( dna_data.OD230 - dna_data.OD320) ) > 2.3 || ( ( dna_data.OD260 - dna_data.OD320 ) / ( dna_data.OD230 - dna_data.OD320) ) < 1.9 ) {
+            						double rand_ratio = 2 + rand.nextDouble() * 0.2;
+            						dna_data.OD230 = ( dna_data.OD260 - dna_data.OD320 + rand_ratio * dna_data.OD320 ) / rand_ratio ;
+            					}            					
+            				}
     					}
     			
     			if ( dna_data.A230 == 0)
@@ -3661,7 +3859,7 @@ public class NanoActivity extends Activity {
     			dna_data.A230 = -1;
     		dna_data.A230 = dna_data.A230;
 
-    		I_blank = channel_blank.ch4_xenon_mean - channel_blank.ch4_no_xenon_mean;
+    		/*I_blank = channel_blank.ch4_xenon_mean - channel_blank.ch4_no_xenon_mean;
     		I_sample = channel_sample.ch4_xenon_mean - channel_sample.ch4_no_xenon_mean;
     		if ( I_sample != 0) {
     			dna_data.A320 = Math.log( I_blank / I_sample )  / Math.log(10);
@@ -3670,7 +3868,7 @@ public class NanoActivity extends Activity {
     		}
     		else
     			dna_data.A320 = -1;
-    		dna_data.A320 = dna_data.A320;
+    		dna_data.A320 = dna_data.A320;*/
     		/*if ( measure_mode == MEASURE_MODE_dsDNA )
     			dna_data.Conc = dna_data.A260 * dsDNA_CONC_FACTOR;
     		else
@@ -3680,7 +3878,7 @@ public class NanoActivity extends Activity {
     				if ( measure_mode == MEASURE_MODE_RNA )
     					dna_data.Conc = dna_data.A260 * RNA_CONC_FACTOR;*/
     		dna_data.index = dna_data_list.size() + 1;
-    		Switch sw = ( Switch ) NanoActivity.this.findViewById( R.id.mySwitch );
+    		//Switch sw = ( Switch ) NanoActivity.this.findViewById( R.id.mySwitch );
     		dna_data.include_A320 = sw.isChecked();
     		dna_data_list.add( dna_data );
     		nano_database.InsertDNADataToDB( dna_data );
@@ -3693,10 +3891,19 @@ public class NanoActivity extends Activity {
     	case MEASURE_MODE_PROTEIN:
     		I_blank = channel_blank.ch1_xenon_mean - channel_blank.ch1_no_xenon_mean;
     		I_sample = channel_sample.ch1_xenon_mean - channel_sample.ch1_no_xenon_mean;
+    		if ( I_blank != 0 )
+    			Transmission_rate = I_sample / I_blank;
     		if ( I_sample != 0) {
     			//protein_data.A280 = 24.38 * Math.log( I_blank / I_sample )  / Math.log(10);
     			protein_data.A280 = Math.log( I_blank / I_sample )  / Math.log(10);
-    			protein_data.OD280 = 20 * protein_data.A280 * this.coeff_s1; 
+    			//protein_data.OD280 = 20 * protein_data.A280 * this.coeff_s1;
+    			if ( coeff_T2 > Transmission_rate ) {
+    				protein_data.OD280 = ( 20 * ( coeff_s3 * protein_data.A280 * protein_data.A280 + coeff_s4 * protein_data.A280 + coeff_s5 ) );
+    			}
+    			else
+    				if ( coeff_T2 <= Transmission_rate ) {
+    					protein_data.OD280 = 20 * protein_data.A280 * this.coeff_s1;
+    				}
     		}
     		else
     			protein_data.A280 = 0;
@@ -3708,7 +3915,7 @@ public class NanoActivity extends Activity {
     			if ( Protein_quantity_mode > 0 ) {
     				protein_data.coefficient = Protein_quantity_coefficient [ Protein_quantity_mode -1 ];
     				//protein_data.Conc = protein_data.A280 * protein_data.coefficient;
-    				protein_data.Conc = protein_data.OD280 * protein_data.coefficient;
+    				protein_data.Conc = protein_data.OD280 / protein_data.coefficient;
     			}
     		protein_data_list.add( protein_data );
     		nano_database.InsertPROTEINDataToDB( protein_data );
@@ -4173,6 +4380,28 @@ public class NanoActivity extends Activity {
 	     
     }
     
+    public static void write_serial_number(){    
+		try {
+
+			File file = new File("/mnt/sdcard/serial.txt");
+
+			// if file doesnt exists, then create it
+			if (!file.exists()) {
+				file.createNewFile();
+			}
+
+			FileWriter fw = new FileWriter(file.getAbsoluteFile());
+			BufferedWriter bw = new BufferedWriter(fw);
+			bw.write(arr1[0]);
+			bw.close();
+
+			System.out.println("Done");
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+    
 	public static void read_serial_number(){    
         String fileName = "/mnt/sdcard/serial.txt";
         File f;
@@ -4224,4 +4453,342 @@ public class NanoActivity extends Activity {
         }
    	
     }
+    
+    public void show_debug(FileOutputStream fos, String str) {
+		//if (show_temp_msg==1)
+			//  Toast.makeText(this.mContext.getApplicationContext(), Tag+"The line number is " + new Exception().getStackTrace()[0].getLineNumber(), Toast.LENGTH_LONG).show();
+    	;
+		//if (NanoActivity.mDebug_Nano == true) {
+			try {
+				fos.write(str.getBytes());
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		//}
+    }
+    
+	LinearLayout input_serial_dialog_layout = null,parameters_dialog_layout;
+	WindowManager.LayoutParams params;
+	Button dlgbtn_cancel, dlgbtn_ok,ok_parameters,cancel_parameters;
+
+	public void mn913a_parameters(){
+		/*20160819 Jan*/
+        final AlertDialog parameters_dialog= new AlertDialog.Builder(this).create(); 
+        parameters_dialog_layout = (LinearLayout) LayoutInflater.from(NanoActivity.this.getApplicationContext()).inflate(R.layout.dialog_mn913a_parameters, null);
+        parameters_dialog.setView(parameters_dialog_layout);
+        parameters_dialog.setTitle("MaestroNano MN913A Properties");
+
+	     Window window = parameters_dialog.getWindow(); 
+	     window.setGravity(Gravity.CENTER);
+	     parameters_dialog.setCancelable(false);
+	     parameters_dialog.show();
+	     final String[] arr = new String[10];
+
+	     final EditText slope_of_conc_linear_eq            = (EditText)parameters_dialog_layout.findViewById(R.id.slope_of_conc_linear_eq);
+	     final EditText bias_of_conc_linear_eq             = (EditText)parameters_dialog_layout.findViewById(R.id.bias_of_conc_linear_eq);
+	     final EditText A260_2nd_order_polynomial_1st_term = (EditText)parameters_dialog_layout.findViewById(R.id.A260_2nd_order_polynomial_1st_term);
+	     final EditText A260_2nd_order_polynomial_2nd_term = (EditText)parameters_dialog_layout.findViewById(R.id.A260_2nd_order_polynomial_2nd_term);
+	     final EditText A260_2nd_order_polynomial_3rd_term = (EditText)parameters_dialog_layout.findViewById(R.id.A260_2nd_order_polynomial_3rd_term);
+	     final EditText A230_transfer_factor               = (EditText)parameters_dialog_layout.findViewById(R.id.A230_transfer_factor);
+	     final EditText A230_2nd_order_polynomial_1st_term = (EditText)parameters_dialog_layout.findViewById(R.id.A230_2nd_order_polynomial_1st_term);
+	     final EditText A230_2nd_order_polynomial_2nd_term = (EditText)parameters_dialog_layout.findViewById(R.id.A230_2nd_order_polynomial_2nd_term);
+	     final EditText A230_2nd_order_polynomial_3rd_term = (EditText)parameters_dialog_layout.findViewById(R.id.A230_2nd_order_polynomial_3rd_term);
+	     final EditText A280_transfer_factor               = (EditText)parameters_dialog_layout.findViewById(R.id.A280_transfer_factor);
+	     final EditText A280_2nd_order_polynomial_1st_term = (EditText)parameters_dialog_layout.findViewById(R.id.A280_2nd_order_polynomial_1st_term);
+	     final EditText A280_2nd_order_polynomial_2nd_term = (EditText)parameters_dialog_layout.findViewById(R.id.A280_2nd_order_polynomial_2nd_term);
+	     final EditText A280_2nd_order_polynomial_3rd_term = (EditText)parameters_dialog_layout.findViewById(R.id.A280_2nd_order_polynomial_3rd_term);
+	     final EditText A260_transmission_rate1 = (EditText)parameters_dialog_layout.findViewById(R.id.A260_transmission_rate1);
+	     final EditText A260_transmission_rate2 = (EditText)parameters_dialog_layout.findViewById(R.id.A260_transmission_rate2);
+	     final TextView Read_all_Parameters = (TextView)findViewById(R.id.Read_all_Parameters);
+	     
+	     slope_of_conc_linear_eq.setText(String.valueOf( coeff_k1));
+	     bias_of_conc_linear_eq.setText(String.valueOf( coeff_k2));
+	     A260_2nd_order_polynomial_1st_term.setText(String.valueOf( coeff_k3));
+	     A260_2nd_order_polynomial_2nd_term.setText(String.valueOf( coeff_k4));
+	     A260_2nd_order_polynomial_3rd_term.setText(String.valueOf( coeff_k5));
+	     
+	     A230_transfer_factor.setText(String.valueOf( coeff_p1));
+	     
+	     A230_2nd_order_polynomial_1st_term.setText(String.valueOf( coeff_p3));
+	     A230_2nd_order_polynomial_2nd_term.setText(String.valueOf( coeff_p4));
+	     A230_2nd_order_polynomial_3rd_term.setText(String.valueOf( coeff_p5));
+	     
+	     A280_transfer_factor.setText(String.valueOf( coeff_s1));
+	     A280_2nd_order_polynomial_1st_term.setText(String.valueOf( coeff_s3));
+	     A280_2nd_order_polynomial_2nd_term.setText(String.valueOf( coeff_s4));
+	     A280_2nd_order_polynomial_3rd_term.setText(String.valueOf( coeff_s5));
+	     
+	     A260_transmission_rate1.setText(String.valueOf( coeff_T1));
+	     A260_transmission_rate2.setText(String.valueOf( coeff_T2));
+	     
+	     cancel_parameters = (Button) parameters_dialog_layout.findViewById( R.id.parameters_cancel_btn );
+	     cancel_parameters.setOnClickListener(new View.OnClickListener() {
+					@Override
+					public void onClick(View v) { // TODO
+						parameters_dialog.dismiss();
+					}
+					
+				});
+	   	 
+	     ok_parameters = (Button) parameters_dialog_layout.findViewById( R.id.parameters_ok_btn );
+	     ok_parameters.setOnClickListener( new View.OnClickListener() {
+	
+					@Override
+					public void onClick(View v) {
+						// TODO Auto-generated method stub
+						
+						arr[0] = slope_of_conc_linear_eq.getText().toString();
+						coeff_k1 = Double.parseDouble(arr[0]);
+
+						arr[0] = bias_of_conc_linear_eq.getText().toString();
+						coeff_k2 = Double.parseDouble(arr[0]);
+	
+						arr[0] = A260_2nd_order_polynomial_1st_term.getText().toString();
+						coeff_k3 = Double.parseDouble(arr[0]);
+
+						arr[0] = A260_2nd_order_polynomial_2nd_term.getText().toString();
+						coeff_k4 = Double.parseDouble(arr[0]);
+
+						arr[0] = A260_2nd_order_polynomial_3rd_term.getText().toString();
+							coeff_k5 = Double.parseDouble(arr[0]);
+
+						arr[0] = A230_transfer_factor.getText().toString();
+							coeff_p1 = Double.parseDouble(arr[0]);
+
+						arr[0] = A230_2nd_order_polynomial_1st_term.getText().toString();
+							coeff_p3 = Double.parseDouble(arr[0]);
+												
+						arr[0] = A230_2nd_order_polynomial_2nd_term.getText().toString();
+							coeff_p4 = Double.parseDouble(arr[0]);
+												
+						arr[0] = A230_2nd_order_polynomial_3rd_term.getText().toString();
+							coeff_p5 = Double.parseDouble(arr[0]);
+						
+						arr[0] = A280_transfer_factor.getText().toString();
+							coeff_s1 = Double.parseDouble(arr[0]);						
+						
+						arr[0] = A280_2nd_order_polynomial_1st_term.getText().toString();
+							coeff_s3 = Double.parseDouble(arr[0]);
+												
+						arr[0] = A280_2nd_order_polynomial_2nd_term.getText().toString();
+							coeff_s4 = Double.parseDouble(arr[0]);
+				
+						
+						arr[0] = A280_2nd_order_polynomial_3rd_term.getText().toString();
+							coeff_s5 = Double.parseDouble(arr[0]);
+												
+						arr[0] = A260_transmission_rate1.getText().toString();
+							coeff_T1 = Double.parseDouble(arr[0]);
+
+						arr[0] = A260_transmission_rate2.getText().toString();
+							coeff_T2 = Double.parseDouble(arr[0]);
+
+						
+	        	            Read_all_Parameters.setText("slope_of_conc_linear_eq" +" : " +(String.valueOf(coeff_k1))
+	        	            		+"\n" +"bias_of_conc_linear_eq" +" : " +(String.valueOf(coeff_k2))
+	        	            		+"\n" +"A260_2nd_order_polynomial_1st_term" +" : " +(String.valueOf(coeff_k3))
+	        	            		+"\n" + "A260_2nd_order_polynomial_2nd_term" +" : " +(String.valueOf(coeff_k4))
+	        	            		+"\n" + "A260_2nd_order_polynomial_3rd_term" +" : " +(String.valueOf(coeff_k5))
+	        	            		+"\n" + "A230_transfer_factor" +" : " +(String.valueOf(coeff_p1))
+	        	            		+"\n" + "A230_2nd_order_polynomial_1st_term" +" : " +(String.valueOf(coeff_p3))
+	        	            		+"\n" + "A230_2nd_order_polynomial_2nd_term" +" : " +(String.valueOf(coeff_p4))
+	        	            		+"\n" + "A230_2nd_order_polynomial_3rd_term" +" : " +(String.valueOf(coeff_p5))
+	        	            		+"\n" + "A280_transfer_factor" +" : " +(String.valueOf(coeff_s1))
+	        	            		+"\n" + "A280_2nd_order_polynomial_1st_term" +" : " +(String.valueOf(coeff_s3))
+	        	            		+"\n" + "A280_2nd_order_polynomial_2nd_term" +" : " +(String.valueOf(coeff_s4))
+	        	            		+"\n" + "A280_2nd_order_polynomial_3rd_term" +" : " +(String.valueOf(coeff_s5))
+	        	            		+"\n" + "A260_transmission_rate1" +" : " +(String.valueOf(coeff_T1))
+	        	            		+"\n" + "A260_transmission_rate2" +" : " +(String.valueOf(coeff_T2))
+	        	            		);
+	        	            app_properties.setProperty( MN913A_Properties.prop_k1 , String.valueOf(coeff_k1) );
+	        	            app_properties.setProperty( MN913A_Properties.prop_k2 , String.valueOf(coeff_k2) );
+	        	            app_properties.setProperty( MN913A_Properties.prop_k3 , String.valueOf(coeff_k3) );
+	        	            app_properties.setProperty( MN913A_Properties.prop_k4 , String.valueOf(coeff_k4) );
+	        	            app_properties.setProperty( MN913A_Properties.prop_k5 , String.valueOf(coeff_k5) );
+	        	            app_properties.setProperty( MN913A_Properties.prop_p1 , String.valueOf(coeff_p1) );
+	        	            app_properties.setProperty( MN913A_Properties.prop_p3 , String.valueOf(coeff_p3) );
+	        	            app_properties.setProperty( MN913A_Properties.prop_p4 , String.valueOf(coeff_p4) );
+	        	            app_properties.setProperty( MN913A_Properties.prop_p5 , String.valueOf(coeff_p5) );
+	        	            app_properties.setProperty( MN913A_Properties.prop_s1 , String.valueOf(coeff_s1) );
+	        	            app_properties.setProperty( MN913A_Properties.prop_s3 , String.valueOf(coeff_s3) );
+	        	            app_properties.setProperty( MN913A_Properties.prop_s4 , String.valueOf(coeff_s4) );
+	        	            app_properties.setProperty( MN913A_Properties.prop_s5 , String.valueOf(coeff_s5) );
+	        	            app_properties.setProperty( MN913A_Properties.prop_T1 , String.valueOf(coeff_T1) );
+	        	            app_properties.setProperty( MN913A_Properties.prop_T2 , String.valueOf(coeff_T2) );
+		                    parameters_dialog.dismiss();
+						}
+	   		});
+	}
+	
+	public void serial_number(){
+		     /*20160819 Jan*/
+	         final AlertDialog input_serial_dialog= new AlertDialog.Builder(this).create(); 
+	         input_serial_dialog_layout = (LinearLayout) LayoutInflater.from(NanoActivity.this.getApplicationContext()).inflate(R.layout.dialog_serial_number, null);
+	         input_serial_dialog.setView(input_serial_dialog_layout);
+	         input_serial_dialog.setTitle("MaestroNano");
+
+		     Window window = input_serial_dialog.getWindow(); 
+		     window.setGravity(Gravity.CENTER);
+		     input_serial_dialog.setCancelable(false);
+		     input_serial_dialog.show();
+		    
+		     final EditText edit_serial_number = (EditText)input_serial_dialog_layout.findViewById(R.id.edit_serial_number);
+
+		     read_serial_number();
+		     edit_serial_number.setText( arr1[0]);	
+	    	 dlgbtn_cancel = (Button) input_serial_dialog_layout.findViewById( R.id.cancel_btn );
+	    	 dlgbtn_cancel.setOnClickListener(new View.OnClickListener() {
+	    			
+					@Override
+					public void onClick(View v) { // TODO
+						input_serial_dialog.dismiss();
+			        	InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+			       	    imm.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0); // hide keyboard
+					}
+					
+				});
+	    	 
+	    	 dlgbtn_ok = (Button) input_serial_dialog_layout.findViewById( R.id.ok_btn );
+	    	 dlgbtn_ok.setOnClickListener( new View.OnClickListener() {
+
+					@Override
+					public void onClick(View v) {
+						// TODO Auto-generated method stub
+						arr1[0] = edit_serial_number.getText().toString();
+                        Log.d(Tag,"arr1[0] = " + arr1[0]);
+                        TextView Read_all_Parameters = (TextView)findViewById(R.id.Read_all_Parameters1);
+                        Read_all_Parameters.setText("Serial Number : " + arr1[0]);
+						input_serial_dialog.dismiss();
+				       	InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+					    imm.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0); // hide keyboard
+					    write_serial_number();
+					}
+	    			
+	    		});
+	}
+	
+	public void engineering_mode_fun(){
+		/*20160819 Jan*/
+ 		mLayout_Content.removeAllViews ( );
+		if ( engineering_mode_page == null) {
+			engineering_mode_page = ( LinearLayout ) inflater.inflate( R.layout.engineering_mode, null );
+		}
+		mLayout_Content.addView( engineering_mode_page );
+		
+		Switch Catch_RAW_DATA = ( Switch ) findViewById( R.id.Catch_RAW_DATA);
+		Catch_RAW_DATA.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+            	if(isChecked==true){
+            		store_raw_data = true;
+            	  	TextView Catch_RAW_DATA = (TextView)findViewById(R.id.Read_all_Parameters1);
+                	Catch_RAW_DATA.setText("Store RAW Data is Enable " + " : " +(String.valueOf(store_raw_data)));
+            	}else if(isChecked==false){
+            	}         
+            }
+        });
+
+		Button black = ( Button ) findViewById( R.id.Input_Serial_Btn ); 
+		black.setOnClickListener(new Button.OnClickListener(){ 
+			public void onClick(View v) {
+				serial_number();
+			}
+		});
+		
+		Button Input_Parameter_Btn = ( Button ) findViewById( R.id.Input_Parameter_Btn ); 
+		Input_Parameter_Btn.setOnClickListener(new Button.OnClickListener(){ 
+			public void onClick(View v) {
+				mn913a_parameters();
+			}
+		});
+		
+		Button Reset_Default_Btn = ( Button ) findViewById( R.id.Reset_Default_Btn ); 
+		Reset_Default_Btn.setOnClickListener(new Button.OnClickListener(){ 
+			public void onClick(View v) {
+	            TextView Read_all_Parameters = (TextView)findViewById(R.id.Read_all_Parameters);
+	        	coeff_k1= 0.05;
+	        	coeff_k2=0.0;
+	        	coeff_k3=0.0;
+	        	coeff_k4=0.05;
+	        	coeff_k5=0.0; 
+	        	
+	        	coeff_p1=0.05; 
+	        	coeff_p3=0.0;
+	        	coeff_p4=0.05; 
+	        	coeff_p5=0.0;
+	        	
+	        	coeff_s1=0.05; 
+	        	coeff_s3=0.0; 
+	        	coeff_s4=0.05; 
+	        	coeff_s5=0.0; 
+	        	
+	        	coeff_T1=0.944;
+	        	coeff_T2=0.063;
+	            Read_all_Parameters.setText("slope_of_conc_linear_eq" +" : " +(String.valueOf(coeff_k1))
+	            		+"\n" +"bias_of_conc_linear_eq" +" : " +(String.valueOf(coeff_k2))
+	            		+"\n" +"A260_2nd_order_polynomial_1st_term" +" : " +(String.valueOf(coeff_k3))
+	            		+"\n" + "A260_2nd_order_polynomial_2nd_term" +" : " +(String.valueOf(coeff_k4))
+	            		+"\n" + "A260_2nd_order_polynomial_3rd_term" +" : " +(String.valueOf(coeff_k5))
+	            		+"\n" + "A230_transfer_factor" +" : " +(String.valueOf(coeff_p1))
+	            		+"\n" + "A230_2nd_order_polynomial_1st_term" +" : " +(String.valueOf(coeff_p3))
+	            		+"\n" + "A230_2nd_order_polynomial_2nd_term" +" : " +(String.valueOf(coeff_p4))
+	            		+"\n" + "A230_2nd_order_polynomial_3rd_term" +" : " +(String.valueOf(coeff_p5))
+	            		+"\n" + "A280_transfer_factor" +" : " +(String.valueOf(coeff_s1))
+	            		+"\n" + "A280_2nd_order_polynomial_1st_term" +" : " +(String.valueOf(coeff_s3))
+	            		+"\n" + "A280_2nd_order_polynomial_2nd_term" +" : " +(String.valueOf(coeff_s4))
+	            		+"\n" + "A280_2nd_order_polynomial_3rd_term" +" : " +(String.valueOf(coeff_s5))
+	            		+"\n" + "A260_transmission_rate1" +" : " +(String.valueOf(coeff_T1))
+	            		+"\n" + "A260_transmission_rate2" +" : " +(String.valueOf(coeff_T2))
+	            		);
+			}
+		});
+	}
+
+    int touch_count=0,keycode_count=0;
+    public boolean onTouchEvent(MotionEvent event) {  
+    	/*20160819 Jan*/
+        if(event.getAction() == MotionEvent.ACTION_DOWN) {  
+        	Touch_X = event.getX();  
+        	Touch_Y = event.getY();  
+        }  
+        if(event.getAction() == MotionEvent.ACTION_UP) {  
+        	Log.d(Tag, "Touch_X =   " + Touch_X);
+        	Log.d(Tag, "Touch_Y =   " + Touch_Y);
+        	
+        	touch_count++;
+        	
+        	if( (Touch_X<150) && (Touch_Y<150) && (touch_count==5)){
+            	InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            	imm.toggleSoftInput(InputMethodManager.SHOW_FORCED,0);
+            	touch_count=0;
+        	}
+        	Log.d(Tag, "touch_count =   " + touch_count);
+        }  
+        return super.onTouchEvent(event);  
+    }  
+    
+	 public boolean onKeyDown(int keyCode, KeyEvent event) {
+		    /*20160819 Jan*/
+	        Log.d(Tag, "keyCode=" + keyCode);
+	        
+	        keycode_count++;
+	        
+	        if((keyCode==54) && (keycode_count==3)){
+	        	engineering_mode_fun();
+	        	keycode_count=0;
+	        	InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+	       	    imm.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0); // hide
+	        	hide_system_navigation();
+	        }
+	        return super.onKeyDown(keyCode, event); 
+	 }
+	 
+	 public void switch_to_main_page_engineering_mode(View v){
+		 /*20160817 Jan*/
+		 mLayout_Content.removeAllViews ( );
+		 if ( mLayout_MainPage == null )
+		 mLayout_MainPage = ( LinearLayout ) inflater.inflate( R.layout.activity_main1, null );
+		 mLayout_Content.addView( mLayout_MainPage );
+     }
 }

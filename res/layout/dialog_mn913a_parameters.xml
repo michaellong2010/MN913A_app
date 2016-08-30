@@ -1,0 +1,516 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="#FF27160e"
+    android:orientation="vertical" >
+
+   <!-- <TextView
+        android:id="@+id/textView1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textColor="#FF00FF00" />-->
+
+   <!--  <EditText
+        android:id="@+id/edit_parameters"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="#FF00FF00"
+        android:ems="30"
+        android:gravity="center_horizontal"
+        android:imeOptions="actionDone"
+        android:inputType="number"
+        android:maxLength="30"
+        android:singleLine="true"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:textSize="30sp"
+        android:textColor="#FF0000FF" >
+        
+        <requestFocus />
+    </EditText> -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal" >
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1" >
+            
+				<TextView
+				android:id="@+id/slope"
+                android:layout_width="220dp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="320dp"
+                android:layout_marginTop="10dp"
+                android:textSize="20sp"
+		        android:text="slope_of_conc_linear_eq  "
+		        android:textColor="#FFB6C1" />
+				
+			    <EditText
+					android:id="@+id/slope_of_conc_linear_eq"
+                    android:layout_width="90dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="550dp"
+                    android:layout_marginTop="10dp"
+					android:background="#FFFFFF"
+					android:ems="30"
+					android:gravity="center_horizontal"
+					android:imeOptions="actionDone"
+					android:inputType="text"
+					android:maxLength="30"
+					android:singleLine="true"
+					android:textAppearance="?android:attr/textAppearanceLarge"
+					android:textSize="24sp"
+					android:text ="0.05"
+					android:textColor="#FF0000FF" >
+        
+                    <requestFocus />
+                </EditText>
+                
+				<TextView
+                android:layout_width="220dp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="320dp"
+                android:layout_marginTop="60dp"
+                android:textSize="20sp"
+		        android:text="bias_of_conc_linear_eq  "
+		        android:textColor="#FFB6C1" />   
+		                     
+                <EditText
+					android:id="@+id/bias_of_conc_linear_eq"
+                    android:layout_width="90dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="550dp"
+                    android:layout_marginTop="60dp"
+					android:background="#FFFFFF"
+					android:ems="30"
+					android:gravity="center_horizontal"
+					android:imeOptions="actionDone"
+					android:inputType="text"
+					android:maxLength="30"
+					android:singleLine="true"
+					android:textAppearance="?android:attr/textAppearanceLarge"
+					android:textSize="24sp"
+					android:text ="0.0"
+					android:textColor="#FF0000FF" >
+        
+                    <requestFocus />
+                </EditText>
+                
+				<TextView
+                android:layout_width="220dp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="320dp"
+                android:layout_marginTop="110dp"
+                android:textSize="20sp"
+		        android:text="A260 1st term  "
+		        android:textColor="#FFB6C1" />  
+		                         
+                <EditText
+					android:id="@+id/A260_2nd_order_polynomial_1st_term"
+                    android:layout_width="90dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="550dp"
+                    android:layout_marginTop="110dp"
+					android:background="#FFFFFF"
+					android:ems="30"
+					android:gravity="center_horizontal"
+					android:imeOptions="actionDone"
+					android:inputType="text"
+					android:maxLength="30"
+					android:singleLine="true"
+					android:textAppearance="?android:attr/textAppearanceLarge"
+					android:textSize="24sp"
+					android:text ="0.0"
+					android:textColor="#FF0000FF" >
+        
+                    <requestFocus />
+                </EditText>   
+                
+				<TextView
+                android:layout_width="220dp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="320dp"
+                android:layout_marginTop="160dp"
+                android:textSize="20sp"
+		        android:text="A260 2nd_term  "
+		        android:textColor="#FFB6C1" />     
+		                     
+                <EditText
+					android:id="@+id/A260_2nd_order_polynomial_2nd_term"
+                    android:layout_width="90dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="550dp"
+                    android:layout_marginTop="160dp"
+					android:background="#FFFFFF"
+					android:ems="30"
+					android:gravity="center_horizontal"
+					android:imeOptions="actionDone"
+					android:inputType="text"
+					android:maxLength="30"
+					android:singleLine="true"
+					android:textAppearance="?android:attr/textAppearanceLarge"
+					android:textSize="24sp"
+					android:text ="0.05"
+					android:textColor="#FF0000FF" >
+        
+                    <requestFocus />
+                </EditText>    
+                
+				<TextView
+                android:layout_width="220dp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="320dp"
+                android:layout_marginTop="210dp"
+                android:textSize="20sp"
+		        android:text="A260 3rd term "
+		        android:textColor="#FFB6C1" />  
+		                         
+                 <EditText
+					android:id="@+id/A260_2nd_order_polynomial_3rd_term"
+                    android:layout_width="90dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="550dp"
+                    android:layout_marginTop="210dp"
+					android:background="#FFFFFF"
+					android:ems="30"
+					android:gravity="center_horizontal"
+					android:imeOptions="actionDone"
+					android:inputType="text"
+					android:maxLength="30"
+					android:singleLine="true"
+					android:textAppearance="?android:attr/textAppearanceLarge"
+					android:textSize="24sp"
+					android:text ="0.0"
+					android:textColor="#FF0000FF" >
+        
+                    <requestFocus />
+                </EditText>    
+                
+ 				<TextView
+                android:layout_width="220dp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="320dp"
+                android:layout_marginTop="260dp"
+                android:textSize="20sp"
+		        android:text="A230_transfer_factor "
+		        android:textColor="#FFB6C1" />    
+		                     
+                <EditText
+					android:id="@+id/A230_transfer_factor"
+                    android:layout_width="90dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="550dp"
+                    android:layout_marginTop="260dp"
+					android:background="#FFFFFF"
+					android:ems="30"
+					android:gravity="center_horizontal"
+					android:imeOptions="actionDone"
+					android:inputType="text"
+					android:maxLength="30"
+					android:singleLine="true"
+					android:textAppearance="?android:attr/textAppearanceLarge"
+					android:textSize="24sp"
+					android:text ="0.05"
+					android:textColor="#FF0000FF" >
+        
+                    <requestFocus />
+                </EditText>   
+
+ 				<TextView
+                android:layout_width="220dp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="320dp"
+                android:layout_marginTop="310dp"
+                android:textSize="20sp"
+		        android:text="A230 1st_term"
+		        android:textColor="#FFB6C1" />    
+		                        
+                <EditText
+					android:id="@+id/A230_2nd_order_polynomial_1st_term"
+                    android:layout_width="90dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="550dp"
+                    android:layout_marginTop="310dp"
+					android:background="#FFFFFF"
+					android:ems="30"
+					android:gravity="center_horizontal"
+					android:imeOptions="actionDone"
+					android:inputType="text"
+					android:maxLength="30"
+					android:singleLine="true"
+					android:textAppearance="?android:attr/textAppearanceLarge"
+					android:textSize="24sp"
+					android:text ="0.0"
+					android:textColor="#FF0000FF" >
+        
+                    <requestFocus />
+                </EditText>   
+                
+ 				<TextView
+                android:layout_width="220dp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="320dp"
+                android:layout_marginTop="360dp"
+                android:textSize="20sp"
+		        android:text="A230 2nd_term"
+		        android:textColor="#FFB6C1" /> 
+		                         
+                <EditText
+					android:id="@+id/A230_2nd_order_polynomial_2nd_term"
+                    android:layout_width="90dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="550dp"
+                    android:layout_marginTop="360dp"
+					android:background="#FFFFFF"
+					android:ems="30"
+					android:gravity="center_horizontal"
+					android:imeOptions="actionDone"
+					android:inputType="text"
+					android:maxLength="30"
+					android:singleLine="true"
+					android:textAppearance="?android:attr/textAppearanceLarge"
+					android:textSize="24sp"
+					android:text ="0.05"
+					android:textColor="#FF0000FF" >
+        
+                    <requestFocus />
+                </EditText>   
+                
+ 				<TextView
+                android:layout_width="220dp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="320dp"
+                android:layout_marginTop="410dp"
+                android:textSize="20sp"
+		        android:text="A230 3rd_term"
+		        android:textColor="#FFB6C1" />      
+		                   
+                <EditText
+					android:id="@+id/A230_2nd_order_polynomial_3rd_term"
+                    android:layout_width="90dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="550dp"
+                    android:layout_marginTop="410dp"
+					android:background="#FFFFFF"
+					android:ems="30"
+					android:gravity="center_horizontal"
+					android:imeOptions="actionDone"
+					android:inputType="text"
+					android:maxLength="30"
+					android:singleLine="true"
+					android:textAppearance="?android:attr/textAppearanceLarge"
+					android:textSize="24sp"
+					android:text ="0.0"
+					android:textColor="#FF0000FF" >
+        
+                    <requestFocus />
+                </EditText>   
+                
+ 				<TextView
+                android:layout_width="220dp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="320dp"
+                android:layout_marginTop="460dp"
+                android:textSize="20sp"
+		        android:text="A280_transfer_factor"
+		        android:textColor="#FFB6C1" />   
+		        
+                <EditText
+					android:id="@+id/A280_transfer_factor"
+                    android:layout_width="90dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="550dp"
+                    android:layout_marginTop="460dp"
+					android:background="#FFFFFF"
+					android:ems="30"
+					android:gravity="center_horizontal"
+					android:imeOptions="actionDone"
+					android:inputType="text"
+					android:maxLength="30"
+					android:singleLine="true"
+					android:textAppearance="?android:attr/textAppearanceLarge"
+					android:textSize="24sp"
+					android:text ="0.05"
+					android:textColor="#FF0000FF" >
+        
+                    <requestFocus />
+                </EditText>      
+                 
+ 				<TextView
+                android:layout_width="220dp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="20dp"
+                android:layout_marginTop="10dp"
+                android:textSize="20sp"
+		        android:text="A280 1st term"
+		        android:textColor="#FFB6C1" />      
+		                          
+               <EditText
+					android:id="@+id/A280_2nd_order_polynomial_1st_term"
+                    android:layout_width="90dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="180dp"
+                    android:layout_marginTop="10dp"
+					android:background="#FFFFFF"
+					android:ems="30"
+					android:gravity="center_horizontal"
+					android:imeOptions="actionDone"
+					android:inputType="text"
+					android:maxLength="30"
+					android:singleLine="true"
+					android:textAppearance="?android:attr/textAppearanceLarge"
+					android:textSize="24sp"
+					android:text ="0.0"
+					android:textColor="#FF0000FF" >
+        
+                    <requestFocus />
+                </EditText>                
+
+ 				<TextView
+                android:layout_width="220dp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="20dp"
+                android:layout_marginTop="60dp"
+                android:textSize="20sp"
+		        android:text="A280 2nd term"
+		        android:textColor="#FFB6C1" />  
+		        
+                 <EditText
+					android:id="@+id/A280_2nd_order_polynomial_2nd_term"
+                    android:layout_width="90dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="180dp"
+                    android:layout_marginTop="60dp"
+					android:background="#FFFFFF"
+					android:ems="30"
+					android:gravity="center_horizontal"
+					android:imeOptions="actionDone"
+					android:inputType="text"
+					android:maxLength="30"
+					android:singleLine="true"
+					android:textAppearance="?android:attr/textAppearanceLarge"
+					android:textSize="24sp"
+					android:text ="0.05"
+					android:textColor="#FF0000FF" >
+        
+                    <requestFocus />
+                </EditText> 
+                   
+ 				<TextView
+                android:layout_width="220dp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="20dp"
+                android:layout_marginTop="110dp"
+                android:textSize="20sp"
+		        android:text="A280 3rd term"
+		        android:textColor="#FFB6C1" />   
+		                       
+                  <EditText
+					android:id="@+id/A280_2nd_order_polynomial_3rd_term"
+                    android:layout_width="90dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="180dp"
+                    android:layout_marginTop="110dp"
+					android:background="#FFFFFF"
+					android:ems="30"
+					android:gravity="center_horizontal"
+					android:imeOptions="actionDone"
+					android:inputType="text"
+					android:maxLength="30"
+					android:singleLine="true"
+				    android:textAppearance="?android:attr/textAppearanceLarge"
+				    android:text=" 0.0"
+					android:textColor="#FF0000FF" >
+                    <requestFocus />
+                </EditText>   
+                   
+ 				<TextView
+                android:layout_width="220dp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="20dp"
+                android:layout_marginTop="160dp"
+                android:textSize="20sp"
+		        android:text="A260 rate1"
+		        android:textColor="#FFB6C1" />   
+		        
+                  <EditText
+					android:id="@+id/A260_transmission_rate1"
+                    android:layout_width="90dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="180dp"
+                    android:layout_marginTop="160dp"
+					android:background="#FFFFFF"
+					android:ems="30"
+					android:gravity="center_horizontal"
+					android:imeOptions="actionDone"
+					android:inputType="text"
+					android:maxLength="30"
+					android:singleLine="true"
+					android:textAppearance="?android:attr/textAppearanceLarge"
+					android:textSize="24sp"
+					android:text =" 0.944"
+					android:textColor="#FF0000FF" >
+                    <requestFocus />
+                </EditText>  
+                   
+ 				<TextView
+                android:layout_width="220dp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="20dp"
+                android:layout_marginTop="210dp"
+                android:textSize="20sp"
+		        android:text="A260 rate2"
+		        android:textColor="#FFB6C1" />    
+		        
+                  <EditText
+					android:id="@+id/A260_transmission_rate2"
+                    android:layout_width="90dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="180dp"
+                    android:layout_marginTop="210dp"
+					android:background="#FFFFFF"
+					android:ems="30"
+					android:gravity="center_horizontal"
+					android:imeOptions="actionDone"
+					android:inputType="text"
+					android:maxLength="30"
+					android:singleLine="true"
+					android:textAppearance="?android:attr/textAppearanceLarge"
+					android:textSize="24sp"
+					android:text ="0.063"
+					android:textColor="#FF0000FF" >
+                    <requestFocus />
+                </EditText>     
+
+		</RelativeLayout>
+    </LinearLayout>
+    
+
+    
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:orientation="horizontal" >
+
+        <Button
+            android:id="@+id/parameters_ok_btn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="OK" />
+
+        <Button
+            android:id="@+id/parameters_cancel_btn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="cancel" />
+    </LinearLayout>
+
+</LinearLayout>

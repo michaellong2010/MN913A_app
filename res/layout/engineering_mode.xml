@@ -1,0 +1,309 @@
+<?xml version="1.0" encoding="utf-8"?><LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:weightSum="1"
+    android:id="@+id/measure_top_ui" >
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="0.12"
+        android:background="@drawable/top_border" >
+        <Switch
+                android:id="@+id/Catch_RAW_DATA"
+                android:layout_width="230dp"
+                android:layout_height="80dp"
+                android:layout_marginLeft="920dp"
+                android:layout_marginTop="10dp"
+        />
+        
+        <TextView
+                android:layout_width="330dp"
+                android:layout_height="80dp"
+                android:layout_marginLeft="825dp"
+                android:layout_marginTop="30dp"
+                android:textSize="9pt"
+                android:textColor="@android:color/white"
+                android:text="Switch RAW Data"/>
+
+         <TextView
+            android:id="@+id/main_title_id"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:text="Engineering Mode"
+            android:textColor="@android:color/white"
+            android:textSize="14pt" />
+        
+        <ImageButton
+            android:id="@+id/main_home"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:background="@drawable/btn_home"
+            android:onClick="switch_to_main_page_engineering_mode" />
+
+    </RelativeLayout>
+    
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@drawable/mn_913a_ui_bg"
+        android:layout_weight="0.76" >
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1" >
+
+                          
+            <Button
+                android:id="@+id/Input_Serial_Btn"
+                android:layout_width="200dp"
+                android:layout_height="80dp"
+                android:layout_marginLeft="670dp"
+                android:layout_marginTop="12dp"
+                android:textSize="24sp"
+                android:text="輸入序號"
+                 />
+            <Button
+                android:id="@+id/Input_Parameter_Btn"
+                android:layout_width="200dp"
+                android:layout_height="80dp"
+                android:layout_marginLeft="870dp"
+                android:layout_marginTop="12dp"
+                android:textSize="24sp"
+                android:text="輸入參數"
+                 />
+            <Button
+                android:id="@+id/Reset_Default_Btn"
+                android:layout_width="200dp"
+                android:layout_height="80dp"
+                android:layout_marginLeft="1070dp"
+                android:layout_marginTop="12dp"
+                android:textSize="24sp"
+                android:text="回復預設參數"
+                 />
+
+
+           <TextView
+                    android:id="@+id/Read_all_Parameters1"
+				    android:layout_width="590dp"
+				    android:layout_height="520dp"
+				    android:layout_marginLeft="675dp"
+                    android:layout_marginTop="100dp"
+				    android:background="#FFFFFFFF"
+				    android:textSize="26sp"
+				    android:text="   " />
+   
+          <TextView
+                    android:id="@+id/Read_all_Parameters"
+				    android:layout_width="590dp"
+				    android:layout_height="620dp"
+				    android:layout_marginLeft="20dp"
+                    android:layout_marginTop="10dp"
+				    android:background="#FFFFFFFF"
+				    android:textSize="26sp"
+				    android:text="   " />
+          <!--   <TextView
+                android:id="@+id/slope_of_conc_linear_eq_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="20dp"
+                android:layout_marginTop="10dp"
+                android:textSize="8pt"
+                android:text="slope_of_conc_linear_eq"
+                android:textColor="@android:color/holo_red_dark"
+                />
+            
+               <TextView
+                android:id="@+id/bias_of_conc_linear_eq"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="20dp"
+                android:layout_marginTop="50dp"
+                android:textSize="8pt"
+                android:text="bias_of_conc_linear_eq"
+                android:textColor="@android:color/holo_red_dark"
+                />
+               
+                <TextView
+                android:id="@+id/A260_2nd_order_polynomial_1st_term"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="20dp"
+                android:layout_marginTop="90dp"
+                android:textSize="8pt"
+                android:text="A260_2nd_order_polynomial_1st_term"
+                android:textColor="@android:color/holo_red_dark"
+                />
+
+               <TextView
+                android:id="@+id/A260_2nd_order_polynomial_2nd_term"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="20dp"
+                android:layout_marginTop="130dp"
+                android:textSize="8pt"
+                android:text="A260_2nd_order_polynomial_2nd_term"
+                android:textColor="@android:color/holo_red_dark"
+                />
+          
+                <TextView
+                android:id="@+id/A260_2nd_order_polynomial_3rd_term"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="20dp"
+                android:layout_marginTop="170dp"
+                android:textSize="8pt"
+                android:text="A260_2nd_order_polynomial_3rd_term"
+                android:textColor="@android:color/holo_red_dark"
+                />
+                
+                <TextView
+                android:id="@+id/A230_transfer_factor"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="20dp"
+                android:layout_marginTop="210dp"
+                android:textSize="8pt"
+                android:text="A230_transfer_factor"
+                android:textColor="@android:color/holo_red_dark"
+                />
+                
+                <TextView
+                android:id="@+id/A230_2nd_order_polynomial_1st_term"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="20dp"
+                android:layout_marginTop="250dp"
+                android:textSize="8pt"
+                android:text="A230_2nd_order_polynomial_1st_term"
+                android:textColor="@android:color/holo_red_dark"
+                />
+                                
+                <TextView
+                android:id="@+id/A230_2nd_order_polynomial_2nd_term"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="20dp"
+                android:layout_marginTop="290dp"
+                android:textSize="8pt"
+                android:text="A230_2nd_order_polynomial_2nd_term"
+                android:textColor="@android:color/holo_red_dark"
+                />
+                                                
+                <TextView
+                android:id="@+id/A230_2nd_order_polynomial_3rd_term"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="20dp"
+                android:layout_marginTop="330dp"
+                android:textSize="8pt"
+                android:text="A230_2nd_order_polynomial_3rd_term"
+                android:textColor="@android:color/holo_red_dark"
+                />
+                
+                <TextView
+                android:id="@+id/A280_transfer_factor"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="20dp"
+                android:layout_marginTop="370dp"
+                android:textSize="8pt"
+                android:text="A280_transfer_factor"
+                android:textColor="@android:color/holo_red_dark"
+                />
+                
+                <TextView
+                android:id="@+id/A280_2nd_order_polynomial_1st_term"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="20dp"
+                android:layout_marginTop="410dp"
+                android:textSize="8pt"
+                android:text="A280_2nd_order_polynomial_1st_term"
+                android:textColor="@android:color/holo_red_dark"
+                />
+             
+                <TextView
+                android:id="@+id/A280_2nd_order_polynomial_2nd_term"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="20dp"
+                android:layout_marginTop="450dp"
+                android:textSize="8pt"
+                android:text="A280_2nd_order_polynomial_2nd_term"
+                android:textColor="@android:color/holo_red_dark"
+                />
+                                                                
+                <TextView
+                android:id="@+id/A280_2nd_order_polynomial_3rd_term"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="20dp"
+                android:layout_marginTop="490dp"
+                android:textSize="8pt"
+                android:text="A280_2nd_order_polynomial_3rd_term"
+                android:textColor="@android:color/holo_red_dark"
+                /> 
+                
+                <TextView
+                android:id="@+id/A260_transmission_rate1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="20dp"
+                android:layout_marginTop="530dp"
+                android:textSize="8pt"
+                android:text="A260_transmission_rate1"
+                android:textColor="@android:color/holo_red_dark"
+                />  
+                
+                                
+                <TextView
+                android:id="@+id/A260_transmission_rate2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="20dp"
+                android:layout_marginTop="570dp"
+                android:textSize="8pt"
+                android:text="A260_transmission_rate2"
+                android:textColor="@android:color/holo_red_dark"
+                />  
+                
+                <TextView
+                android:id="@+id/Input_Serial_Number"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="20dp"
+                android:layout_marginTop="610dp"
+                android:textSize="8pt"
+                android:text="Input_Serial_Number"
+                android:textColor="@android:color/holo_red_dark"
+                />   --> 
+        </RelativeLayout>
+    </LinearLayout>
+    
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="0.12"
+        android:background="@drawable/bottom_border" >
+        
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:text="TextView"
+            android:id="@+id/lbltime"
+            android:textColor="@android:color/white"
+            android:fontFamily="Calibri"
+            android:textSize="10pt" />
+    </RelativeLayout>
+
+</LinearLayout>

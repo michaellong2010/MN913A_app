@@ -883,6 +883,7 @@ public class Nano_UpdateFun extends Activity {
 				message = mHandler.obtainMessage(Nano_UpdateFun.this.Msg_Upgrade_Error, "status: upgrade complete");
 				message.sendToTarget();
 			}
+			EnumerationDevice(getIntent());
 			Next_Download();
 		}
 	};
@@ -1064,7 +1065,7 @@ public class Nano_UpdateFun extends Activity {
         		  general_task_executor.execute(upgrade_firmware_runnable);
         		  break;
         	  case Msg_Cancel_Dlg:
-        		  turn_off_wifi();        		  
+        		  //turn_off_wifi();        		  
         		  Check_Network_timerTaskPause();
         		  break;
         	  case Msg_Upgrade_UserManual:
@@ -1105,6 +1106,7 @@ public class Nano_UpdateFun extends Activity {
 		wifi.reassociate();
 	}
 	Timer connecting_network_mTimer = null;
+	boolean send_isConnected=false;
 	CheckNetworkTheTimerTask connecting_network_timertask;
 	boolean is_internet_available() {
 		ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -1116,7 +1118,12 @@ public class Nano_UpdateFun extends Activity {
 		boolean isConnected = activeNetwork != null &&
 		                      activeNetwork.isConnectedOrConnecting();
 		
-		return isConnected;
+		if((remain_secconds==38) && (isConnected==true)){
+			send_isConnected = true;
+		}else{
+			send_isConnected = false;
+		}
+		return send_isConnected;
 	}
 	protected void Check_Network_timerTaskPause() {
 		if (connecting_network_timertask != null) {
@@ -1336,10 +1343,10 @@ public class Nano_UpdateFun extends Activity {
 		}
 		return false;
     }
-    
+    int remain_secconds = 45;
     protected class CheckNetworkTheTimerTask extends TimerTask {
 		Message message;
-		int remain_secconds = 45;
+		//int remain_secconds = 45;
 
 		@Override
 		public void run() {
