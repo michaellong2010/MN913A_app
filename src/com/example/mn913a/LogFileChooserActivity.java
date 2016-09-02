@@ -1139,11 +1139,20 @@ public class LogFileChooserActivity extends FileChooserActivity {
 				e1.printStackTrace();
 			}
 			fillMaps.clear();
-			item_selection_result.setActionView( R.layout.actionview_item_selection );
-			btn_selection_result = ( ImageButton )item_selection_result.getActionView();
-			btn_selection_result.setOnClickListener( selection_clicklistener );
-			item_print_result.setVisible( false );
-			item_delete_result.setVisible( false );
+
+            if ( activity_use_for.equals( ACTIVITY_USE_FOR_MANAGEMENT ) ) {
+    			item_selection_result.setActionView( R.layout.actionview_item_selection );
+    			btn_selection_result = ( ImageButton )item_selection_result.getActionView();
+    			btn_selection_result.setOnClickListener( selection_clicklistener );
+    			item_print_result.setVisible( false );
+    			item_delete_result.setVisible( false );
+            }
+            else
+            	if ( activity_use_for.equals( ACTIVITY_USE_FOR_ANALYSIS ) ) {
+        			item_selection_result.setActionView( R.layout.actionview_item_selection );
+        			btn_selection_result = ( ImageButton )item_selection_result.getActionView();
+        			btn_selection_result.setOnClickListener( selection_clicklistener );            		
+            	}
 			result_listview.setDividerHeight( 3 );
 			mIsFileDirty = false;
 			/*if ( selected_file_items.get(0).getFile().getName().contains( "dsDNA" ) == true ||
@@ -1369,6 +1378,11 @@ public class LogFileChooserActivity extends FileChooserActivity {
 									if ( selection_count > 0 ) {
 										item_normalization.setVisible( true );
 										mSelected_items_count = selection_count;
+										
+										if ( mSelected_items_count == fillMaps.size() )
+											btn_selection_result.setImageDrawable( LogFileChooserActivity.this.getResources().getDrawable( R.drawable.files_select_all ) );
+										else
+											btn_selection_result.setImageDrawable( LogFileChooserActivity.this.getResources().getDrawable( R.drawable.files_unselect_all ) );
 									}
 									else
 										item_normalization.setVisible( false );
@@ -1534,6 +1548,11 @@ public class LogFileChooserActivity extends FileChooserActivity {
 										if ( selection_count > 0 ) {
 											item_normalization.setVisible( true );
 											mSelected_items_count = selection_count;
+											
+											if ( mSelected_items_count == fillMaps.size() )
+												btn_selection_result.setImageDrawable( LogFileChooserActivity.this.getResources().getDrawable( R.drawable.files_select_all ) );
+											else
+												btn_selection_result.setImageDrawable( LogFileChooserActivity.this.getResources().getDrawable( R.drawable.files_unselect_all ) );
 										}
 										else
 											item_normalization.setVisible( false );
@@ -1895,6 +1914,9 @@ public class LogFileChooserActivity extends FileChooserActivity {
 				    inflater.inflate(R.menu.analysis_right_side_menu, menu);
 				    
 				    main_menu = menu;
+				    item_selection_result = menu.findItem( R.id.item_selection );
+				    item_selection_result.setActionView( R.layout.actionview_item_selection );
+				    btn_selection_result = ( ImageButton )item_selection_result.getActionView();
 				    item_normalization = menu.findItem(R.id.item_normalization_analysis);
 				    item_normalization.setActionView ( R.layout.actionview_item_normalization_analysis );
 				    btn_normalization = ( ImageButton ) item_normalization.getActionView();

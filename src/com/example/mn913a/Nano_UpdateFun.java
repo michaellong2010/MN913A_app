@@ -102,8 +102,8 @@ public class Nano_UpdateFun extends Activity {
 	private ProgressDialog progress_dialog;
 	public String DL_fileExtenstion, DL_filename;
 	public String iTrack_Cache_Dir;
-	final String Http_Repo_Host1 = "http://www.maestrogen.com/ftp/";//"https://www.google.com.tw/?gfe_rd=cr&ei=XJ-FV4_MLZSg8wWu_JqICA";
-	final String Http_Repo_Host = "http://www.maestrogen.com/ftp/";//"https://googledrive.com/host/0ByxRe22Uei-JdHloZm56Rng2QVk/";
+	final String Http_Repo_Host1 = "http://www.maestrogen.com/ftp/MN913A/OEM/tiangen/";//"https://www.google.com.tw/?gfe_rd=cr&ei=XJ-FV4_MLZSg8wWu_JqICA";
+	final String Http_Repo_Host = "http://www.maestrogen.com/ftp/MN913A/OEM/tiangen/";//"https://googledrive.com/host/0ByxRe22Uei-JdHloZm56Rng2QVk/";
 	private String MD5_list_filename = "iTrack_md5_list.txt"; 
 	public String files_MD5_list = Http_Repo_Host + MD5_list_filename;
 	public String files_MD5_list1 = Http_Repo_Host1 + MD5_list_filename;//add jan
