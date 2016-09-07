@@ -1476,7 +1476,7 @@ public class Nano_UpdateFun extends Activity {
     protected void onStart() {
     	super.onStart();
     	Log.d(Tag, "permission denied for onStart ");
-    	EnumerationDevice(getIntent());
+    	//EnumerationDevice(getIntent());
     }
 	@Override
     protected void onDestroy() {

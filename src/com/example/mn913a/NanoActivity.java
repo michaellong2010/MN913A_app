@@ -3915,7 +3915,7 @@ public class NanoActivity extends Activity {
     			if ( Protein_quantity_mode > 0 ) {
     				protein_data.coefficient = Protein_quantity_coefficient [ Protein_quantity_mode -1 ];
     				//protein_data.Conc = protein_data.A280 * protein_data.coefficient;
-    				protein_data.Conc = protein_data.OD280 / protein_data.coefficient;
+    				protein_data.Conc = 10 * protein_data.OD280 / protein_data.coefficient;
     			}
     		protein_data_list.add( protein_data );
     		nano_database.InsertPROTEINDataToDB( protein_data );
