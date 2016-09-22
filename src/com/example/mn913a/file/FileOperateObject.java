@@ -4,9 +4,10 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OptionalDataException;
+import java.io.Serializable;
 import java.io.StreamCorruptedException;
 
-public class FileOperateObject extends FileOperateByteArray {
+public class FileOperateObject extends FileOperateByteArray implements Serializable   {
 	private String Tag = "FileOperateObject";
 	protected String file_extension = ".ojt";
 	
@@ -42,4 +43,21 @@ public class FileOperateObject extends FileOperateByteArray {
 		
 		return object;
 	}
+	
+	
+	/*public void write_obj_file ( serializable_test ser_obj ) {
+		if (fos != null) {
+			try {
+				ObjectOutputStream os = new ObjectOutputStream(fos);
+				os.writeObject(ser_obj);
+				os.close();
+				fos.flush();
+				fos.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}*/
+	
 }

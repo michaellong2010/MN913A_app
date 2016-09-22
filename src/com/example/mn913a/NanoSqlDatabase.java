@@ -2,9 +2,6 @@ package com.example.mn913a;
 
 import java.math.BigDecimal;
 
-import com.example.mn913a.NanoActivity.DNA_measure_data;
-import com.example.mn913a.NanoActivity.Protein_measure_data;
-
 import android.content.Context;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;

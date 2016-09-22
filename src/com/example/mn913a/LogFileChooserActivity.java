@@ -1799,6 +1799,8 @@ public class LogFileChooserActivity extends FileChooserActivity {
 								mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_PRINT_DNA_RESULT, 0, ( byte_offset / 256 ) + 1, byte_array, 0);
 							else
 								mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_PRINT_DNA_RESULT, 0, ( byte_offset / 256 ), byte_array, 0);
+							//mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_MN913A_STATUS, 0, 0, null, 0);
+							//Log.d ( Tag, Integer.toHexString( mNano_dev.Printer_Status ) );
 						}
 						else
 							if ( result_listview.getAdapter() instanceof protein_result_adapter ) {
