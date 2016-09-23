@@ -3296,13 +3296,14 @@ public class NanoActivity extends Activity {
                 			  mNano_dev.Set_Start_Calibration ( 1 );
                 			  mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_MN913A_SETTING, 0, 0, null, 1);
                 			  mNano_dev.Set_Start_Calibration ( 0 );
-              			  while ( mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_MN913A_STATUS, 0, 0, null, 0) ) {
+              			  while ( true ) { //while ( mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_MN913A_STATUS, 0, 0, null, 0) ) {
 							  try {
 								sleep ( 1000 );
 							  } catch (InterruptedException e) {
 								// TODO Auto-generated catch block
 								  e.printStackTrace();
 							  }
+							  mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_MN913A_STATUS, 0, 0, null, 0);
 							  if ( mNano_dev.Has_Calibration == 1 ) {
 								//Log.d ( Tag, "MN913A device not busy");
 								  break;
