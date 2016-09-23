@@ -95,6 +95,11 @@ public class FileOperateByteArray extends FileOperation {
 			//	Show_Toast_Msg(Flush_File);
 				fos = null;
 			}
+			
+			if ( fis != null ) {
+				fis.close();
+				fis = null;
+			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -112,4 +117,16 @@ public class FileOperateByteArray extends FileOperation {
 		}
 	}
 	
+	public void flush_file() {
+		try {
+			if (fos != null) {
+				fos.flush();
+				Flush_File = "log file saved: " + file.getPath(); 
+
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}		
+	}
 }

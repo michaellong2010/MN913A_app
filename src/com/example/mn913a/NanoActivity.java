@@ -11,6 +11,9 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.nio.ByteBuffer;
@@ -205,9 +208,11 @@ public class NanoActivity extends Activity {
 	int set_time=0;
 	int [] datetime_data_int = new int [ 256 / 4 ];
 	int mCali_Selected_count = 0;
-	String raw_data_debug_msg;
+	String raw_data_debug_msg, cur_temp_file_name;
 	public FileOutputStream fos_debug_raw_data, fos_debug_raw_data_mean;
 	float Touch_X=0,Touch_Y=0;
+	FileOperateObject write_temp_file, read_temp_file;
+	boolean is_need_restore = false;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -366,6 +371,7 @@ public class NanoActivity extends Activity {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
+	    cali_read_file.flush_close_file();
 	    
 	    if ( Calibration_Data_List == null ) {
 	    	Calibration_Data_List = new LinkedList<HashMap<String, String>>();
@@ -794,11 +800,12 @@ public class NanoActivity extends Activity {
 			public void onClick(View v) {
 				// TODO Auto-generated method stub
 				//getResources().getText(R.string.main_title)
+				measure_mode = NanoActivity.this.MEASURE_MODE_dsDNA;
 				switch_to_dna_measure_page ( );
 				TextView tv;
 				tv = (TextView) NanoActivity.this.findViewById( R.id.main_title_id );
 				tv.setText( R.string.main_title_dsdna );
-				measure_mode = NanoActivity.this.MEASURE_MODE_dsDNA;
+				//measure_mode = NanoActivity.this.MEASURE_MODE_dsDNA;
 				nano_database.CreateDataDB( NanoSqlDatabase.MEASURE_MODE_DNA );
 				blank_valid = false;
 				
@@ -808,11 +815,22 @@ public class NanoActivity extends Activity {
 				btn_sample.setEnabled( false );
 				srcTable = new ArrayList<HashMap<String, String>>();
 				saTable = new SimpleAdapter ( NanoActivity.this , srcTable, R.layout.griditem, new String[] { "ItemText1", "ItemText2", "ItemText3" }, new int[] { R.id.ItemText1, R.id.ItemText2, R.id.ItemText3 } );
-				table.gvUpdatePageBar("select count(*) from " + NanoSqlDatabase.DNA_VALUE_TABLE_NAME, nano_database.get_database());
-			    table.gvReadyTable("select * from " + NanoSqlDatabase.DNA_VALUE_TABLE_NAME, nano_database.get_database());
-				table.refresh_last_table();
 				
-				dna_data_list.clear ( );
+				if ( is_need_restore == true) {
+					for ( DNA_measure_data dna_data: dna_data_list ) {
+						nano_database.InsertDNADataToDB( dna_data );
+						if ( dna_data_list.getLast() == dna_data ) {
+						    msg = NanoActivity.this.mHandler.obtainMessage( NanoActivity.this.UPDATE_DNA_RESULT_UI, dna_data );
+						    msg.sendToTarget ( );
+						}
+					}
+				}
+				else {
+					table.gvUpdatePageBar("select count(*) from " + NanoSqlDatabase.DNA_VALUE_TABLE_NAME, nano_database.get_database());
+				    table.gvReadyTable("select * from " + NanoSqlDatabase.DNA_VALUE_TABLE_NAME, nano_database.get_database());
+					table.refresh_last_table();
+					dna_data_list.clear ( );
+				}
 				
 				btn_blank.setOnClickListener( new OnClickListener() {
 
@@ -916,11 +934,12 @@ public class NanoActivity extends Activity {
 			public void onClick(View v) {
 				// TODO Auto-generated method stub
 				//getResources().getText(R.string.main_title)
+				measure_mode = NanoActivity.this.MEASURE_MODE_ssDNA;
 				switch_to_dna_measure_page ( );
 				TextView tv;
 				tv = (TextView) NanoActivity.this.findViewById( R.id.main_title_id );
 				tv.setText( R.string.main_title_ssdna );
-				measure_mode = NanoActivity.this.MEASURE_MODE_ssDNA;
+				//measure_mode = NanoActivity.this.MEASURE_MODE_ssDNA;
 				nano_database.CreateDataDB( NanoSqlDatabase.MEASURE_MODE_DNA );
 				blank_valid = false;
 				
@@ -928,11 +947,21 @@ public class NanoActivity extends Activity {
 				btn_blank.setEnabled( true );
 				btn_sample = ( ImageButton ) NanoActivity.this.findViewById ( R.id.imageButton2 );
 				btn_sample.setEnabled( false );
-				table.gvUpdatePageBar("select count(*) from " + NanoSqlDatabase.DNA_VALUE_TABLE_NAME, nano_database.get_database());
-			    table.gvReadyTable("select * from " + NanoSqlDatabase.DNA_VALUE_TABLE_NAME, nano_database.get_database());
-				table.refresh_last_table();
-				
-				dna_data_list.clear ( );
+				if ( is_need_restore == true) {
+					for ( DNA_measure_data dna_data: dna_data_list ) {
+						nano_database.InsertDNADataToDB( dna_data );
+						if ( dna_data_list.getLast() == dna_data ) {
+						    msg = NanoActivity.this.mHandler.obtainMessage( NanoActivity.this.UPDATE_DNA_RESULT_UI, dna_data );
+						    msg.sendToTarget ( );
+						}
+					}
+				}
+				else {
+					table.gvUpdatePageBar("select count(*) from " + NanoSqlDatabase.DNA_VALUE_TABLE_NAME, nano_database.get_database());
+				    table.gvReadyTable("select * from " + NanoSqlDatabase.DNA_VALUE_TABLE_NAME, nano_database.get_database());
+					table.refresh_last_table();
+					dna_data_list.clear ( );
+				}
 				
 				btn_blank.setOnClickListener (new OnClickListener() {
 
@@ -1046,11 +1075,12 @@ public class NanoActivity extends Activity {
 			public void onClick(View v) {
 				// TODO Auto-generated method stub
 				//getResources().getText(R.string.main_title)
+				measure_mode = NanoActivity.this.MEASURE_MODE_RNA;
 				switch_to_dna_measure_page ( );
 				TextView tv;
 				tv = (TextView) NanoActivity.this.findViewById( R.id.main_title_id );
 				tv.setText( R.string.main_title_rna );
-				measure_mode = NanoActivity.this.MEASURE_MODE_RNA;
+				//measure_mode = NanoActivity.this.MEASURE_MODE_RNA;
 				nano_database.CreateDataDB( NanoSqlDatabase.MEASURE_MODE_DNA );
 				blank_valid = false;
 				
@@ -1059,11 +1089,21 @@ public class NanoActivity extends Activity {
 				btn_sample = ( ImageButton ) NanoActivity.this.findViewById ( R.id.imageButton2 );
 				btn_sample.setEnabled( false );
 
-				table.gvUpdatePageBar("select count(*) from " + NanoSqlDatabase.DNA_VALUE_TABLE_NAME, nano_database.get_database());
-			    table.gvReadyTable("select * from " + NanoSqlDatabase.DNA_VALUE_TABLE_NAME, nano_database.get_database());
-				table.refresh_last_table();
-				
-				dna_data_list.clear ( );
+				if ( is_need_restore == true) {
+					for ( DNA_measure_data dna_data: dna_data_list ) {
+						nano_database.InsertDNADataToDB( dna_data );
+						if ( dna_data_list.getLast() == dna_data ) {
+						    msg = NanoActivity.this.mHandler.obtainMessage( NanoActivity.this.UPDATE_DNA_RESULT_UI, dna_data );
+						    msg.sendToTarget ( );
+						}
+					}
+				}
+				else {
+					table.gvUpdatePageBar("select count(*) from " + NanoSqlDatabase.DNA_VALUE_TABLE_NAME, nano_database.get_database());
+				    table.gvReadyTable("select * from " + NanoSqlDatabase.DNA_VALUE_TABLE_NAME, nano_database.get_database());
+					table.refresh_last_table();
+					dna_data_list.clear ( );
+				}
 				
 				btn_blank.setOnClickListener (new OnClickListener() {
 
@@ -1146,11 +1186,12 @@ public class NanoActivity extends Activity {
 				// TODO Auto-generated method stub
 				//protein_quantity_layout.check( R.id.radioButton1 );
 				//alert_dlg1.show();
+				measure_mode = NanoActivity.this.MEASURE_MODE_PROTEIN;
 				switch_to_protein_measure_page ( );
 				TextView tv;
 				tv = (TextView) NanoActivity.this.findViewById( R.id.main_title_id );
 				tv.setText( R.string.main_title_protein );
-				measure_mode = NanoActivity.this.MEASURE_MODE_PROTEIN;
+				//measure_mode = NanoActivity.this.MEASURE_MODE_PROTEIN;
 				nano_database.CreateDataDB( NanoSqlDatabase.MEASURE_MODE_PROTEIN );
 				blank_valid = false;
 				
@@ -1159,11 +1200,21 @@ public class NanoActivity extends Activity {
 				btn_sample = ( ImageButton ) NanoActivity.this.findViewById ( R.id.imageButton2 );
 				btn_sample.setEnabled( false );
 
-				table.gvUpdatePageBar("select count(*) from " + NanoSqlDatabase.PROTEIN_VALUE_TABLE_NAME, nano_database.get_database());
-			    table.gvReadyTable("select * from " + NanoSqlDatabase.PROTEIN_VALUE_TABLE_NAME, nano_database.get_database());
-				table.refresh_last_table();
-				
-				protein_data_list.clear();
+				if ( is_need_restore == true) {
+					for ( Protein_measure_data protein_data: protein_data_list ) {
+						nano_database.InsertPROTEINDataToDB( protein_data );
+						if ( protein_data_list.getLast() == protein_data ) {
+						    msg = NanoActivity.this.mHandler.obtainMessage( NanoActivity.this.UPDATE_PROTEIN_RESULT_UI, protein_data );
+						    msg.sendToTarget ( );
+						}
+					}
+				}
+				else {
+					table.gvUpdatePageBar("select count(*) from " + NanoSqlDatabase.PROTEIN_VALUE_TABLE_NAME, nano_database.get_database());
+				    table.gvReadyTable("select * from " + NanoSqlDatabase.PROTEIN_VALUE_TABLE_NAME, nano_database.get_database());
+					table.refresh_last_table();
+					protein_data_list.clear();
+				}
 				
 				btn_blank.setOnClickListener (new OnClickListener() {
 
@@ -1844,10 +1895,65 @@ public class NanoActivity extends Activity {
 			mLayout_MainPage = ( LinearLayout ) inflater.inflate( R.layout.activity_main1, null );
 		mLayout_Content.addView( mLayout_MainPage );
 		
-		measure_mode = 0;
+		//measure_mode = 0;
 		//Stop_Monitor_AutoMeasure_Thread ();
 		//mNano_dev.Set_Auto_Measure( 0 );
 		//mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_MN913A_SETTING, 0, 0, null, 0);
+		
+		if ( write_temp_file == null ) {
+			if ( measure_mode < MEASURE_MODE_PROTEIN && measure_mode > 0 ) {
+			write_temp_file = new FileOperateObject ( "misc", cur_temp_file_name );
+			try {
+				write_temp_file.create_file( write_temp_file.generate_filename_no_date() );
+				/*if ( measure_mode < MEASURE_MODE_PROTEIN )
+					write_temp_file.write_file( dna_data_list.getLast() );
+				else
+					write_temp_file.write_file( protein_data_list );*/
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			}
+		}
+		
+		if ( write_temp_file != null ) {
+			try {
+				write_temp_file.delete_file( write_temp_file.generate_filename_no_date() );
+				write_temp_file.flush_close_file();
+				write_temp_file = null;
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		} 
+
+		/*if ( measure_mode < MEASURE_MODE_PROTEIN && measure_mode > 0 ) {
+        String file_name = "";
+        if ( measure_mode == MEASURE_MODE_dsDNA ) {
+        	file_name = "dsDNA";
+        }
+        else
+        	if ( measure_mode == MEASURE_MODE_ssDNA ) {
+        		file_name = "ssDNA";
+        	}
+        	else
+        		if ( measure_mode == MEASURE_MODE_RNA ) {
+        			file_name = "RNA";
+        		}
+        
+        file_name = file_name + "_temp";
+
+        write_temp_file = new FileOperateObject ( "misc", file_name );
+    	try {
+    		write_temp_file.create_file( write_temp_file.generate_filename_no_date() );
+    		write_temp_file.write_file( dna_data_list );
+    	} catch (IOException e) {
+    		// TODO Auto-generated catch block
+    		e.printStackTrace();
+    	}
+        }*/
+    	
+    	measure_mode = 0;
 	}
 	
 	public void switch_to_dna_measure_page ( ) {
@@ -1943,6 +2049,81 @@ public class NanoActivity extends Activity {
 	    ( ( TextView ) NanoActivity.this.findViewById( R.id.textView5 ) ).setText( "" );
 	    ( ( TextView ) NanoActivity.this.findViewById( R.id.textView6 ) ).setText( "" );
 	    ( ( TextView ) NanoActivity.this.findViewById( R.id.textView7 ) ).setText( "" );
+	    
+		String file_name = "";
+		if ( measure_mode == MEASURE_MODE_dsDNA ) {
+			file_name = "dsDNA";
+		}
+		else
+			if ( measure_mode == MEASURE_MODE_ssDNA ) {
+				file_name = "ssDNA";
+			}
+			else
+				if ( measure_mode == MEASURE_MODE_RNA ) {
+					file_name = "RNA";
+				}
+		cur_temp_file_name = file_name = file_name + "_temp";
+	    /*write_temp_file = new FileOperation ( "Temp", file_name, false );
+	    
+		try {
+			write_temp_file.set_file_extension ( ".csv" ); 
+			write_temp_file.create_file ( write_temp_file.generate_filename_no_date() );
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}*/
+		File f = new File( Environment.getExternalStorageDirectory().getPath() + "//MaestroNano///" + "//misc//" + file_name + ".ojt" );
+		
+		if ( f.exists() == true ) {
+			if ( measure_mode == MEASURE_MODE_dsDNA ) {
+			}
+			else
+				if ( measure_mode == MEASURE_MODE_ssDNA ) {
+				}
+				else
+					if ( measure_mode == MEASURE_MODE_RNA ) {
+					}
+			read_temp_file = new FileOperateObject ( "misc", file_name );
+		    try {
+		    	read_temp_file.open_read_file(read_temp_file.generate_filename_no_date());
+		    	dna_data_list = ( LinkedList<DNA_measure_data> ) read_temp_file.read_file_object();
+		    	//DNA_measure_data dna_data = ( DNA_measure_data ) read_temp_file.read_file_object();
+		    	if ( dna_data_list == null )
+		    		dna_data_list = new LinkedList <DNA_measure_data>();
+		    	//serializable_test ser_get_obj = ( serializable_test ) read_temp_file.read_file_object();
+		    	//Log.d ( Tag, "dna data size: " + Integer.toString( dna_data_list.size() ) );
+		    	//Log.d ( Tag, "serializable int: " + Integer.toString( ser_get_obj.index ) );
+		    } catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			} catch (ClassNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		    read_temp_file.flush_close_file();
+		    is_need_restore = true;
+		    
+		    /*write_temp_file = new FileOperateObject ( "misc", file_name );
+			try {
+				write_temp_file.create_file( write_temp_file.generate_filename_no_date() );
+				write_temp_file.write_file( dna_data_list );
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}*/
+		}
+		else {
+			dna_data_list.clear();
+			write_temp_file = new FileOperateObject ( "misc", file_name );
+			try {
+				write_temp_file.create_file( write_temp_file.generate_filename_no_date() );
+				//write_temp_file.write_file( dna_data_list );
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			is_need_restore = false;
+		}
 	}
 	
 	public void switch_to_protein_measure_page ( ) {
@@ -2079,6 +2260,47 @@ public class NanoActivity extends Activity {
 		} );
 		ed_protein_quantity.setFilters(apped_input_filter(ed_protein_quantity.getFilters(), new DecimalInputFilter(ed_protein_quantity, 2, 2, 0.0, 5.0, 1.0)));
 		ed_protein_quantity.setOnEditorActionListener ( ed_action_listener );
+		
+		String file_name = "protein_temp";
+		cur_temp_file_name = file_name; 
+		File f = new File( Environment.getExternalStorageDirectory().getPath() + "//MaestroNano///" + "//misc//" + file_name + ".ojt" );
+		if ( f.exists() == true ) {
+			read_temp_file = new FileOperateObject ( "misc", file_name );
+		    try {
+		    	read_temp_file.open_read_file(read_temp_file.generate_filename_no_date());
+		    	protein_data_list = ( LinkedList<Protein_measure_data> ) read_temp_file.read_file_object();
+		    	if ( protein_data_list == null )
+		    		protein_data_list = new LinkedList <Protein_measure_data>();
+			} catch (ClassNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		    is_need_restore = true;
+		    
+			write_temp_file = new FileOperateObject ( "misc", file_name );
+			try {
+				write_temp_file.create_file( write_temp_file.generate_filename_no_date() );
+				write_temp_file.write_file( protein_data_list );
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		else {
+			protein_data_list.clear();
+			write_temp_file = new FileOperateObject ( "misc", file_name );
+			try {
+				write_temp_file.create_file( write_temp_file.generate_filename_no_date() );
+				//write_temp_file.write_file( protein_data_list );
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			is_need_restore = false;
+		}
 	}
 	
 	/*20140820 added by michael
@@ -3074,13 +3296,14 @@ public class NanoActivity extends Activity {
                 			  mNano_dev.Set_Start_Calibration ( 1 );
                 			  mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_MN913A_SETTING, 0, 0, null, 1);
                 			  mNano_dev.Set_Start_Calibration ( 0 );
-              			  while ( mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_MN913A_STATUS, 0, 0, null, 0) ) {
+              			  while ( true ) { //while ( mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_MN913A_STATUS, 0, 0, null, 0) ) {
 							  try {
 								sleep ( 1000 );
 							  } catch (InterruptedException e) {
 								// TODO Auto-generated catch block
 								  e.printStackTrace();
 							  }
+							  mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_MN913A_STATUS, 0, 0, null, 0);
 							  if ( mNano_dev.Has_Calibration == 1 ) {
 								//Log.d ( Tag, "MN913A device not busy");
 								  break;
@@ -3620,27 +3843,45 @@ public class NanoActivity extends Activity {
     	
     }
     
-    class DNA_measure_data {
+    /*class serializable_test implements Serializable {
+    	int index;
+    	public serializable_test () {
+    		
+    	}
+    	
+    	private void readObject(ObjectInputStream aInputStream)
+    			throws ClassNotFoundException, IOException {
+    		aInputStream.defaultReadObject();
+    	}
+    	
+    	private void writeObject(ObjectOutputStream aOutputStream)
+    			throws IOException {
+    		aOutputStream.defaultWriteObject();	
+    	}
+    }*/
+    
+    /*class DNA_measure_data implements Serializable {
     	int index;
     	double A260, A230, A280, A320, Conc;
     	boolean include_A320;
-    	double OD260, OD230, OD280, OD320;
+    	double OD260, OD230, OD280, OD320;    	
     }
 
-    class Protein_measure_data {
+    class Protein_measure_data implements Serializable {
     	int index;
     	double A280, coefficient, Conc;
     	double OD280;
-    }
+    }*/
     
-    LinkedList<DNA_measure_data> dna_data_list = new LinkedList <DNA_measure_data>();
+    LinkedList<DNA_measure_data> dna_data_list = new LinkedList <DNA_measure_data>(), dna_data_list1;
     LinkedList<Protein_measure_data> protein_data_list = new LinkedList <Protein_measure_data>();
     static final double dsDNA_CONC_FACTOR = 50;
     static final double ssDNA_CONC_FACTOR = 33;
     static final double RNA_CONC_FACTOR = 40;
+    transient serializable_test ser_obj = new serializable_test ();
     public void OD_Calculate () {
     	double I_blank, I_sample, I_blank1, I_sample1;
-    	DNA_measure_data dna_data = new DNA_measure_data ();
+    	DNA_measure_data dna_data = new DNA_measure_data (), dna_data_get;
     	Protein_measure_data protein_data = new Protein_measure_data ();
     	Message msg;
     	double Transmission_rate = 0, low_conc_TR_range = 0;
@@ -3885,6 +4126,38 @@ public class NanoActivity extends Activity {
 			//table.gvUpdatePageBar("select count(*) from " + NanoSqlDatabase.DNA_VALUE_TABLE_NAME, nano_database.get_database());
 		    //table.gvReadyTable("select * from " + NanoSqlDatabase.DNA_VALUE_TABLE_NAME, nano_database.get_database());
 		    //table.refresh_last_table();
+    		//write_temp_file.seek_read_file( 0 );
+    		if ( write_temp_file == null ) {
+    			write_temp_file = new FileOperateObject ( "misc", cur_temp_file_name );
+    			try {
+    				write_temp_file.create_file( write_temp_file.generate_filename_no_date() );
+    				//write_temp_file.write_file( dna_data_list );
+    			} catch (IOException e) {
+    				// TODO Auto-generated catch block
+    				e.printStackTrace();
+    			}
+    		}
+    		//ser_obj.index = 1993;
+    		write_temp_file.write_file( dna_data_list );
+    		//write_temp_file.write_obj_file( ser_obj );    		
+    		//write_temp_file.flush_close_file();
+    		write_temp_file = null;
+    		
+    		/*read_temp_file = new FileOperateObject ( "misc", cur_temp_file_name );
+    		try {
+				read_temp_file.open_read_file(read_temp_file.generate_filename_no_date());
+				dna_data_list1 = ( LinkedList<DNA_measure_data> ) read_temp_file.read_file_object();
+				Log.d ( Tag, Double.toString( dna_data_list1.getLast().Conc ) );
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+    		catch (ClassNotFoundException e) {
+    			// TODO Auto-generated catch block
+    			e.printStackTrace();
+    		}*/
+
+    		
 		    msg = this.mHandler.obtainMessage( this.UPDATE_DNA_RESULT_UI, dna_data );
 		    msg.sendToTarget ( );
     		break;
@@ -3915,10 +4188,27 @@ public class NanoActivity extends Activity {
     			if ( Protein_quantity_mode > 0 ) {
     				protein_data.coefficient = Protein_quantity_coefficient [ Protein_quantity_mode -1 ];
     				//protein_data.Conc = protein_data.A280 * protein_data.coefficient;
-    				protein_data.Conc = protein_data.OD280 / protein_data.coefficient;
+    				protein_data.Conc = 10 * protein_data.OD280 / protein_data.coefficient;
     			}
     		protein_data_list.add( protein_data );
     		nano_database.InsertPROTEINDataToDB( protein_data );
+    		
+    		if ( write_temp_file == null ) {
+    			write_temp_file = new FileOperateObject ( "misc", cur_temp_file_name );
+    			try {
+    				write_temp_file.create_file( write_temp_file.generate_filename_no_date() );
+    				//write_temp_file.write_file( dna_data_list );
+    			} catch (IOException e) {
+    				// TODO Auto-generated catch block
+    				e.printStackTrace();
+    			}
+    		}
+    		//ser_obj.index = 1993;
+    		write_temp_file.write_file( protein_data_list );
+    		//write_temp_file.write_obj_file( ser_obj );    		
+    		//write_temp_file.flush_close_file();
+    		write_temp_file = null;
+    		
 		    msg = this.mHandler.obtainMessage( this.UPDATE_PROTEIN_RESULT_UI, protein_data );
 		    msg.sendToTarget ( );
     		break;
@@ -4123,7 +4413,8 @@ public class NanoActivity extends Activity {
 	public void sync_RTC_Android_systime () {
 		byte [] datetime_data = new byte [ 256 ];
 
-		if ( mNano_dev.MN913A_IOCTL ( CMD_T.HID_CMD_GET_TIME, 0, 1, datetime_data, 0) ) {
+		while ( true ) {
+			if ( mNano_dev.MN913A_IOCTL ( CMD_T.HID_CMD_GET_TIME, 0, 1, datetime_data, 0) ) {
 			ByteBuffer.wrap ( datetime_data ).order( ByteOrder.LITTLE_ENDIAN ).asIntBuffer().get( datetime_data_int );
 			Log.d ( Tag, "year: " + Integer.toString( datetime_data_int [ 0 ] ) );
 			Log.d ( Tag, "month: " + Integer.toString( datetime_data_int [ 1 ] ) );
@@ -4142,7 +4433,13 @@ public class NanoActivity extends Activity {
 				// TODO Auto-generated catch block
 			  e.printStackTrace();
 		    }
+	        Log.d ( Tag, "sync RTC success");
+	        break;
+			}
 		}
+		/*else {
+			Log.d ( Tag, "sync RTC fail");
+		}*/
 		TextView txtCurrentTime = (TextView) findViewById( R.id.lbltime );
 		if ( txtCurrentTime != null )
 			txtCurrentTime.setText((Integer.toString( datetime_data_int [ 0 ] )) + "." + (Integer.toString( datetime_data_int [ 1] ))+
@@ -4791,4 +5088,5 @@ public class NanoActivity extends Activity {
 		 mLayout_MainPage = ( LinearLayout ) inflater.inflate( R.layout.activity_main1, null );
 		 mLayout_Content.addView( mLayout_MainPage );
      }
+	 
 }
