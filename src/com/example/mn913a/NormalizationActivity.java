@@ -503,6 +503,7 @@ public class NormalizationActivity extends Activity {
 				allow_checked = true;
 				last_target_volume = target_volume; 
 				last_target_conc = target_conc;
+				item_selection_result.setVisible ( true );
 			}
     }
 	
@@ -526,9 +527,9 @@ public class NormalizationActivity extends Activity {
 		return super.onOptionsItemSelected( item );
 	}
 	
-	MenuItem item_goback, item_print_result, Dummy_menu_item;
+	MenuItem item_goback, item_print_result, Dummy_menu_item, item_selection_result;
 	Menu main_menu;
-	ImageButton btn_goback, btn_print_result;
+	ImageButton btn_goback, btn_print_result, btn_selection_result;
 	int action_id = 0;
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
@@ -539,6 +540,49 @@ public class NormalizationActivity extends Activity {
 		item_goback.setActionView( R.layout.actionview_item_goback );
 		btn_goback = ( ImageButton ) item_goback.getActionView ( );
 		
+	    item_selection_result = menu.findItem( R.id.item_selection );
+	    item_selection_result.setActionView( R.layout.actionview_item_selection );
+	    item_selection_result.setVisible ( false );
+	    btn_selection_result = ( ImageButton )item_selection_result.getActionView();
+	    btn_selection_result.setOnClickListener ( new View.OnClickListener( ) {
+	    	@Override
+			public void onClick(View v) {
+				ImageButton btn_img = null;
+				if ( v instanceof ImageButton ) {
+					btn_img = ( ImageButton ) v;
+				}
+				
+				if ( btn_img != null && btn_img.isSelected() == false) {
+					btn_img.setSelected( true );
+					btn_img.setImageDrawable( NormalizationActivity.this.getResources().getDrawable( R.drawable.files_select_all ) );
+					
+					selection_count = 0;
+					for ( HashMap <String, String> map : selected_fillMaps )
+						if ( map.get( dst_from[2] ).equals( "NA" ) == false && map.get( dst_from[3] ).equals( "NA" ) == false ) {
+							map.put( "isSelected", "true" );
+							selection_count++;
+						}
+					( ( normalization_adapter ) result_listview.getAdapter() ).notifyDataSetChanged();
+					if ( item_print_result != null && item_print_result.isVisible() == false )
+						item_print_result.setVisible( true );
+				}
+				else
+					if ( btn_img != null && btn_img.isSelected() == true) {
+						btn_img.setSelected( false );
+						btn_img.setImageDrawable( NormalizationActivity.this.getResources().getDrawable( R.drawable.files_unselect_all ) );
+						
+						for ( HashMap <String, String> map : selected_fillMaps )
+							if ( map.get( dst_from[2] ).equals( "NA" ) == false && map.get( dst_from[3] ).equals( "NA" ) == false )
+								map.put( "isSelected", "false" );
+						( ( normalization_adapter ) result_listview.getAdapter() ).notifyDataSetChanged();
+						if ( item_print_result != null && item_print_result.isVisible() == true )
+							item_print_result.setVisible( false );
+						
+						selection_count = 0;
+					}
+	    	}
+	    } );
+	    
 		item_print_result = menu.findItem(R.id.item_print);
 	    item_print_result.setActionView( R.layout.actionview_item_print );
 	    item_print_result.setVisible( false );
@@ -638,7 +682,7 @@ public class NormalizationActivity extends Activity {
 						  }
 						  
 						  try {
-							  sleep ( 450 );
+							  sleep ( 850 );
 						  } catch (InterruptedException e) {
 								// TODO Auto-generated catch block
 							  e.printStackTrace();

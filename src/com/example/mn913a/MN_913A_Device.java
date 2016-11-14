@@ -335,7 +335,7 @@ public class MN_913A_Device {
     					Has_Calibration = MN913A_dev_data.get ( 5 );
     					AutoMeasure_Detected = MN913A_dev_data.get ( 6 );
     					Invalid_Measure_Assert = MN913A_dev_data.get ( 7 );
-    					//Printer_Status = MN913A_dev_data.get ( 8 );
+    					Printer_Status = MN913A_dev_data.get ( 8 );
     				}
     				else
     					if ( itracker_cmd == CMD_T.HID_CMD_GET_TIME && result ) {
@@ -467,7 +467,7 @@ public class MN_913A_Device {
 	// #define HID_CMD_SIGNATURE 0x43444948
 	public static final int HID_CMD_SIGNATURE = 0x43444948;
 	public static final int MAX_PAYLOAD = 4096;
-	public int Xenon_Voltage_Level = 0, Illumination_State = 0, start_calibration = 0, Max_Volt_Level = 0, Min_Volt_Level = 0, Max_Voltage_Intensity = 0, Min_Voltage_Intensity = 0, Auto_Measure = 0;// Printer_Status = 0;
+	public int Xenon_Voltage_Level = 0, Illumination_State = 0, start_calibration = 0, Max_Volt_Level = 0, Min_Volt_Level = 0, Max_Voltage_Intensity = 0, Min_Voltage_Intensity = 0, Auto_Measure = 0, Printer_Status = 0;
 	public int Reset_MCU = 0, LCD_Brightness_Level = 0;
 	
 	public final class CMD_T {

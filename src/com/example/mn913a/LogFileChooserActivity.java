@@ -1153,6 +1153,7 @@ public class LogFileChooserActivity extends FileChooserActivity {
         			btn_selection_result = ( ImageButton )item_selection_result.getActionView();
         			btn_selection_result.setOnClickListener( selection_clicklistener );            		
             	}
+            item_selection_result.setVisible ( true );
 			result_listview.setDividerHeight( 3 );
 			mIsFileDirty = false;
 			/*if ( selected_file_items.get(0).getFile().getName().contains( "dsDNA" ) == true ||
@@ -1689,6 +1690,7 @@ public class LogFileChooserActivity extends FileChooserActivity {
 			    main_menu = menu;
 			    item_selection_result = menu.findItem( R.id.item_selection );
 			    item_selection_result.setActionView( R.layout.actionview_item_selection );
+			    item_selection_result.setVisible ( false );
 			    btn_selection_result = ( ImageButton )item_selection_result.getActionView();
 			    item_print_result = menu.findItem(R.id.item_print);
 			    item_print_result.setActionView( R.layout.actionview_item_print );
@@ -1795,12 +1797,23 @@ public class LogFileChooserActivity extends FileChooserActivity {
 									}
 								}
 							}
+							if ( mSelected_items_count > 0 ) {
 							if ( ( byte_offset % 256 ) != 0)
 								mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_PRINT_DNA_RESULT, 0, ( byte_offset / 256 ) + 1, byte_array, 0);
 							else
 								mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_PRINT_DNA_RESULT, 0, ( byte_offset / 256 ), byte_array, 0);
-							//mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_MN913A_STATUS, 0, 0, null, 0);
-							//Log.d ( Tag, Integer.toHexString( mNano_dev.Printer_Status ) );
+							}
+							
+							/*try {
+								Thread.sleep( 100 );
+							} catch (InterruptedException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+							for ( int i = 0; i < 5; i++ ) {
+							mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_MN913A_STATUS, 0, 0, null, 0);
+							Log.d ( Tag, Integer.toHexString( mNano_dev.Printer_Status ) );
+							}*/
 						}
 						else
 							if ( result_listview.getAdapter() instanceof protein_result_adapter ) {
@@ -1831,10 +1844,12 @@ public class LogFileChooserActivity extends FileChooserActivity {
 										byte_offset = byte_offset + bytes.length;
 									}
 								}
+								if ( mSelected_items_count > 0 ) {
 								if ( ( byte_offset % 256 ) != 0)
 									mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_PRINT_PROTEIN_RESULT, 0, ( byte_offset / 256 ) + 1, byte_array, 0);
 								else
 									mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_PRINT_PROTEIN_RESULT, 0, ( byte_offset / 256 ), byte_array, 0);
+								}
 							}
 					}
 			    	
@@ -1873,7 +1888,7 @@ public class LogFileChooserActivity extends FileChooserActivity {
 			    	
 			    } );
 			    
-			    selection_clicklistener = new View.OnClickListener( ) {
+			    /*selection_clicklistener = new View.OnClickListener( ) {
 			    	@Override
 					public void onClick(View v) {
 						ImageButton btn_img = null;
@@ -1892,6 +1907,12 @@ public class LogFileChooserActivity extends FileChooserActivity {
 							else
 								if ( result_listview.getAdapter() instanceof protein_result_adapter )
 									( ( protein_result_adapter ) result_listview.getAdapter() ).notifyDataSetChanged();
+							mSelected_items_count = fillMaps.size();
+							
+							if ( item_print_result.isVisible() == false )
+								item_print_result.setVisible( true );
+							if ( item_delete_result.isVisible() == false )
+								item_delete_result.setVisible( true );
 						}
 						else 
 							if ( btn_img != null && btn_img.isSelected() == true) {
@@ -1905,9 +1926,15 @@ public class LogFileChooserActivity extends FileChooserActivity {
 								else
 									if ( result_listview.getAdapter() instanceof protein_result_adapter )
 										( ( protein_result_adapter ) result_listview.getAdapter() ).notifyDataSetChanged();
+								mSelected_items_count = 0;
+								
+								if ( item_print_result.isVisible() == true )
+									item_print_result.setVisible( false );
+								if ( item_delete_result.isVisible() == true )
+									item_delete_result.setVisible( false );
 							}
 			    	}
-			    };
+			    };*/
 		    }
 		    else 
 		    	if ( activity_use_for.equals( ACTIVITY_USE_FOR_ANALYSIS ) ) {
@@ -1918,6 +1945,7 @@ public class LogFileChooserActivity extends FileChooserActivity {
 				    main_menu = menu;
 				    item_selection_result = menu.findItem( R.id.item_selection );
 				    item_selection_result.setActionView( R.layout.actionview_item_selection );
+				    item_selection_result.setVisible ( false );
 				    btn_selection_result = ( ImageButton )item_selection_result.getActionView();
 				    item_normalization = menu.findItem(R.id.item_normalization_analysis);
 				    item_normalization.setActionView ( R.layout.actionview_item_normalization_analysis );
@@ -1963,6 +1991,58 @@ public class LogFileChooserActivity extends FileChooserActivity {
 						}
 					} );
 		    	}
+		    
+		    selection_clicklistener = new View.OnClickListener( ) {
+		    	@Override
+				public void onClick(View v) {
+					ImageButton btn_img = null;
+					if ( v instanceof ImageButton ) {
+						btn_img = ( ImageButton ) v;
+					}
+					
+					if ( btn_img != null && btn_img.isSelected() == false) {
+						btn_img.setSelected( true );
+						btn_img.setImageDrawable( LogFileChooserActivity.this.getResources().getDrawable( R.drawable.files_select_all ) );
+						
+						for ( HashMap <String, String> map : fillMaps )
+							map.put( "isSelected", "true" );
+						if ( result_listview.getAdapter() instanceof dna_result_adapter )
+							( ( dna_result_adapter ) result_listview.getAdapter() ).notifyDataSetChanged();
+						else
+							if ( result_listview.getAdapter() instanceof protein_result_adapter )
+								( ( protein_result_adapter ) result_listview.getAdapter() ).notifyDataSetChanged();
+						mSelected_items_count = fillMaps.size();
+						
+						if ( item_print_result != null && item_print_result.isVisible() == false )
+							item_print_result.setVisible( true );
+						if ( item_delete_result != null && item_delete_result.isVisible() == false )
+							item_delete_result.setVisible( true );
+						if ( item_normalization != null )
+							item_normalization.setVisible( true );
+					}
+					else 
+						if ( btn_img != null && btn_img.isSelected() == true) {
+							btn_img.setSelected( false );
+							btn_img.setImageDrawable( LogFileChooserActivity.this.getResources().getDrawable( R.drawable.files_unselect_all ) );
+							
+							for ( HashMap <String, String> map : fillMaps )
+								map.put( "isSelected", "false" );
+							if ( result_listview.getAdapter() instanceof dna_result_adapter )
+								( ( dna_result_adapter ) result_listview.getAdapter() ).notifyDataSetChanged();
+							else
+								if ( result_listview.getAdapter() instanceof protein_result_adapter )
+									( ( protein_result_adapter ) result_listview.getAdapter() ).notifyDataSetChanged();
+							mSelected_items_count = 0;
+							
+							if ( item_print_result != null && item_print_result.isVisible() == true )
+								item_print_result.setVisible( false );
+							if ( item_delete_result != null && item_delete_result.isVisible() == true )
+								item_delete_result.setVisible( false );
+							if ( item_normalization != null )
+								item_normalization.setVisible( false );
+						}
+		    	}
+		    };
 		    update_actionbar_optiomenu ();
 	    }
 	    else {

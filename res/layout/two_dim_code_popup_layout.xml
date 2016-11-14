@@ -8,7 +8,7 @@
         <RelativeLayout
           android:layout_width="match_parent"
           android:layout_height="wrap_content"
-          android:layout_marginTop="2dp"  >
+          android:layout_marginTop="0dp"  >
         
 		      <ImageView
 			        android:id="@+id/qrimage1"
@@ -22,7 +22,7 @@
 		            android:layout_width="wrap_content"
 		            android:layout_height="wrap_content"
 		            android:text="  "
-		            android:layout_marginTop="435dp"  
+		            android:layout_marginTop="433dp"  
 		            android:layout_marginLeft="95dp"
 		            android:textStyle="bold" 
 		            android:textSize="34dp"/>
@@ -31,7 +31,7 @@
 		            android:id="@+id/dismiss"
 		            android:layout_width="158dp"
 		            android:layout_height="wrap_content"
-		            android:layout_marginTop="510dp"  
+		            android:layout_marginTop="522dp"  
 		            android:layout_marginLeft="165dp"
 		            android:background="#FFCCCCCC"
 		            android:textSize="24dp"

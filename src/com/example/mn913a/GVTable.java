@@ -144,6 +144,7 @@ public class GVTable extends LinearLayout {
 		}
 		
 		saTable.notifyDataSetChanged();
+		gvTable.smoothScrollToPosition( saTable.getCount() - 1 );
 	}
 	
 	public void refresh_last_table() {

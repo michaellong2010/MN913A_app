@@ -65,6 +65,28 @@ public class calibration_result_adapter extends BaseAdapter {
         tv =  ( TextView ) calibration_result_layout.findViewById( R.id.ItemText4 );
         tv.setText( map.get( "situation" ) );
         
+        if ( map.get( "situation" ).equals( "fail" ) ) {
+        	tv =  ( TextView ) calibration_result_layout.findViewById( R.id.ItemText1 );
+        	tv.setBackgroundResource( android.R.color.holo_red_light );
+        	tv =  ( TextView ) calibration_result_layout.findViewById( R.id.ItemText2 );
+        	tv.setBackgroundResource( android.R.color.holo_red_light );
+        	tv =  ( TextView ) calibration_result_layout.findViewById( R.id.ItemText3 );
+        	tv.setBackgroundResource( android.R.color.holo_red_light );
+        	tv =  ( TextView ) calibration_result_layout.findViewById( R.id.ItemText4 );
+        	tv.setBackgroundResource( android.R.color.holo_red_light );
+        }
+        else
+        	if ( map.get( "situation" ).equals( "pass" ) ) {
+            	tv =  ( TextView ) calibration_result_layout.findViewById( R.id.ItemText1 );
+            	tv.setBackgroundResource( android.R.color.holo_green_light );
+            	tv =  ( TextView ) calibration_result_layout.findViewById( R.id.ItemText2 );
+            	tv.setBackgroundResource( android.R.color.holo_green_light );
+            	tv =  ( TextView ) calibration_result_layout.findViewById( R.id.ItemText3 );
+            	tv.setBackgroundResource( android.R.color.holo_green_light );
+            	tv =  ( TextView ) calibration_result_layout.findViewById( R.id.ItemText4 );
+            	tv.setBackgroundResource( android.R.color.holo_green_light );
+        	}
+        
         CheckBox checkbox1 = ( CheckBox ) calibration_result_layout.findViewById( R.id.checkbox2 );
         if ( map.get("isSelected") != null && map.get("isSelected").equals( "true" ) ) {
         	checkbox1.setChecked( true );

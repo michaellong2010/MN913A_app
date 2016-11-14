@@ -213,6 +213,9 @@ public class NanoActivity extends Activity {
 	float Touch_X=0,Touch_Y=0;
 	FileOperateObject write_temp_file, read_temp_file;
 	boolean is_need_restore = false;
+	
+	final String Http_Repo_Host = "http://www.maestrogen.com/ftp/MN913A/";
+	public String user_manual_filename = "MaestroNano_Pro_user_manual_Version_728-16_20160805 _third__Future.pdf";
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -1509,6 +1512,38 @@ public class NanoActivity extends Activity {
 					@Override
 					public void onClick(View v) {
 						Log.d ( Tag, "############# user_manual" );
+			            LayoutInflater layoutInflater = (LayoutInflater)getBaseContext().getSystemService(LAYOUT_INFLATER_SERVICE);  
+			            View popupView = layoutInflater.inflate(R.layout.two_dim_code_popup_layout, null);
+			            
+			            String QRCodeContent = Http_Repo_Host + user_manual_filename;
+			            ImageView iv= ( ImageView ) popupView.findViewById ( R.id.qrimage1 );
+			            QRCodeWriter writer = new QRCodeWriter();
+			            
+			       	     try {
+			       	    	 BitMatrix matrix = writer.encode( // int width, int height  350, 360)
+			       	    		QRCodeContent, BarcodeFormat.QR_CODE,550, 500 );
+			       	         bitmap = bitmatrixToBitmap(matrix);
+			       	         iv.setImageBitmap(bitmap);
+			
+			       	     } catch (WriterException e) {
+			       	          Log.d("MainActivity", "Writer exception: " + e);
+			       	     }
+			       	     final PopupWindow popupWindow = new PopupWindow( popupView,490,590 );// 320,430
+			       	  
+	    	            TextView textIp = (TextView)popupView.findViewById(R.id.IpAdress);
+	    	            textIp.setTextColor(android.graphics.Color.GRAY);
+	   	                //textIp.setText( QRCodeContent );
+	    	            textIp.setText( "Download user manual" );
+	   	                
+	   	                Button btnDismiss = (Button)popupView.findViewById(R.id.dismiss);
+	   	                btnDismiss.setOnClickListener(new Button.OnClickListener(){
+							@Override
+							public void onClick(View v) {
+								// TODO Auto-generated method stub
+					   	           popupWindow.dismiss();
+							}	   	                	
+	   	                } );
+	   	                popupWindow.showAtLocation( btn_user_manual, Gravity.TOP | Gravity.RIGHT,400, 79 ); //600 139
 					}
 					
 				});
@@ -3985,7 +4020,11 @@ public class NanoActivity extends Activity {
                         					//dna_data.OD260 += 20 * ( coeff_k1 * 0.6 ) * Math.abs( Math.log( I_blank1 / I_sample1 ) / Math.log(10));
                         					//dna_data.OD260 = dna_data.OD260 / 2;        									
         								}*/
-        					dna_data.OD260 = 20 * coeff_k1 * Math.abs( dna_data.A260 ) * Math.pow( 4 / 3, - low_conc_TR_range ) ;
+        					if ( low_conc_TR_range > 1.047129 ) {
+        						dna_data.OD260 = 20 *  Math.abs( dna_data.A260 ) * Math.pow( 2, - low_conc_TR_range ) ;
+        					}
+        					else
+        						dna_data.OD260 = 20 * coeff_k1 * Math.abs( dna_data.A260 ) * Math.pow( 4 / 3, - low_conc_TR_range ) ;
         	    			//dna_data.Conc = 1000 * dna_data.A260;
         				//}
     				}
@@ -4413,7 +4452,8 @@ public class NanoActivity extends Activity {
 	public void sync_RTC_Android_systime () {
 		byte [] datetime_data = new byte [ 256 ];
 
-		if ( mNano_dev.MN913A_IOCTL ( CMD_T.HID_CMD_GET_TIME, 0, 1, datetime_data, 0) ) {
+		while ( true ) {
+			if ( mNano_dev.MN913A_IOCTL ( CMD_T.HID_CMD_GET_TIME, 0, 1, datetime_data, 0) ) {
 			ByteBuffer.wrap ( datetime_data ).order( ByteOrder.LITTLE_ENDIAN ).asIntBuffer().get( datetime_data_int );
 			Log.d ( Tag, "year: " + Integer.toString( datetime_data_int [ 0 ] ) );
 			Log.d ( Tag, "month: " + Integer.toString( datetime_data_int [ 1 ] ) );
@@ -4425,13 +4465,21 @@ public class NanoActivity extends Activity {
 			calendar.set( datetime_data_int [ 0 ], datetime_data_int [ 1 ] - 1, datetime_data_int [ 2 ], datetime_data_int [ 3 ], datetime_data_int [ 4 ], datetime_data_int [ 5 ] );
 			//exec_shell_command ( "date -s" + dateformat.format( calendar.getTime() ) + "; \n" );
 	        try {
-	          Process loProcess = Runtime.getRuntime().exec("su");
+	          /*Process loProcess = Runtime.getRuntime().exec("su");
 	          DataOutputStream loDataOutputStream = new DataOutputStream(loProcess.getOutputStream());
-	          loDataOutputStream.writeBytes( "date -s" + dateformat.format( calendar.getTime() ) + "; \n" );
-	        } catch (IOException e) {
+	          loDataOutputStream.writeBytes( "date -s" + dateformat.format( calendar.getTime() ) + "; \n" );*/
+	        	ShellExecuter exe = new ShellExecuter();
+	        	exe.Executer( "/system/xbin/su & " + "date -s" + dateformat.format( calendar.getTime() ) + "; \n" );
+	        } catch (Exception e) {
 				// TODO Auto-generated catch block
 			  e.printStackTrace();
 		    }
+	        Log.d ( Tag, "sync RTC success");
+	        break;
+			}
+			else {
+			Log.d ( Tag, "sync RTC fail");
+		}
 		}
 		TextView txtCurrentTime = (TextView) findViewById( R.id.lbltime );
 		if ( txtCurrentTime != null )
@@ -4612,7 +4660,7 @@ public class NanoActivity extends Activity {
    	          
    	          }});
    	          popupWindow.showAtLocation( btn_share, Gravity.TOP | Gravity.RIGHT,400, 79 ); //600 139
-              popupWindow.showAsDropDown( btn_share, 1, 1);
+              //popupWindow.showAsDropDown( btn_share, 1, 1);
               btn_share.setImageDrawable(getResources().getDrawable ( R.drawable.share_on ) );
               }
             }         
