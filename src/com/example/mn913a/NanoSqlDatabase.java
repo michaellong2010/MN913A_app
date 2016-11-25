@@ -95,7 +95,7 @@ public class NanoSqlDatabase {
 
 		String sql_dna_value = "insert into " + DNA_VALUE_TABLE_NAME + " ("
 				+ INDEX + ", " + CONC + ", " + A260 + ", " + A230 + ", " + A280 + ", " + A260_A230 + ", " + A260_A280 + ") values('" + index + "', '" + concentration
-				+ "','" + dna_od_array[0] + "','" + dna_od_array [ 3 ] + "','" + dna_od_array [ 4 ] + "','" + dna_od_array[1] + "','" + dna_od_array[2] + "');";
+				+ "','" + dna_od_array[0] + "','" + dna_od_array [ 3 ] + "','" + dna_od_array [ 4 ] + "','" + dna_od_array[2] + "','" + dna_od_array[1] + "');";
 				//+ INDEX + ", " + CONC + ", " + A260 + ", " + A260_A230 + ", " + A260_A280 + ") values('" + index + "', '" + concentration
 				//+ "','" + dna_od_array[0]  + "','" + dna_od_array[1] + "','" + dna_od_array[2] + "');";
 

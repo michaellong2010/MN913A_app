@@ -26,7 +26,7 @@ public class GVTable extends LinearLayout {
 	protected OnTableClickListener clickListener;
 	protected OnPageSwitchListener switchListener;
 	protected static int ID = 0x18;
-	public static String [ ] dna_column_name = { "NO", "Conc.(ng/ul)", "A260", "A230", "A280", "A260/A230", "A260/A280" };
+	public static String [ ] dna_column_name = { "NO", "Conc.(ng/ul)", "A260", "A230", "A280", "A260/A280", "A260/A230" };
 	//public static String [ ] dna_column_name = { "NO", "Conc.(ng/ul)", "A260", "A260/A230", "A260/A280" };
 	public static String [ ] protein_column_name = { "NO", "A280", "Coeff.", "Conc.(mg/ml)" };
 	
@@ -144,6 +144,7 @@ public class GVTable extends LinearLayout {
 		}
 		
 		saTable.notifyDataSetChanged();
+		gvTable.smoothScrollToPosition( saTable.getCount() - 1 );
 	}
 	
 	public void refresh_last_table() {
