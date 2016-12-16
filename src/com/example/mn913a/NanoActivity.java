@@ -4142,6 +4142,8 @@ public class NanoActivity extends Activity {
     		I_sample = Math.abs ( channel_sample.ch2_xenon_mean - channel_sample.ch2_no_xenon_mean );
     		if ( I_blank != 0 )
     			Transmission_rate = I_sample / I_blank;
+    		if ( Transmission_rate > 1 )
+    			Transmission_rate = 1 / Transmission_rate;
     		if ( I_sample != 0) {
     			dna_data.A260 = Math.log( I_blank / I_sample ) / Math.log(10);
     			if ( dna_data.A260 == 0)
@@ -4191,19 +4193,19 @@ public class NanoActivity extends Activity {
         					dna_data.Conc += coeff_k1 * Math.abs( Math.log( I_blank1 / I_sample1 ) / Math.log(10));
         					dna_data.Conc = dna_data.Conc / 2;*/
         					low_conc_TR_range = Transmission_rate / coeff_T1;
-        					/*if ( 1 < low_conc_TR_range && low_conc_TR_range < 1.02) {
-        						dna_data.OD260 = 20 * coeff_k1 * Math.abs( dna_data.A260 );
+        					if ( 0.9772 < Transmission_rate && Transmission_rate <= 0.9818 ) {
+        						dna_data.OD260 = 20 * Math.abs( dna_data.A260 - 0.006 );
             					//dna_data.OD260 += 20 * coeff_k1 * Math.abs( Math.log( I_blank1 / I_sample1 ) / Math.log(10));
             					//dna_data.OD260 = dna_data.OD260 / 2;
         					}
         					else
-        						if ( 1.02 <= low_conc_TR_range && low_conc_TR_range < 1.04) {
-        							dna_data.OD260 = 20 * ( coeff_k1 * 0.9 ) * Math.abs( dna_data.A260 );
+        						if ( 0.9818 < Transmission_rate && Transmission_rate <= 1 ) {
+        							dna_data.OD260 = 20 * ( 0.25 ) * Math.abs( dna_data.A260 );
                 					//dna_data.OD260 += 20 * ( coeff_k1 * 0.9 ) * Math.abs( Math.log( I_blank1 / I_sample1 ) / Math.log(10));
                 					//dna_data.OD260 = dna_data.OD260 / 2;
         						}
-        						else
-        							if ( 1.04 <= low_conc_TR_range && low_conc_TR_range < 1.05 ) {
+        						/*else
+        							if ( 1.04 < Transmission_rate && Transmission_rate < 1.05 ) {
             							dna_data.OD260 = 20 * ( coeff_k1 * 0.8 ) * Math.abs( dna_data.A260 );
                     					//dna_data.OD260 += 20 * ( coeff_k1 * 0.8 ) * Math.abs( Math.log( I_blank1 / I_sample1 ) / Math.log(10));
                     					//dna_data.OD260 = dna_data.OD260 / 2;
