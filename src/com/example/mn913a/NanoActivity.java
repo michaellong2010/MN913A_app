@@ -215,7 +215,16 @@ public class NanoActivity extends Activity {
 	boolean is_need_restore = false;
 	
 	final String Http_Repo_Host = "http://www.maestrogen.com/ftp/MN913A/";
-	public String user_manual_filename = "MaestroNano_Pro_user_manual_Version_728-16_20160805 _third__Future.pdf";
+	public String user_manual_filename = "MN913A_user_manual.pdf";
+	
+	public Dialog file_rename_dialog = null;
+	LinearLayout file_rename_dialog_layout = null;
+	EditText edit_new_filename;
+	public int decimal_digits = 6;
+	
+	String Last_print_data_type;
+	int Last_print_total_items,time_for_each_item_printing;
+	Long Last_print_time_diff;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -556,7 +565,7 @@ public class NanoActivity extends Activity {
 						}
 					    }
 					}
-				}.run();
+				}.start();
 				/*HashMap<String, String> map = Calibration_Data_List.getLast();
 				String [] str_arry;
 				byte [] datetime_data = new byte [ 24 ], meta_print_data = new byte [ 1024 ];
@@ -1822,7 +1831,224 @@ public class NanoActivity extends Activity {
 						file_name = "";
 		
 		FileOperation write_file = new FileOperation ( "Measure", file_name, true );
-		try {
+		String origin_filename = null;
+		write_file.set_file_extension ( ".csv" );
+		origin_filename = write_file.generate_filename();
+		//write_file.create_file ( write_file.generate_filename() );
+		
+		Button dlgbtn_cancel, dlgbtn_ok;
+		if ( file_rename_dialog == null ) {
+			file_rename_dialog = new Dialog( this, R.style.CenterDialog );
+    		file_rename_dialog_layout = (LinearLayout) LayoutInflater.from( this.getApplicationContext()).inflate(R.layout.dialog_file_rename, null );
+    		//file_rename_dialog.getWindow().setGravity( Gravity.CENTER_HORIZONTAL );
+    		params = file_rename_dialog.getWindow().getAttributes();
+    		params.x = 0;
+    		params.y = -100;
+    		file_rename_dialog.getWindow().setAttributes( params );
+    		file_rename_dialog.setContentView( file_rename_dialog_layout );
+    		file_rename_dialog.setTitle( "Save File As" );
+    		file_rename_dialog.setCancelable(true);
+    		
+    		dlgbtn_cancel = (Button) file_rename_dialog_layout.findViewById( R.id.button2_cancel );
+    		dlgbtn_cancel.setOnClickListener(new View.OnClickListener() {
+    			
+				@Override
+				public void onClick(View v) { // TODO
+					file_rename_dialog.dismiss();
+				}
+				
+			});
+    		
+    		dlgbtn_ok = (Button) file_rename_dialog_layout.findViewById( R.id.button1_ok );
+    		dlgbtn_ok.setOnClickListener( new View.OnClickListener() {
+    			
+				@Override
+				public void onClick(View v) {
+					
+					Pattern mPattern = Pattern.compile(  "(.*/)*.+(\\.csv)$" );
+					Matcher matcher, matcher1 = null;
+					boolean Is_Valid_filename, Is_Valid_filename1;
+					matcher = mPattern.matcher( edit_new_filename.getText() );
+					Is_Valid_filename = matcher.matches();
+					Is_Valid_filename1 = false;
+					if ( Is_Valid_filename == false ) {
+						matcher1 = mPattern.matcher( edit_new_filename.getText() + ".csv" );
+						Is_Valid_filename1 = matcher1.matches();
+					}
+					Log.d ( Tag, "file name match: " + Boolean.toString( Is_Valid_filename ));
+					
+					String file_name1, measure_result;
+					if ( measure_mode == MEASURE_MODE_dsDNA ) {
+						file_name1 = "dsDNA";
+					}
+					else
+						if ( measure_mode == MEASURE_MODE_ssDNA ) {
+							file_name1 = "ssDNA";
+						}
+						else
+							if ( measure_mode == MEASURE_MODE_RNA ) {
+								file_name1 = "RNA";
+							}
+							else
+								if ( measure_mode == MEASURE_MODE_PROTEIN ) {
+									file_name1 = "PROTEIN";
+								}
+								else
+									file_name1 = "";
+					FileOperation write_file1 = new FileOperation ( "Measure", file_name1, true );
+					
+					if ( Is_Valid_filename == true || Is_Valid_filename1 == true ) {
+						file_rename_dialog.dismiss();
+						//try {
+							write_file1.set_file_extension ( ".csv" );
+							if ( Is_Valid_filename == true ) {
+							  try {
+								write_file1.create_file ( file_name1 + "-" + matcher.group( 0 ) );
+							} catch (IOException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+							  Log.d ( Tag, "matcher group count: " + Integer.toString( matcher.groupCount())  + " ," + matcher.group( 0 ) );
+							}
+							else
+								if ( Is_Valid_filename1 == true ) {
+								  try {
+									  write_file1.create_file ( file_name1 + "-" + matcher1.group( 0 ) );
+								} catch (IOException e) {
+									// TODO Auto-generated catch block
+									e.printStackTrace();
+								}
+								  Log.d ( Tag, "matcher1 group count: " + Integer.toString( matcher.groupCount())  + " ," + matcher1.group( 0 ) );
+								}
+						//} catch (IOException e) {
+							// TODO Auto-generated catch block
+							//e.printStackTrace();
+						//}
+				    write_file1.write_file_with_date ( file_name1 );
+					switch ( measure_mode ) {
+					case MEASURE_MODE_dsDNA:
+					case MEASURE_MODE_ssDNA:
+					case MEASURE_MODE_RNA:
+						write_file1.write_file( "No., Conc., A260, A260_A230, A260_A280, A230, A280", true);
+						for ( DNA_measure_data dna_data: dna_data_list ) {
+							if ( dna_data.include_A320 == true ) {
+							  measure_result = Integer.toString( dna_data.index ) + ", " + NanoSqlDatabase.truncateDecimal(  dna_data.Conc, decimal_digits ).doubleValue() +  ", " +
+							  //NanoSqlDatabase.truncateDecimal(  dna_data.A260 * 24.38, 3 ).doubleValue() +  ", " +
+							  //NanoSqlDatabase.truncateDecimal(  dna_data.Conc / 50, 3 ).doubleValue() +  ", " +
+							  NanoSqlDatabase.truncateDecimal(  dna_data.OD260, decimal_digits ).doubleValue() +  ", " +
+							  //NanoSqlDatabase.truncateDecimal(  ( dna_data.A260 * 210 - dna_data.A320 ) / ( dna_data.A230 * 167 - dna_data.A320 ), 3 ).doubleValue() + ", " +
+							  //NanoSqlDatabase.truncateDecimal(  ( dna_data.A260 * 19 - dna_data.A320 ) / ( dna_data.A280 * 23 - dna_data.A320 ), 3 ).doubleValue();
+							  NanoSqlDatabase.truncateDecimal(  ( dna_data.OD260 - dna_data.A320 ) / ( dna_data.OD230 - dna_data.A320 ), decimal_digits ).doubleValue() + ", " +
+							  NanoSqlDatabase.truncateDecimal(  ( dna_data.OD260 - dna_data.A320 ) / ( dna_data.OD280 - dna_data.A320 ), decimal_digits ).doubleValue() + ", " +
+							  NanoSqlDatabase.truncateDecimal(  dna_data.OD230, decimal_digits ).doubleValue() +  ", " +
+							  NanoSqlDatabase.truncateDecimal(  dna_data.OD280, decimal_digits ).doubleValue();
+							}
+							else {
+								measure_result = Integer.toString( dna_data.index ) + ", " + NanoSqlDatabase.truncateDecimal(  dna_data.Conc, decimal_digits ).doubleValue() +  ", " +
+							    //NanoSqlDatabase.truncateDecimal(  dna_data.A260 * 24.38, 3 ).doubleValue() +  ", " +
+							    //NanoSqlDatabase.truncateDecimal(  dna_data.Conc / 50, 3 ).doubleValue() +  ", " +
+							    NanoSqlDatabase.truncateDecimal(  dna_data.OD260, decimal_digits ).doubleValue() +  ", " +
+								//NanoSqlDatabase.truncateDecimal(  ( dna_data.A260 * 210 ) / ( dna_data.A230 * 167 ), 3 ).doubleValue() + ", " +
+								//NanoSqlDatabase.truncateDecimal(  ( dna_data.A260 * 19 ) / ( dna_data.A280 * 23 ), 3 ).doubleValue();
+								NanoSqlDatabase.truncateDecimal(  ( dna_data.OD260 ) / ( dna_data.OD230 ), decimal_digits ).doubleValue() + ", " +
+								NanoSqlDatabase.truncateDecimal(  ( dna_data.OD260 ) / ( dna_data.OD280 ), decimal_digits ).doubleValue() + ", " +
+								NanoSqlDatabase.truncateDecimal(  dna_data.OD230, decimal_digits ).doubleValue() +  ", " +
+								NanoSqlDatabase.truncateDecimal(  dna_data.OD280, decimal_digits ).doubleValue();
+							}
+							write_file1.write_file ( measure_result, true );
+						}
+						break;
+					case MEASURE_MODE_PROTEIN:
+						write_file1.write_file( "No., A280, Coeff., Conc.", true);
+						for ( Protein_measure_data protein_data: protein_data_list ) {
+							/*measure_result = Integer.toString( protein_data.index ) + ", " + NanoSqlDatabase.truncateDecimal(  protein_data.A280, 3 ).doubleValue()	+
+									", " + NanoSqlDatabase.truncateDecimal(  protein_data.coefficient, 3 ).doubleValue()
+									+ ", " + NanoSqlDatabase.truncateDecimal(  protein_data.Conc, 3 ).doubleValue();*/
+							measure_result = Integer.toString( protein_data.index ) + ", " + NanoSqlDatabase.truncateDecimal(  protein_data.OD280, decimal_digits ).doubleValue()	+
+							", " + NanoSqlDatabase.truncateDecimal(  protein_data.coefficient, decimal_digits ).doubleValue()
+							+ ", " + NanoSqlDatabase.truncateDecimal(  protein_data.Conc, decimal_digits ).doubleValue();
+							write_file1.write_file ( measure_result, true );
+						}
+						break;
+					}
+					write_file1.flush_close_file();
+						
+					if ( NanoActivity.this.findViewById( R.id.measure_top_ui ) != null) {
+						gridlayout.removeView( table );
+						//mLayout_DNA_MeasurePage.removeView( gridlayout );
+					}
+					
+					Switch sw1= ( Switch ) NanoActivity.this.findViewById( R.id.Led_switch );
+					if ( sw1 != null ) {
+						/*mNano_dev.Set_Illumination_State ( 0 );
+						mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_MN913A_SETTING, 0, 0, null, 1);*/
+						Cur_Led_Onoff_State = sw1.isChecked();
+						sw1.setChecked( false );
+					}
+					
+					Switch sw2= ( Switch ) NanoActivity.this.findViewById( R.id.Auto_measure_switch );
+					if ( sw2 != null ) {
+						Cur_Auto_Measure = sw2.isChecked();
+						sw2.setChecked( false );
+					}
+					
+					mLayout_Content.removeAllViews ( );
+					if ( mLayout_MainPage == null )
+						mLayout_MainPage = ( LinearLayout ) inflater.inflate( R.layout.activity_main1, null );
+					mLayout_Content.addView( mLayout_MainPage );
+
+
+
+					if ( write_temp_file == null ) {
+						if ( measure_mode < MEASURE_MODE_PROTEIN && measure_mode > 0 ) {
+						write_temp_file = new FileOperateObject ( "misc", cur_temp_file_name );
+						try {
+							write_temp_file.create_file( write_temp_file.generate_filename_no_date() );
+							/*if ( measure_mode < MEASURE_MODE_PROTEIN )
+								write_temp_file.write_file( dna_data_list.getLast() );
+							else
+								write_temp_file.write_file( protein_data_list );*/
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						}
+					}
+					
+					if ( write_temp_file != null ) {
+						try {
+							write_temp_file.delete_file( write_temp_file.generate_filename_no_date() );
+							write_temp_file.flush_close_file();
+							write_temp_file = null;
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
+					measure_mode = 0;
+					}
+					else {
+						alert_dlg_builder.setMessage("Invalid filename!");
+						alert_dlg_builder.show();
+					}
+				}
+    		});
+    		
+    		file_rename_dialog.setOnDismissListener( new DialogInterface.OnDismissListener () {
+				@Override
+				public void onDismiss(DialogInterface dialog) {
+				
+				}
+    		} );
+    		//edit_new_filename = (EditText) file_rename_dialog_layout.findViewById( R.id.edit_rename_file );
+    		//edit_new_filename.setText( origin_filename );
+    		//edit_new_filename.setFilters(apped_input_filter(edit_new_filename.getFilters(), new FilenameInputFilter(edit_new_filename)));
+		}
+		edit_new_filename = (EditText) file_rename_dialog.findViewById( R.id.edit_rename_file );
+		edit_new_filename.setText( origin_filename );
+		file_rename_dialog.show();
+		
+		/*try {
 			write_file.set_file_extension ( ".csv" ); 
 			write_file.create_file ( write_file.generate_filename() );
 		} catch (IOException e) {
@@ -1868,16 +2094,16 @@ public class NanoActivity extends Activity {
 		case MEASURE_MODE_PROTEIN:
 			write_file.write_file( "No., A280, Coeff., Conc.", true);
 			for ( Protein_measure_data protein_data: protein_data_list ) {
-				/*measure_result = Integer.toString( protein_data.index ) + ", " + NanoSqlDatabase.truncateDecimal(  protein_data.A280, 3 ).doubleValue()	+
-						", " + NanoSqlDatabase.truncateDecimal(  protein_data.coefficient, 3 ).doubleValue()
-						+ ", " + NanoSqlDatabase.truncateDecimal(  protein_data.Conc, 3 ).doubleValue();*/
+				//measure_result = Integer.toString( protein_data.index ) + ", " + NanoSqlDatabase.truncateDecimal(  protein_data.A280, 3 ).doubleValue()	+
+						//", " + NanoSqlDatabase.truncateDecimal(  protein_data.coefficient, 3 ).doubleValue()
+						//+ ", " + NanoSqlDatabase.truncateDecimal(  protein_data.Conc, 3 ).doubleValue();
 				measure_result = Integer.toString( protein_data.index ) + ", " + NanoSqlDatabase.truncateDecimal(  protein_data.OD280, 6 ).doubleValue()	+
 				", " + NanoSqlDatabase.truncateDecimal(  protein_data.coefficient, 6 ).doubleValue()
 				+ ", " + NanoSqlDatabase.truncateDecimal(  protein_data.Conc, 6 ).doubleValue();
 				write_file.write_file ( measure_result, true );
 			}
 			break;
-		}
+		}*/
 		write_file.flush_close_file();
 		
 		//write_file.create_file(filename);
@@ -1895,7 +2121,7 @@ public class NanoActivity extends Activity {
 		/* detach table from dna measure page */
 		if ( measure_mode <= MEASURE_MODE_PROTEIN ) {
 			if ( this.findViewById( R.id.measure_top_ui ) != null) {
-				gridlayout.removeView( table );
+				//gridlayout.removeView( table );
 				//mLayout_DNA_MeasurePage.removeView( gridlayout );
 			}
 			//Toast.makeText( this, "save to file", Toast.LENGTH_SHORT).show();
@@ -1911,6 +2137,11 @@ public class NanoActivity extends Activity {
 		}
 		
 		/*turn off led*/
+		if ( ( measure_mode > 0 && measure_mode <= MEASURE_MODE_RNA && dna_data_list.size() == 0 ) || ( measure_mode == MEASURE_MODE_PROTEIN && protein_data_list.size() == 0 ) || ( NanoActivity.this.findViewById( R.id.setting_top_ui ) != null ) ) {
+			if ( NanoActivity.this.findViewById( R.id.measure_top_ui ) != null) {
+				gridlayout.removeView( table );
+				//mLayout_DNA_MeasurePage.removeView( gridlayout );
+			}
 		Switch sw1= ( Switch ) NanoActivity.this.findViewById( R.id.Led_switch );
 		if ( sw1 != null ) {
 			/*mNano_dev.Set_Illumination_State ( 0 );
@@ -1989,6 +2220,7 @@ public class NanoActivity extends Activity {
         }*/
     	
     	measure_mode = 0;
+		}
 	}
 	
 	public void switch_to_dna_measure_page ( ) {
@@ -2366,7 +2598,7 @@ public class NanoActivity extends Activity {
 			if (digitsAfterDecimal == 0)
 				mPattern = Pattern.compile("^[1-9][0-9]{0," + (digitsBeforeDecimal-1) +"}");
 			else
-				mPattern = Pattern.compile("^[1-9][0-9]{0," + (digitsBeforeDecimal-1) + "}(\\.[0-9]{0," + digitsAfterDecimal + "})?");
+				mPattern = Pattern.compile("[0-9]{0," + (digitsBeforeDecimal) + "}(\\.[0-9]{0," + digitsAfterDecimal + "})?");
 			//+([0-9]{1," + (digitsBeforeZero) + "})?+(\\.[0-9]{0," + (digitsAfterZero-1) + "})?");
 			Max = max;
 			Min = min;
@@ -2936,6 +3168,34 @@ public class NanoActivity extends Activity {
 		decorView.setSystemUiVisibility(uiOptions);
 		
 		if ( activity_result_code == 1023 ) {
+			/*new Thread () {
+				@Override
+				public void run() {
+					if ( Last_print_data_type.contains( "dsDNA" )|| Last_print_data_type.contains( "ssDNA" ) || Last_print_data_type.contains( "RNA" ) ) {
+						time_for_each_item_printing = 1000; 
+					}
+					else 
+						if ( Last_print_data_type.contains( "PROTEIN" ) ) {
+							time_for_each_item_printing = 500;
+						}
+					
+					if ( ( Last_print_total_items * time_for_each_item_printing ) > Last_print_time_diff ) {
+						try {
+							Log.d ( Tag, Integer.toString( Last_print_total_items ));
+							Log.d ( Tag, Long.toString( Last_print_time_diff ));
+							Log.d ( Tag, "Delay: " + Long.toString( Last_print_total_items * time_for_each_item_printing - Last_print_time_diff ) );
+							sleep ( Last_print_total_items * time_for_each_item_printing - Last_print_time_diff );
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
+					else {
+					}
+					mNano_dev.MN913A_IOCTL ( CMD_T.HID_CMD_PRINTER_POWER_OFF, 0, 0, null, 0 );
+					activity_result_code = 0;
+				}
+			}.run();*/
 			mNano_dev.MN913A_IOCTL ( CMD_T.HID_CMD_PRINTER_POWER_OFF, 0, 0, null, 0 );
 			activity_result_code = 0;
 		}
@@ -4265,6 +4525,9 @@ public class NanoActivity extends Activity {
 
                 // Do something with the contact here (bigger example below)
             	activity_result_code = 1023;
+            	Last_print_time_diff = data.getExtras().getLong( "home_printer_key_time_diff" );
+            	Last_print_total_items = data.getExtras().getInt( "print_total_items" );
+            	Last_print_data_type = data.getExtras().getString( "print_data_type" );
             	Log.d ( Tag, "onActivityResult" );
             }
         }

@@ -8,9 +8,11 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -18,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.example.mn913a.MN_913A_Device.CMD_T;
+import com.example.mn913a.NanoActivity.LooperThread;
 import com.example.mn913a.file.FileOperation;
 
 
@@ -39,6 +42,9 @@ import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.support.v7.widget.ActionBarOverlayLayout;
 import android.util.Log;
 import android.util.TypedValue;
@@ -134,6 +140,10 @@ public class LogFileChooserActivity extends FileChooserActivity {
 	String first_line;
 	View.OnClickListener selection_clicklistener;
 	
+	Calendar calendar = Calendar.getInstance();
+	long time_at_home, time_at_printer;
+	public Handler mWorker_thread_handler;
+	public Message msg;
     @Override
     public void onCreate(Bundle savedInstanceState) { 
 		this.getIntent().putExtra(FileChooserActivity.INPUT_SHOW_FULL_PATH_IN_TITLE, true);
@@ -955,6 +965,84 @@ public class LogFileChooserActivity extends FileChooserActivity {
 		
 		if ( activity_use_for.equals( ACTIVITY_USE_FOR_MANAGEMENT ) )
 			mNano_dev.MN913A_IOCTL ( CMD_T.HID_CMD_PRINTER_POWER_ON, 0, 0, null, 0 );
+		
+		time_at_home = time_at_printer = 0;
+		//new LooperThread ( ).start();
+    }
+    
+    class LooperThread extends Thread {
+		@Override
+		public synchronized void run() {
+			if ( Looper.myLooper() == null )
+			  Looper.prepare();
+			mWorker_thread_handler = new Handler() {
+                public void handleMessage ( Message msg ) {
+                	switch ( msg.what ) {
+                	case 0x1d:
+					    if ( first_line.contains( "dsDNA" )|| first_line.contains( "ssDNA" ) || first_line.contains( "RNA" ) ) {
+					    	try {
+								sleep ( 1000 + mSelected_items_count * 1000 );
+							} catch (InterruptedException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+					    }
+					    else 
+					    	if ( first_line.contains( "PROTEIN" )) {
+					    		try {
+									sleep ( mSelected_items_count * 500 );
+								} catch (InterruptedException e) {
+									// TODO Auto-generated catch block
+									e.printStackTrace();
+								}
+					    	}
+					    runOnUiThread ( new Runnable () {
+
+							@Override
+							public void run() {
+								// TODO Auto-generated method stub
+								alert_dlg.dismiss();
+							}
+					    	
+					    } );
+                		break;
+                	}
+                }
+			};
+			Looper.loop();
+		    /*try {
+				this.wait( );
+			} catch (InterruptedException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		    if ( first_line.contains( "dsDNA" )|| first_line.contains( "ssDNA" ) || first_line.contains( "RNA" ) ) {
+		    	try {
+					sleep ( 1000 + mSelected_items_count * 1000 );
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+		    }
+		    else 
+		    	if ( first_line.contains( "PROTEIN" )) {
+		    		try {
+						sleep ( mSelected_items_count * 500 );
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+		    	}
+		    runOnUiThread ( new Runnable () {
+
+				@Override
+				public void run() {
+					// TODO Auto-generated method stub
+					alert_dlg.dismiss();
+				}
+		    	
+		    } );*/
+		}
     }
     
 	@Override
@@ -995,6 +1083,8 @@ public class LogFileChooserActivity extends FileChooserActivity {
 				  }
 			  alert_dlg.setMessage( alert_message );
 			  alert_dlg.setTitle( "Delete file(s)" );
+			  alert_dlg.setCancelable( true );
+			  alert_dlg.setCanceledOnTouchOutside( true );
 			  alert_dlg.setButton(DialogInterface.BUTTON_POSITIVE, "Yes", new DialogInterface.OnClickListener() {
 
 				@Override
@@ -1037,6 +1127,8 @@ public class LogFileChooserActivity extends FileChooserActivity {
 					alert_message = alert_message.replace( "$file_name", mActiveFile.getName());
 					alert_dlg.setMessage( alert_message );
 					alert_dlg.setTitle( "Save file" );
+					alert_dlg.setCancelable( true );
+					alert_dlg.setCanceledOnTouchOutside( true );
 					fillMaps1.clear();
 					for ( HashMap<String, String> map : fillMaps ) {
 						HashMap<String, String> map1 = new HashMap<String, String> ( );
@@ -1851,9 +1943,74 @@ public class LogFileChooserActivity extends FileChooserActivity {
 									mNano_dev.MN913A_IOCTL(CMD_T.HID_CMD_PRINT_PROTEIN_RESULT, 0, ( byte_offset / 256 ), byte_array, 0);
 								}
 							}
+						//time_at_printer = LogFileChooserActivity.this.calendar.getTimeInMillis();
+						time_at_printer = System.currentTimeMillis();
+						Log.d ( Tag, "time_at_printer: " + Long.toString( time_at_printer ) );
+						
+						alert_message = "Waiting for printing complete!";
+						alert_dlg.setMessage( alert_message );
+						alert_dlg.setTitle( "Printing..." );
+						alert_dlg.setCancelable( false );
+						alert_dlg.setCanceledOnTouchOutside( false );						
+						/*alert_dlg.setButton(DialogInterface.BUTTON_POSITIVE, "Yes", new DialogInterface.OnClickListener() {
+
+							@Override
+							public void onClick(DialogInterface dialog,
+									int which) {
+								// TODO Auto-generated method stub
+								
+							}
+							  
+						 } );
+						 alert_dlg.setButton(DialogInterface.BUTTON_NEGATIVE, "No", new DialogInterface.OnClickListener() {
+
+							@Override
+							public void onClick(DialogInterface dialog,
+									int which) {
+								// TODO Auto-generated method stub
+								
+							}
+								  
+					     } );*/
+						
+						alert_dlg.show();
+						while ( alert_dlg.isShowing() == false );
+						
+					    //msg = mWorker_thread_handler.obtainMessage( 0x1d );
+					    //msg.sendToTarget ( );
+						new Thread () {
+							@Override
+							public void run() {
+								if (first_line.contains("dsDNA") || first_line.contains("ssDNA") || first_line.contains("RNA")) {
+									try {
+										sleep(2000 + mSelected_items_count * 1200);
+									} catch (InterruptedException e) {
+										// TODO Auto-generated catch block
+										e.printStackTrace();
+									}
+								} else if (first_line.contains("PROTEIN")) {
+									try {
+										sleep(mSelected_items_count * 500);
+									} catch (InterruptedException e) {
+										// TODO Auto-generated catch block
+										e.printStackTrace();
+									}
+								}
+								runOnUiThread(new Runnable() {
+
+									@Override
+									public void run() {
+										// TODO Auto-generated method stub
+										alert_dlg.dismiss();
+									}
+
+								});
+
+							}
+						}.start();
 					}
-			    	
 			    } );
+			    
 			    //View v = item_print_result.getActionView();
 			    //ActionMenuView.LayoutParams lp = ( ActionMenuView.LayoutParams ) item_print_result.getActionView().getLayoutParams();
 			    btn_delete_result.setOnClickListener( new View.OnClickListener( ) {
@@ -2175,11 +2332,17 @@ public class LogFileChooserActivity extends FileChooserActivity {
 	@Override
 	public void onBackPressed() {
 		super.onBackPressed();
+		//time_at_home = calendar.getTimeInMillis();
+		time_at_home = System.currentTimeMillis();
+		Log.d ( Tag, "time_at_home: " + Long.toString( time_at_home -  time_at_printer) );
 	}
 	
 	@Override
 	public void finish() {
 	    Intent data = new Intent();
+	    data.putExtra( "print_data_type", first_line );
+	    data.putExtra( "print_total_items", mSelected_items_count );
+	    data.putExtra( "home_printer_key_time_diff", time_at_home );
 	    setResult(RESULT_OK, data); 
 
 	    super.finish();

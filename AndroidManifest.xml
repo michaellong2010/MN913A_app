@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.mn913a"
     android:versionCode="1"
-    android:versionName="1.0.20161013-1508" >
+    android:versionName="1.0.20161213-1418" >
 
     <permission android:name="android.permission.SET_TIME"
         android:label="@string/app_name"
